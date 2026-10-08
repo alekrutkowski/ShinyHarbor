@@ -1,4 +1,4 @@
 -r requirements-gateway.txt
 # Browser and local TLS tools are installed in the native integration jobs.
-playwright>=1.55,<2
+playwright>=1.63.0,<2
 cryptography>=46,<50
