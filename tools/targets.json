@@ -1,0 +1,12 @@
+{
+  "include": [
+    {"target":"x86_64-unknown-linux-gnu", "runner":"ubuntu-22.04", "musl":false},
+    {"target":"aarch64-unknown-linux-gnu", "runner":"ubuntu-22.04-arm", "musl":false},
+    {"target":"x86_64-unknown-linux-musl", "runner":"ubuntu-22.04", "musl":true},
+    {"target":"aarch64-unknown-linux-musl", "runner":"ubuntu-22.04-arm", "musl":true},
+    {"target":"x86_64-pc-windows-msvc", "runner":"windows-2022", "musl":false},
+    {"target":"aarch64-pc-windows-msvc", "runner":"windows-11-arm", "musl":false},
+    {"target":"x86_64-apple-darwin", "runner":"macos-15-intel", "musl":false},
+    {"target":"aarch64-apple-darwin", "runner":"macos-15", "musl":false}
+  ]
+}

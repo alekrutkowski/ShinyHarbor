@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.png -text
+assets/licenses/* -text
+assets/licenses/manifest.json text eol=lf
+assets/vendor/* -text

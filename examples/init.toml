@@ -1,0 +1,13 @@
+# All paths are relative to this file. Add app folders under apps/ at any time.
+listen = "127.0.0.1:3838"
+admin_listen = "127.0.0.1:3839"
+state_dir = ".harbor"
+
+[tls]
+mode = "off"
+
+[[sites]]
+name = "apps"
+mount = "/"
+path = "apps"
+directory_index = true

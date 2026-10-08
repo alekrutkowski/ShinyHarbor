@@ -1,0 +1,28 @@
+[Unit]
+Description=ShinyHarbor R application server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=shinyharbor
+Group=shinyharbor
+WorkingDirectory=/srv/shinyharbor
+ExecStart=/usr/local/bin/shinyharbor serve --config /etc/shinyharbor/harbor.toml
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=75
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/shinyharbor
+StateDirectory=shinyharbor
+UMask=0077
+# Needed only for native HTTPS on privileged port 443. Never run R as root.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

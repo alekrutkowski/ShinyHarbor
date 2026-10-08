@@ -1,0 +1,70 @@
+[
+  {
+    "file": "asn1-rs-impl-0.2.0-LICENSE-MIT",
+    "sha256": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513",
+    "package": "asn1-rs-impl-0.2.0",
+    "source": "https://raw.githubusercontent.com/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-MIT"
+  },
+  {
+    "file": "asn1-rs-impl-0.2.0-LICENSE-APACHE",
+    "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "package": "asn1-rs-impl-0.2.0",
+    "source": "https://raw.githubusercontent.com/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-APACHE"
+  },
+  {
+    "file": "valuable-0.1.1-LICENSE",
+    "sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+    "package": "valuable-0.1.1",
+    "source": "https://raw.githubusercontent.com/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE"
+  },
+  {
+    "file": "yasna-0.5.2-LICENSE-MIT",
+    "sha256": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16",
+    "package": "yasna-0.5.2",
+    "source": "https://raw.githubusercontent.com/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-MIT"
+  },
+  {
+    "file": "yasna-0.5.2-LICENSE-APACHE",
+    "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "package": "yasna-0.5.2",
+    "source": "https://raw.githubusercontent.com/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-APACHE"
+  },
+  {
+    "file": "winapi-i686-pc-windows-gnu-0.4.0-LICENSE-MIT",
+    "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "package": "winapi-i686-pc-windows-gnu-0.4.0",
+    "source": "https://raw.githubusercontent.com/retep998/winapi-rs/796a8e6c2971dc2ff1bcff166e6671284f9b5b6b/i686/LICENSE-MIT"
+  },
+  {
+    "file": "winapi-i686-pc-windows-gnu-0.4.0-LICENSE-APACHE",
+    "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "package": "winapi-i686-pc-windows-gnu-0.4.0",
+    "source": "https://raw.githubusercontent.com/retep998/winapi-rs/796a8e6c2971dc2ff1bcff166e6671284f9b5b6b/i686/LICENSE-APACHE"
+  },
+  {
+    "file": "winapi-x86_64-pc-windows-gnu-0.4.0-LICENSE-MIT",
+    "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "package": "winapi-x86_64-pc-windows-gnu-0.4.0",
+    "source": "https://raw.githubusercontent.com/retep998/winapi-rs/796a8e6c2971dc2ff1bcff166e6671284f9b5b6b/x86_64/LICENSE-MIT"
+  },
+  {
+    "file": "winapi-x86_64-pc-windows-gnu-0.4.0-LICENSE-APACHE",
+    "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "package": "winapi-x86_64-pc-windows-gnu-0.4.0",
+    "source": "https://raw.githubusercontent.com/retep998/winapi-rs/796a8e6c2971dc2ff1bcff166e6671284f9b5b6b/x86_64/LICENSE-APACHE"
+  },
+  {
+    "file": "Apache-2.0.txt",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "package": "async-http-codec-0.8.0",
+    "standard_text": true,
+    "source": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+  },
+  {
+    "file": "Apache-2.0.txt",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "package": "async-web-client-0.6.3",
+    "standard_text": true,
+    "source": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+  }
+]

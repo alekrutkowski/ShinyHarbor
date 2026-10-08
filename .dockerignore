@@ -1,0 +1,11 @@
+.git
+target
+dist
+.harbor*
+test-results
+**/__pycache__
+*.mmdb
+*.sqlite*
+*.key
+*.pem
+harbor.toml

@@ -1,0 +1,575 @@
+{
+  "schema_version": 1,
+  "certification": "unverified",
+  "review_date": "2026-10-08",
+  "reference_shiny_server": "1.5.23.1030",
+  "reference_shiny_cran": "1.14.0",
+  "scope_note": "This is a required-work inventory, not a complete proof specification. Smoke tests do not set these cases to implemented. Professional parity must be scoped explicitly against licensed reference software.",
+  "cases": [
+    {
+      "id": "directive-run_as",
+      "scope": "upstream-configuration",
+      "description": "run_as",
+      "implemented": false,
+      "progress": "Named Unix account fallback, worker UID, supplementary groups and private state passed in a root-to-unprivileged live test. Windows uses the service account.",
+      "candidate_tests_or_sources": [
+        "tests/unix_identity.py"
+      ]
+    },
+    {
+      "id": "directive-socket_dir",
+      "scope": "upstream-configuration",
+      "description": "socket_dir",
+      "implemented": false,
+      "progress": "Six Linux checks passed for private Unix sockets, real R HTTP, native WebSocket and SockJS reactivity, shared-secret denial and cleanup. Root-to-user identity checks also pass with sockets. Windows uses loopback TCP.",
+      "candidate_tests_or_sources": [
+        "tests/unix_socket.py",
+        "tests/unix_identity.py"
+      ]
+    },
+    {
+      "id": "directive-access_log",
+      "scope": "upstream-configuration",
+      "description": "access_log",
+      "implemented": false,
+      "progress": "Seven checks passed for named/custom token formats, streaming completion, escaping, password exclusion, log rotation/reload and bounded-writer loss metrics. dev output intentionally omits terminal colors.",
+      "candidate_tests_or_sources": [
+        "tests/access_logs.py"
+      ]
+    },
+    {
+      "id": "directive-server",
+      "scope": "upstream-configuration",
+      "description": "server",
+      "implemented": false,
+      "progress": "Multiple listeners and virtual-host routing passed actual HTTP checks.",
+      "candidate_tests_or_sources": [
+        "tests/configuration.py"
+      ]
+    },
+    {
+      "id": "directive-listen",
+      "scope": "upstream-configuration",
+      "description": "listen",
+      "implemented": false
+    },
+    {
+      "id": "directive-server_name",
+      "scope": "upstream-configuration",
+      "description": "server_name",
+      "implemented": false
+    },
+    {
+      "id": "directive-location",
+      "scope": "upstream-configuration",
+      "description": "location",
+      "implemented": false
+    },
+    {
+      "id": "directive-site_dir",
+      "scope": "upstream-configuration",
+      "description": "site_dir",
+      "implemented": false,
+      "progress": "Dynamic nested discovery and real static HTTP integration passed on the candidate.",
+      "candidate_tests_or_sources": [
+        "tests/native_compat.py"
+      ]
+    },
+    {
+      "id": "directive-directory_index",
+      "scope": "upstream-configuration",
+      "description": "directory_index",
+      "implemented": false
+    },
+    {
+      "id": "directive-user_apps",
+      "scope": "upstream-configuration",
+      "description": "user_apps",
+      "implemented": false
+    },
+    {
+      "id": "directive-user_dirs",
+      "scope": "upstream-configuration",
+      "description": "user_dirs",
+      "implemented": false
+    },
+    {
+      "id": "directive-app_dir",
+      "scope": "upstream-configuration",
+      "description": "app_dir",
+      "implemented": false
+    },
+    {
+      "id": "directive-redirect",
+      "scope": "upstream-configuration",
+      "description": "redirect",
+      "implemented": false
+    },
+    {
+      "id": "directive-log_dir",
+      "scope": "upstream-configuration",
+      "description": "log_dir",
+      "implemented": false
+    },
+    {
+      "id": "directive-log_file_mode",
+      "scope": "upstream-configuration",
+      "description": "log_file_mode",
+      "implemented": false,
+      "progress": "Unix modes are applied independently of umask; real worker tests pass with service-owned and worker-owned logs. Windows uses inherited directory ACLs.",
+      "candidate_tests_or_sources": [
+        "tests/worker_logs.py"
+      ]
+    },
+    {
+      "id": "directive-members_of",
+      "scope": "upstream-configuration",
+      "description": "members_of",
+      "implemented": false,
+      "progress": "Unix primary/supplementary group lookup and deny behavior implemented; primary-group and unknown-group cases pass on Linux. Windows rejects unsupported OS group lookup.",
+      "candidate_tests_or_sources": [
+        "src/identity.rs"
+      ]
+    },
+    {
+      "id": "directive-google_analytics_id",
+      "scope": "upstream-configuration",
+      "description": "google_analytics_id",
+      "implemented": false,
+      "progress": "Inherited Google tag markup and disabling overrides tested with real Shiny HTTP. Tests do not execute external scripts or contact Google.",
+      "candidate_tests_or_sources": [
+        "tests/page_settings.py"
+      ]
+    },
+    {
+      "id": "directive-app_init_timeout",
+      "scope": "upstream-configuration",
+      "description": "app_init_timeout",
+      "implemented": false
+    },
+    {
+      "id": "directive-app_idle_timeout",
+      "scope": "upstream-configuration",
+      "description": "app_idle_timeout",
+      "implemented": false
+    },
+    {
+      "id": "directive-http_keepalive_timeout",
+      "scope": "upstream-configuration",
+      "description": "http_keepalive_timeout",
+      "implemented": false,
+      "progress": "Five socket checks passed on Windows and Linux: active requests reset deadlines, idle/incomplete connections close, and zero disables expiration. TLS/ACME and browser transport regressions pass.",
+      "candidate_tests_or_sources": [
+        "tests/keepalive.py"
+      ]
+    },
+    {
+      "id": "directive-http_allow_compression",
+      "scope": "upstream-configuration",
+      "description": "http_allow_compression",
+      "implemented": false,
+      "progress": "Gzip/deflate negotiation, disabled mode, range responses and small bodies passed six live HTTP checks; seven SockJS browser modes pass with compression enabled.",
+      "candidate_tests_or_sources": [
+        "tests/http_compression.py"
+      ]
+    },
+    {
+      "id": "directive-sockjs_heartbeat_delay",
+      "scope": "upstream-configuration",
+      "description": "sockjs_heartbeat_delay",
+      "implemented": false
+    },
+    {
+      "id": "directive-sockjs_disconnect_delay",
+      "scope": "upstream-configuration",
+      "description": "sockjs_disconnect_delay",
+      "implemented": false
+    },
+    {
+      "id": "directive-simple_scheduler",
+      "scope": "upstream-configuration",
+      "description": "simple_scheduler",
+      "implemented": false
+    },
+    {
+      "id": "directive-allow_app_override",
+      "scope": "upstream-configuration",
+      "description": "allow_app_override",
+      "implemented": false,
+      "progress": "Opt-in .shiny_app.conf parsing and generation tracking implemented; full upstream override scope remains under review.",
+      "candidate_tests_or_sources": [
+        "src/legacy.rs",
+        "src/pool.rs"
+      ]
+    },
+    {
+      "id": "directive-application",
+      "scope": "upstream-configuration",
+      "description": "application",
+      "implemented": false
+    },
+    {
+      "id": "directive-template_dir",
+      "scope": "upstream-configuration",
+      "description": "template_dir",
+      "implemented": false,
+      "progress": "Eight checks passed for inherited directory/status-error templates, Handlebars escaping, file reload, specific fallback, invalid syntax and protected static files. Specialized upstream error contracts remain open.",
+      "candidate_tests_or_sources": [
+        "tests/templates.py"
+      ]
+    },
+    {
+      "id": "directive-python",
+      "scope": "upstream-configuration",
+      "description": "python",
+      "implemented": false
+    },
+    {
+      "id": "directive-bookmark_state_dir",
+      "scope": "upstream-configuration",
+      "description": "bookmark_state_dir",
+      "implemented": false
+    },
+    {
+      "id": "directive-disable_websockets",
+      "scope": "upstream-configuration",
+      "description": "disable_websockets",
+      "implemented": false
+    },
+    {
+      "id": "directive-disable_protocols",
+      "scope": "upstream-configuration",
+      "description": "disable_protocols",
+      "implemented": false
+    },
+    {
+      "id": "directive-preserve_logs",
+      "scope": "upstream-configuration",
+      "description": "preserve_logs",
+      "implemented": false,
+      "progress": "Real R exit-code retention, persistent preservation markers and stderr relay pass on Windows and Linux. Exact upstream merged-log filenames remain different.",
+      "candidate_tests_or_sources": [
+        "tests/worker_logs.py"
+      ]
+    },
+    {
+      "id": "directive-log_as_user",
+      "scope": "upstream-configuration",
+      "description": "log_as_user",
+      "implemented": false,
+      "progress": "Six checks passed with a root gateway and an unprivileged log writer: ownership, permissions, bounded rotation and exit-code retention. All log operations run under worker credentials; NFS itself remains untested.",
+      "candidate_tests_or_sources": [
+        "tests/worker_logs.py",
+        "src/user_log.rs"
+      ]
+    },
+    {
+      "id": "directive-reconnect",
+      "scope": "upstream-configuration",
+      "description": "reconnect",
+      "implemented": false
+    },
+    {
+      "id": "directive-sanitize_errors",
+      "scope": "upstream-configuration",
+      "description": "sanitize_errors",
+      "implemented": false
+    },
+    {
+      "id": "directive-frame_options",
+      "scope": "upstream-configuration",
+      "description": "frame_options",
+      "implemented": false,
+      "progress": "allow, deny, sameorigin and legacy allow-from are implemented; response headers and inheritance have live HTTP checks. ALLOW-FROM remains obsolete in modern browsers.",
+      "candidate_tests_or_sources": [
+        "tests/native_compat.py",
+        "tests/page_settings.py"
+      ]
+    },
+    {
+      "id": "config-grammar-errors",
+      "scope": "behavior",
+      "description": "Quoted strings, comments, scope, argument arity, inheritance and error diagnostics",
+      "implemented": false,
+      "progress": "Partial directive parser, positioned errors and nested inheritance; full upstream grammar still open.",
+      "candidate_tests_or_sources": [
+        "src/legacy.rs"
+      ]
+    },
+    {
+      "id": "config-overrides",
+      "scope": "behavior",
+      "description": "Local overrides and deprecated-directive behavior",
+      "implemented": false
+    },
+    {
+      "id": "virtual-hosts-listeners",
+      "scope": "behavior",
+      "description": "Multiple listeners, hosts and nested locations",
+      "implemented": false
+    },
+    {
+      "id": "user-resolution",
+      "scope": "behavior",
+      "description": "UID/GID/group resolution, process user, supplementary groups and login profiles",
+      "implemented": false
+    },
+    {
+      "id": "user-dirs-permissions",
+      "scope": "behavior",
+      "description": "Per-user app discovery, permissions and safe filesystem traversal",
+      "implemented": false
+    },
+    {
+      "id": "http-paths",
+      "scope": "behavior",
+      "description": "Encoded paths, query multiplicity, relative URLs, redirects and canonical routes",
+      "implemented": false
+    },
+    {
+      "id": "http-static",
+      "scope": "behavior",
+      "description": "Static files, MIME, directory indexes, cache validators and range requests",
+      "implemented": false,
+      "progress": "ServeFile-based ranges, HEAD, modification-time validation and guarded directory indexes; Candidate Rust/browser checks now pass; see validation/2026-10-08.json.",
+      "candidate_tests_or_sources": [
+        "src/site.rs",
+        "tests/native_compat.py"
+      ]
+    },
+    {
+      "id": "http-streams",
+      "scope": "behavior",
+      "description": "Streaming uploads/downloads, limits, aborts, trailers and compression",
+      "implemented": false
+    },
+    {
+      "id": "http-websocket",
+      "scope": "behavior",
+      "description": "Handshake, extension/subprotocol headers, masking, fragmentation, binary, ping/pong and close",
+      "implemented": false
+    },
+    {
+      "id": "sockjs-websocket",
+      "scope": "behavior",
+      "description": "SockJS WebSocket transport and framing",
+      "implemented": false,
+      "progress": "Real Shiny WebSocket transport passed five browser features; see retained validation record.",
+      "candidate_tests_or_sources": [
+        "tests/transports.py"
+      ]
+    },
+    {
+      "id": "sockjs-streaming",
+      "scope": "behavior",
+      "description": "xhr/xdr streaming, eventsource, iframe eventsource and htmlfile variants",
+      "implemented": false,
+      "progress": "XHR streaming, eventsource and htmlfile passed real Shiny browser tests; obsolete IE transports remain unverified.",
+      "candidate_tests_or_sources": [
+        "tests/transports.py"
+      ]
+    },
+    {
+      "id": "sockjs-polling",
+      "scope": "behavior",
+      "description": "xhr/xdr polling, iframe xhr polling and JSONP polling",
+      "implemented": false,
+      "progress": "XHR, iframe XHR and JSONP passed real Shiny browser tests; obsolete IE/XDR remains unverified.",
+      "candidate_tests_or_sources": [
+        "tests/transports.py"
+      ]
+    },
+    {
+      "id": "sockjs-lifecycle",
+      "scope": "behavior",
+      "description": "Session IDs, heartbeats, disconnect deadlines, origin/iframe behavior",
+      "implemented": false
+    },
+    {
+      "id": "session-reconnect",
+      "scope": "behavior",
+      "description": "Shiny Server reconnect, worker affinity and expired-session behavior",
+      "implemented": false,
+      "progress": "Numbered replay, 15-second grace, multiplex channels and browser recovery implemented. Six wire cases also passed against upstream; exhaustive failure equivalence remains open.",
+      "candidate_tests_or_sources": [
+        "src/sockjs/reconnect.rs",
+        "tests/reconnect.py"
+      ]
+    },
+    {
+      "id": "session-bookmarks",
+      "scope": "behavior",
+      "description": "URL and server bookmark storage, restoration and isolation",
+      "implemented": false,
+      "progress": "Server-side bookmark save and restoration across R workers passed through the Rust gateway; imported upstream state remains unverified.",
+      "candidate_tests_or_sources": [
+        "tests/native_compat.py"
+      ]
+    },
+    {
+      "id": "session-state",
+      "scope": "behavior",
+      "description": "session$request, session$clientData, identity and environment contract",
+      "implemented": false,
+      "progress": "Real Shiny session identity and per-worker secret exercised via R launcher; full environment contract still open.",
+      "candidate_tests_or_sources": [
+        "src/proxy.rs",
+        "tests/runtime.R",
+        "tests/launcher.py"
+      ]
+    },
+    {
+      "id": "worker-lifecycle",
+      "scope": "behavior",
+      "description": "Scheduling, spawn failures, idle termination, crash behavior and limits",
+      "implemented": false
+    },
+    {
+      "id": "worker-restarts",
+      "scope": "behavior",
+      "description": "restart.txt and per-app overrides without disturbing unrelated apps",
+      "implemented": false,
+      "progress": "restart.txt generation draining and browser bookmark restoration passed; opt-in app overrides are parsed and tracked.",
+      "candidate_tests_or_sources": [
+        "tests/native_compat.py",
+        "src/legacy.rs"
+      ]
+    },
+    {
+      "id": "server-reload",
+      "scope": "behavior",
+      "description": "SIGHUP/config reload, draining, process trees and termination behavior",
+      "implemented": false,
+      "progress": "Atomic application reloads passed seven Windows browser/CLI cases and two Linux SIGHUP cases. Listener/TLS/global changes still require restart.",
+      "candidate_tests_or_sources": [
+        "tests/reload.py",
+        "tests/reload_signal.py"
+      ]
+    },
+    {
+      "id": "rmarkdown",
+      "scope": "behavior",
+      "description": "Interactive R Markdown discovery, launch behavior and resources",
+      "implemented": false,
+      "progress": "Three real browser routes passed reactive R Markdown and relative-resource checks with rmarkdown 2.32 and Pandoc 3.12.1; comprehensive document semantics remain open.",
+      "candidate_tests_or_sources": [
+        "tests/rmarkdown.py"
+      ]
+    },
+    {
+      "id": "rendering-assets",
+      "scope": "behavior",
+      "description": "htmlwidgets, shared dependencies, UI updates and custom messages",
+      "implemented": false
+    },
+    {
+      "id": "error-pages",
+      "scope": "behavior",
+      "description": "Sanitization, templates, error status and full-stacktrace controls",
+      "implemented": false
+    },
+    {
+      "id": "logs-contract",
+      "scope": "behavior",
+      "description": "Paths, formats, retention, user ownership and access log behavior",
+      "implemented": false
+    },
+    {
+      "id": "pro-auth",
+      "scope": "behavior",
+      "description": "Professional-equivalent authentication, identity, authorization and session isolation",
+      "implemented": false,
+      "progress": "Trusted proxy SSO and inherited user/group policies passed ten real R/browser and denial cases, including local overrides and reconnect identity changes. Native PAM/LDAP/OIDC and licensed professional comparison remain open.",
+      "candidate_tests_or_sources": [
+        "tests/auth_proxy.py"
+      ]
+    },
+    {
+      "id": "pro-scheduler",
+      "scope": "behavior",
+      "description": "Multiple workers, utilization, queue bounds and overload/recovery",
+      "implemented": false,
+      "progress": "Load-factor scaling, worker ceiling, overload recovery and idle-session limits passed seven real R tests. Licensed professional scheduling equivalence remains unverified.",
+      "candidate_tests_or_sources": [
+        "tests/resource_limits.py"
+      ]
+    },
+    {
+      "id": "pro-monitoring",
+      "scope": "behavior",
+      "description": "Documented accurate monitoring and failure reporting",
+      "implemented": false
+    },
+    {
+      "id": "tls-acme-lifecycle",
+      "scope": "behavior",
+      "description": "Staging/production issuance, challenge handling, persistence, renewal and failure recovery",
+      "implemented": false
+    },
+    {
+      "id": "adversarial-isolation",
+      "scope": "behavior",
+      "description": "Unauthorized access, traversal, resource exhaustion and secrets exposure",
+      "implemented": false
+    },
+    {
+      "id": "latest-shiny",
+      "scope": "behavior",
+      "description": "Real application integration with the moving latest stable CRAN Shiny",
+      "implemented": false,
+      "progress": "Local R launcher tested with installed Shiny 1.14.0. Full latest-CRAN Rust browser tests remain pending CI.",
+      "candidate_tests_or_sources": [
+        "tests/launcher.py",
+        ".github/workflows/ci.yml"
+      ]
+    },
+    {
+      "id": "platform-x86_64-unknown-linux-gnu",
+      "scope": "platform",
+      "description": "Native startup, permissions, TLS, lifecycle and integration on x86_64-unknown-linux-gnu",
+      "implemented": false
+    },
+    {
+      "id": "platform-aarch64-unknown-linux-gnu",
+      "scope": "platform",
+      "description": "Native startup, permissions, TLS, lifecycle and integration on aarch64-unknown-linux-gnu",
+      "implemented": false
+    },
+    {
+      "id": "platform-x86_64-unknown-linux-musl",
+      "scope": "platform",
+      "description": "Native startup, permissions, TLS, lifecycle and integration on x86_64-unknown-linux-musl",
+      "implemented": false
+    },
+    {
+      "id": "platform-aarch64-unknown-linux-musl",
+      "scope": "platform",
+      "description": "Native startup, permissions, TLS, lifecycle and integration on aarch64-unknown-linux-musl",
+      "implemented": false
+    },
+    {
+      "id": "platform-x86_64-pc-windows-msvc",
+      "scope": "platform",
+      "description": "Native startup, permissions, TLS, lifecycle and integration on x86_64-pc-windows-msvc",
+      "implemented": false
+    },
+    {
+      "id": "platform-aarch64-pc-windows-msvc",
+      "scope": "platform",
+      "description": "Native startup, permissions, TLS, lifecycle and integration on aarch64-pc-windows-msvc",
+      "implemented": false
+    },
+    {
+      "id": "platform-x86_64-apple-darwin",
+      "scope": "platform",
+      "description": "Native startup, permissions, TLS, lifecycle and integration on x86_64-apple-darwin",
+      "implemented": false
+    },
+    {
+      "id": "platform-aarch64-apple-darwin",
+      "scope": "platform",
+      "description": "Native startup, permissions, TLS, lifecycle and integration on aarch64-apple-darwin",
+      "implemented": false
+    }
+  ]
+}

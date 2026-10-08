@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-07",
+  "platform": "Windows x86-64",
+  "r_version": "4.6.1",
+  "shiny_version": "1.14.0",
+  "source_sha256": "942a269188d1a008fa573e3240cc74033d60a79e31135bbddaf6930f5204f7a0",
+  "executed": {
+    "r_runtime": {
+      "tests_passed": 5,
+      "assertions_passed": 35
+    },
+    "r_launcher": {
+      "suite": "real-r-launcher",
+      "checks": [
+        "http-page",
+        "missing-secret-rejected",
+        "forged-secret-rejected",
+        "session-user",
+        "reactivity",
+        "persistent-server-bookmark",
+        "bookmark-restored-after-r-restart"
+      ],
+      "passed": true,
+      "certifies_rust_proxy": false,
+      "certifies_full_compatibility": false
+    },
+    "python_unit_tests": {
+      "passed": 17,
+      "skipped": 1,
+      "skip_reason": "PyYAML unavailable; workflow syntax independently parsed with installed R yaml"
+    },
+    "workflow_yaml_r": {
+      "parsed": 3
+    },
+    "javascript_syntax": "passed with RStudio-bundled Node",
+    "python_syntax": "passed",
+    "shell_installer_syntax": "passed with Git-bundled Bash"
+  },
+  "not_executed": [
+    "Rust build",
+    "Rust tests",
+    "rustfmt",
+    "Clippy",
+    "Rust gateway tests",
+    "browser suites",
+    "release builds",
+    "ACME issuance/renewal"
+  ],
+  "blocking_environment": "No accessible installed Rust toolchain; workspace-local rustup installation denied network access to static.rust-lang.org (Windows error 10013). Python aiohttp/Playwright unavailable.",
+  "git": {
+    "initialized": true,
+    "branch": "main",
+    "remote_created": false,
+    "committed": false,
+    "staging": "denied: cannot create .git/index.lock"
+  },
+  "certifies_full_compatibility": false,
+  "certifies_rust_proxy": false
+}

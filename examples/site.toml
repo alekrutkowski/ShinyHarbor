@@ -1,0 +1,16 @@
+listen = "127.0.0.1:3838"
+admin_listen = "127.0.0.1:3839"
+
+[[sites]]
+name = "examples"
+mount = "/examples"
+path = "."
+directory_index = true
+
+[sites.app_defaults]
+max_workers = 4
+sessions_per_worker = 20
+idle_seconds = 60
+startup_seconds = 90
+sanitize_errors = true
+frame_options = "sameorigin"

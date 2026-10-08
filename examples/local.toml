@@ -1,0 +1,13 @@
+# Paths are relative to this file, not your terminal's working directory.
+listen = "127.0.0.1:3838"
+admin_listen = "127.0.0.1:3839"
+state_dir = "../.harbor"
+
+[[apps]]
+name = "hello"
+mount = "/hello"
+path = "hello"
+max_workers = 4
+sessions_per_worker = 20
+idle_seconds = 60
+startup_seconds = 60

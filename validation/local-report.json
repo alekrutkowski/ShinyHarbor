@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-02",
+  "source_status": "alpha-uncompiled-not-conformance-certified",
+  "python": "3.13.5",
+  "sqlite": "3.46.1",
+  "node": "v22.16.0",
+  "chromium": "Chromium 144.0.7559.96 built on Debian GNU/Linux 13 (trixie)",
+  "executed": {
+    "structural_tests": {
+      "passed": 13
+    },
+    "extracted_sql_tests": {
+      "passed": 5
+    },
+    "dashboard": {
+      "suite": "dashboard-browser-synthetic-api",
+      "mode": "in-memory-assets",
+      "server_http_or_csp_tested": false,
+      "passed": true,
+      "checks": [
+        "locked-by-default",
+        "rejects-invalid-token",
+        "renders-aggregates",
+        "renders-runtime",
+        "renders-applications",
+        "token-cleared-from-input",
+        "table-sort",
+        "period-switch",
+        "mobile-no-horizontal-overflow",
+        "explicit-lock",
+        "no-browser-javascript-errors"
+      ],
+      "count": 11
+    },
+    "node_syntax": "passed",
+    "python_syntax": "passed",
+    "shell_syntax": "passed"
+  },
+  "not_executed": [
+    "Rust compile/unit tests/clippy/rustfmt",
+    "Executable gateway suite",
+    "Real Shiny suite",
+    "Release platform builds",
+    "Windows SCM lifecycle",
+    "Production ACME issuance and renewal",
+    "Performance benchmarks",
+    "Independent security audit"
+  ],
+  "conformance": {
+    "status": "unverified",
+    "implemented_required_cases": 0,
+    "total_required_cases": 73
+  },
+  "first_http_browser_attempt": "blocked by managed browser URL policy; no policy modified",
+  "csp_and_real_admin_auth_tested": false
+}

@@ -1,0 +1,43 @@
+{
+  "version": "v2.10.1",
+  "assets": {
+    "pebble-darwin-amd64.zip": {
+      "url": "https://github.com/letsencrypt/pebble/releases/download/v2.10.1/pebble-darwin-amd64.zip",
+      "sha256": "4d1cd69f03bfecd094b944842c27b28bddc459ff466efc2f17cecdea37fd7c62"
+    },
+    "pebble-darwin-arm64.zip": {
+      "url": "https://github.com/letsencrypt/pebble/releases/download/v2.10.1/pebble-darwin-arm64.zip",
+      "sha256": "0e4a894a8672a8cfa6dcbff05619cb2b19072ea0bbecd05df101f087d08235b0"
+    },
+    "pebble-linux-amd64.zip": {
+      "url": "https://github.com/letsencrypt/pebble/releases/download/v2.10.1/pebble-linux-amd64.zip",
+      "sha256": "c626f4b966f972aee217b0e121adf3eb9490d4ac57e490be730d0343d99a326e"
+    },
+    "pebble-linux-arm64.zip": {
+      "url": "https://github.com/letsencrypt/pebble/releases/download/v2.10.1/pebble-linux-arm64.zip",
+      "sha256": "31883c79adbc7d21ebb36e84ed698e464e5c0486461c24049b20b3ec47ca9402"
+    },
+    "pebble-windows-amd64.zip": {
+      "url": "https://github.com/letsencrypt/pebble/releases/download/v2.10.1/pebble-windows-amd64.zip",
+      "sha256": "2539f3903302d75f897522b23b1b52b3300f5f992245f13d3bdf3967cf23af6d"
+    },
+    "pebble-windows-arm64.zip": {
+      "url": "https://github.com/letsencrypt/pebble/releases/download/v2.10.1/pebble-windows-arm64.zip",
+      "sha256": "787d2aec8a77c86c5f76280fdf9025f183171ef2115bfeb9ef7e32e0a2ee0f12"
+    }
+  },
+  "certificates": {
+    "cert.pem": {
+      "url": "https://raw.githubusercontent.com/letsencrypt/pebble/v2.10.1/test/certs/localhost/cert.pem",
+      "sha256": "c87fb918d9bac8db11aa54493b5f0cf6e0725a3fe73f617d1c64737e1ab4caf9"
+    },
+    "key.pem": {
+      "url": "https://raw.githubusercontent.com/letsencrypt/pebble/v2.10.1/test/certs/localhost/key.pem",
+      "sha256": "0977979255b0e0721c17335c056b627f66a43cf56e5a52f3cda81fb111ecf00e"
+    },
+    "pebble.minica.pem": {
+      "url": "https://raw.githubusercontent.com/letsencrypt/pebble/v2.10.1/test/certs/pebble.minica.pem",
+      "sha256": "0c502e52627ff7de972c7e9e065640103b4589b4e2d23d3fcf21bef1e3c8c67c"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+# Set your real hostname and email before using this example.
+listen = "0.0.0.0:443"
+admin_listen = "127.0.0.1:3839"
+state_dir = "../.harbor"
+
+[tls]
+mode = "acme"
+domains = ["shiny.example.org"]
+email = "admin@example.org"
+# false uses staging certificates, which browsers do NOT trust.
+# Set true only after testing public DNS and inbound TLS-ALPN on port 443.
+production = false
+
+[analytics]
+retention_days = 30
+# country_database = "GeoLite2-Country.mmdb"
+
+[[apps]]
+name = "hello"
+mount = "/hello"
+path = "hello"
+max_workers = 8
+sessions_per_worker = 20

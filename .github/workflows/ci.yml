@@ -1,0 +1,169 @@
+name: Build and test
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+env:
+  PYTHONUTF8: '1'
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+jobs:
+  resolve:
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.matrix.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        shell: bash
+        run: rustup update stable --no-self-update
+      - name: Resolve once for every platform
+        shell: bash
+        run: |
+          if [ ! -f Cargo.lock ]; then cargo generate-lockfile; fi
+          cargo metadata --locked --format-version 1 > /dev/null
+      - id: matrix
+        run: echo "value=$(python3 -c 'import json; print(json.dumps(json.load(open("tools/targets.json"))))')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: resolved-lockfile
+          path: Cargo.lock
+          if-no-files-found: error
+  build:
+    needs: resolve
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.resolve.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: resolved-lockfile
+      - name: Configure native toolchain
+        run: |
+          rustup update stable --no-self-update
+          rustup target add ${{ matrix.target }}
+          rustup component add rustfmt clippy
+      - name: musl prerequisites
+        if: matrix.musl
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          echo "CC=musl-gcc" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr '[:lower:]-' '[:upper:]_')_LINKER=musl-gcc" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install gateway test dependencies
+        run: python -m pip install -r tests/requirements-gateway.txt
+      - name: Parse and format Rust; inspect lints
+        run: |
+          cargo fmt --all --check
+          cargo clippy --locked --all-targets --target ${{ matrix.target }} -- -D warnings
+      - name: Rust unit tests
+        run: cargo test --locked --all-targets --target ${{ matrix.target }}
+      - name: Repository and JavaScript checks
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
+          node --check assets/app.js
+          node --check assets/shinyharbor-client.js
+      - name: Build release executable
+        run: cargo build --locked --release --target ${{ matrix.target }}
+      - name: Exercise CLI and real streaming/WebSocket gateway
+        run: |
+          python tests/gateway.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/configuration.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/access_logs.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/keepalive.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+      - name: Package with actual lockfile and retained license texts
+        run: python tools/package.py --target ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+  browser:
+    needs: resolve
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-22.04, windows-2022, macos-15]
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: resolved-lockfile
+      - run: rustup update stable --no-self-update
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: '3.12.1'
+      - name: Install current CRAN Shiny
+        shell: Rscript {0}
+        run: |
+          install.packages(c('shiny', 'rmarkdown', 'testthat'), repos = 'https://cloud.r-project.org')
+          cat('Reference package:', as.character(packageVersion('shiny')), '\n')
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          cargo build --locked
+          python -m pip install -r tests/requirements.txt
+          python -m playwright install --with-deps chromium
+          Rscript --vanilla tests/runtime.R
+          python tests/launcher.py
+          python tests/dashboard.py
+          python tests/shiny_browser.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/native_compat.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/transports.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/multiworker.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/reconnect.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/auth_proxy.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/rmarkdown.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/resource_limits.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/reload.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/http_compression.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/unicode_paths.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/worker_logs.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/templates.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/page_settings.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/live_dashboard.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+      - name: Unix reload signals
+        if: runner.os != 'Windows'
+        run: |
+          python tests/reload_signal.py --binary target/debug/shinyharbor
+          python tests/unix_socket.py --binary target/debug/shinyharbor
+      - name: Unix worker credentials and log ownership
+        if: runner.os == 'Linux'
+        run: |
+          sudo --preserve-env=PATH,R_HOME,R_LIBS_USER,R_LIBS_SITE "$(command -v python)" tests/unix_identity.py --binary target/debug/shinyharbor --account "$(id -un)" --sockets
+          sudo --preserve-env=PATH,R_HOME,R_LIBS_USER,R_LIBS_SITE "$(command -v python)" tests/worker_logs.py --binary target/debug/shinyharbor --account "$(id -un)"
+      - name: Exercise real local ACME issuance and renewal
+        run: |
+          python tools/fetch_pebble.py
+          python tests/tls.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }} --pebble .build/pebble-ci/pebble${{ runner.os == 'Windows' && '.exe' || '' }} --certificates .build/pebble-ci/certs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-test-evidence-${{ matrix.runner }}
+          path: test-results/
+          if-no-files-found: warn

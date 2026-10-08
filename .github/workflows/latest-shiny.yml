@@ -1,0 +1,12 @@
+name: Latest Shiny canary
+on:
+  schedule:
+    - cron: '19 6 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  canary:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read

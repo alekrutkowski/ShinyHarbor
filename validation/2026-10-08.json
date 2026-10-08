@@ -1,0 +1,514 @@
+{
+  "date": "2026-10-08",
+  "certifies_full_compatibility": false,
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "reference_shiny_server": "1.5.23.1030",
+  "shiny_package": "1.14.0",
+  "rust_tests": {
+    "windows_x64": 29,
+    "linux_x64": 31
+  },
+  "clippy": "Windows and Linux all-targets -D warnings passed",
+  "python_tests": 18,
+  "reports": {
+    "transports": {
+      "report": {
+        "suite": "real-shiny-transports",
+        "passed": true,
+        "checks": {
+          "websocket": {
+            "reactivity": true,
+            "unicode": true,
+            "upload": true,
+            "download": true,
+            "dynamic-ui": true
+          },
+          "xhr-streaming": {
+            "reactivity": true,
+            "unicode": true,
+            "upload": true,
+            "download": true,
+            "dynamic-ui": true
+          },
+          "eventsource": {
+            "reactivity": true,
+            "unicode": true,
+            "upload": true,
+            "download": true,
+            "dynamic-ui": true
+          },
+          "htmlfile": {
+            "reactivity": true,
+            "unicode": true,
+            "upload": true,
+            "download": true,
+            "dynamic-ui": true
+          },
+          "xhr-polling": {
+            "reactivity": true,
+            "unicode": true,
+            "upload": true,
+            "download": true,
+            "dynamic-ui": true
+          },
+          "iframe-xhr-polling": {
+            "reactivity": true,
+            "unicode": true,
+            "upload": true,
+            "download": true,
+            "dynamic-ui": true
+          },
+          "jsonp-polling": {
+            "reactivity": true,
+            "unicode": true,
+            "upload": true,
+            "download": true,
+            "dynamic-ui": true
+          },
+          "protocol-security": true
+        },
+        "certifies_full_compatibility": false
+      },
+      "sha256": "3e76e29120958a60dab05e78c0f9ead864b5371474229e51f47ea56e4e8cf7fd"
+    },
+    "reconnect": {
+      "report": {
+        "suite": "reconnect",
+        "passed": true,
+        "checks": [
+          "same-R-session-after-network-loss",
+          "offline-input-delivered",
+          "existing-dynamic-state-preserved",
+          "numbered-messages",
+          "replay-unacknowledged-output",
+          "multiplex-independent-sessions",
+          "duplicate-open-not-repeated",
+          "unknown-session-rejected",
+          "expired-session-rejected"
+        ],
+        "reference": "http://127.0.0.1:48381/fixture/",
+        "certifies_full_compatibility": false
+      },
+      "sha256": "26c74a3625e834ded8973aef01a0f9a6a5f6c49a3a3c7f8f124fe07c16289ed9"
+    },
+    "multiworker": {
+      "report": {
+        "suite": "multiworker-tabs",
+        "passed": true,
+        "checks": [
+          "shared-cookie-tabs",
+          "distinct-worker-pids",
+          "session-download-routing",
+          "session-upload-routing"
+        ]
+      },
+      "sha256": "9c41ab4ed780c137e89f9f9082ad10eed7eb37ea3793c0c4790aab03f621c8a2"
+    },
+    "native-compat": {
+      "report": {
+        "suite": "native-compatibility-cases",
+        "passed": true,
+        "checks": [
+          "legacy-configuration",
+          "static-range",
+          "static-head",
+          "static-cache-validator",
+          "source-and-hidden-files-denied",
+          "redirect-query",
+          "dynamic-nested-discovery",
+          "frame-options",
+          "anonymous-identity",
+          "server-bookmark-save",
+          "new-worker-after-restart",
+          "bookmark-restored-across-workers",
+          "existing-session-survives-restart"
+        ],
+        "certifies_full_compatibility": false
+      },
+      "sha256": "d6c69f3999b8325c7599aadde40b8777c4c2f6c3bb9b943baa90a704130d3f2e"
+    },
+    "configuration": {
+      "report": {
+        "suite": "legacy-virtual-hosts",
+        "passed": true,
+        "checks": [
+          "multiple-listeners",
+          "host-routing",
+          "host-isolation",
+          "case-insensitive-host",
+          "host-port-ignored",
+          "unnamed-host-fallback"
+        ]
+      },
+      "sha256": "85e5b5ec6741c0f9d242bd992d54d217aadf32d378d2a1052e62f1aaa1825f6d"
+    },
+    "unix-identity": {
+      "report": {
+        "suite": "unix-identity",
+        "passed": true,
+        "checks": [
+          "named-user-fallback",
+          "worker-uid",
+          "supplementary-groups",
+          "private-gateway-state",
+          "user-owned-bookmarks"
+        ],
+        "unix_domain_sockets": true
+      },
+      "sha256": "aaed5eaef48f7143a8101a2aa3ca128101616354446fdac7b4810af3e16ab04f"
+    },
+    "live-dashboard": {
+      "report": {
+        "suite": "dashboard-real-R-and-SQLite",
+        "passed": true,
+        "checks": [
+          "real-page-count",
+          "real-live-session-count",
+          "application-label",
+          "authenticated-dashboard",
+          "lock-clears-access",
+          "no-persistent-browser-token"
+        ]
+      },
+      "sha256": "97422ee3fa09e6e3b2cc14daf96b891c98a865b214a1679798d1b243e99dba28"
+    },
+    "tls": {
+      "report": {
+        "suite": "local-ACME-and-TLS",
+        "passed": true,
+        "checks": [
+          "ACME-TLS-ALPN-01-validation",
+          "trusted-issued-certificate",
+          "TLSv1_2",
+          "TLSv1_3",
+          "redirect-preserves-path-query",
+          "redirect-rejects-unconfigured-host",
+          "certificate-cache-survives-restart",
+          "automatic-renewal-without-restart",
+          "PEM-HTTPS",
+          "valid-PEM-reloads-without-server-restart",
+          "invalid-PEM-retains-last-good-certificate",
+          "legacy-ssl-directive-serves-trusted-HTTPS"
+        ],
+        "public_CA_tested": false,
+        "certificate_verification_disabled": false
+      },
+      "sha256": "94af6621eb84836c5649efebb369d552dc0751fa2db1eff763bb202c90eae8c7"
+    },
+    "load": {
+      "report": {
+        "suite": "gateway-load-probe",
+        "passed": true,
+        "platform": "Windows-11-10.0.26200-SP0",
+        "binary": "target\\release\\shinyharbor.exe",
+        "requests": 10000,
+        "concurrency": 32,
+        "body_bytes": 1024,
+        "analytics_enabled": true,
+        "errors": 0,
+        "elapsed_seconds": 3.584,
+        "requests_per_second": 2790.2,
+        "p50_ms": 11.328,
+        "p95_ms": 11.844,
+        "peak_observed_RSS_MiB": 16.26,
+        "scope": "Loopback 1 KiB responses via Python aiohttp backend/client; does not measure R application capacity or isolated gateway throughput."
+      },
+      "sha256": "b76471bb1666abe48ad9520f5facab0c2462bdbc9b9d48640203789f40924609"
+    },
+    "gateway": {
+      "report": {
+        "suite": "gateway-integration",
+        "checks": [
+          "raw-path-query",
+          "forwarded-ip-trust",
+          "identity-spoofing",
+          "connection-headers",
+          "multiple-set-cookie",
+          "signed-session-affinity",
+          "chunked-upload-integrity",
+          "streamed-response-integrity",
+          "websocket-text",
+          "websocket-binary",
+          "backend-status-preserved",
+          "admin-token-required",
+          "real-analytics",
+          "dashboard-security-headers"
+        ],
+        "count": 14,
+        "passed": true
+      },
+      "sha256": "ed90df135ad4ae06274b97bf8ee2d1a199e72daccc2c5d2f41567a8fbb991780"
+    },
+    "auth-proxy": {
+      "report": {
+        "checks": [
+          "trusted-authorization-and-header-spoofing",
+          "trusted-R-session-identity-and-groups",
+          "trusted-anonymous-public-access",
+          "multiplex-cannot-bypass-app-authorization",
+          "changed-groups-cannot-resume-existing-privileges",
+          "app-overrides-change-user-and-group-policy",
+          "untrusted-authorization-and-header-spoofing",
+          "legacy-authorization-and-header-spoofing",
+          "legacy-R-session-identity-and-groups",
+          "legacy-anonymous-public-access"
+        ]
+      },
+      "sha256": "e3ab6cec0980bd9f87f0b0534e47213f886b5857b7a47176f9865f1c1f7c236a"
+    },
+    "rmarkdown": {
+      "report": {
+        "checks": [
+          "/docs/index/:reactive-document-and-relative-resources",
+          "/docs/report.Rmd/:reactive-document-and-relative-resources",
+          "/direct/:reactive-document-and-relative-resources"
+        ]
+      },
+      "sha256": "415d8371b37630d10d8cffaab8dcb62983de7af1cf44265bcb465cf8d5229f46"
+    },
+    "resource-limits": {
+      "report": {
+        "checks": [
+          "load-factor-spawns-second-worker",
+          "maximum-worker-count",
+          "overload-rejected",
+          "closed-session-restores-capacity",
+          "robust-idle-session-closed-despite-heartbeats",
+          "application-data-resets-session-idle-timer",
+          "plain-SockJS-idle-session-closed"
+        ]
+      },
+      "sha256": "4bf88ecc87ab7dff7f480bae91f08f3e99950ceeff20e7500aa71d79890d2275"
+    },
+    "reload": {
+      "report": {
+        "checks": [
+          "reload-requires-admin-token",
+          "added-route-and-unchanged-worker-reuse",
+          "CLI-reload",
+          "changed-worker-generation",
+          "live-session-and-transfer-continuity",
+          "invalid-and-listener-change-reloads-retain-working-configuration",
+          "removed-route-denied-on-existing-multiplex-transport"
+        ]
+      },
+      "sha256": "fcd8c356051cfb6f3b7c7651537c4d56bbb4b7d8bc9cad430ac6477733882188"
+    },
+    "reload-signal": {
+      "report": {
+        "checks": [
+          "SIGHUP-route-reload",
+          "invalid-SIGHUP-keeps-working-configuration"
+        ]
+      },
+      "sha256": "5b268e72ca268c5123a499eba8113a05a693ce7593207b54e0d873c05ada4773"
+    },
+    "compression": {
+      "report": {
+        "checks": [
+          "gzip-negotiation-and-content",
+          "deflate-negotiation-and-content",
+          "ranges-and-small-body-True",
+          "gzip-disabled",
+          "deflate-disabled",
+          "ranges-and-small-body-False"
+        ]
+      },
+      "sha256": "8e4e567b10a76fad3d813e8a08ff0c91801bf8c42f24422ff007197cb7b4654f"
+    },
+    "unicode-paths": {
+      "report": {
+        "checks": [
+          "directory-labels-and-encoded-links",
+          "/apps/sales%20report:reactivity-upload-download",
+          "/apps/Za%C5%BC%C3%B3%C5%82%C4%87%20%E6%97%A5%E6%9C%AC%E8%AA%9E:reactivity-upload-download",
+          "/apps/a%20%26%20b:reactivity-upload-download",
+          "/Raport%20%E6%97%A5%E6%9C%AC%E8%AA%9E:reactivity-upload-download",
+          "equivalent-escaping-static-paths-and-traversal-denial"
+        ]
+      },
+      "sha256": "f5f872c9c0e66a383e462a0a71135b8d0d57a11de08996420c2699388e7d3d67"
+    },
+    "worker-logs": {
+      "report": {
+        "checks": [
+          "preserve=False:exit=0:retention-and-relay",
+          "preserve=True:exit=0:retention-and-relay",
+          "preserve=False:exit=3:retention-and-relay"
+        ]
+      },
+      "sha256": "1103a0f4cad9836a06e71b57b1c519d12a7537334d8060e8f6d970aec4466992"
+    },
+    "templates": {
+      "report": {
+        "checks": [
+          "inherited-directory-template",
+          "app-directory-file-context",
+          "HTML-escaping-and-hidden-logs",
+          "access-log-configuration-and-state-never-served-as-static-files",
+          "error-template-preserves-status-and-HEAD",
+          "specific-error-template-overrides-fallback",
+          "template-file-reloads-without-service-restart",
+          "invalid-template-rejected-by-config-check"
+        ]
+      },
+      "sha256": "8f3af091d30036a0b19596d0819e887cc397a383db0163e5697833a6f602ae43"
+    },
+    "access-logs": {
+      "report": {
+        "checks": [
+          "legacy-default-format-and-append-file",
+          "peer-address-password-exclusion-and-escaping",
+          "custom-header-date-and-duration-tokens",
+          "streaming-not-buffered-and-logged-after-completion",
+          "reload-reopens-rotated-log-and-errors-are-recorded",
+          "bounded-writer-loss-metric",
+          "named-formats-and-invalid-token-validation"
+        ]
+      },
+      "sha256": "3d7e19e501da2d1dc9dbb5ae402af01be0a00f8ac0a209b8e0fa9ebfd708a0e4"
+    },
+    "keepalive": {
+      "report": {
+        "checks": [
+          "reused-connection-survives-continued-traffic",
+          "idle-connection-closes-at-deadline",
+          "stalled-incomplete-request-closes",
+          "disabled-deadline-allows-persistent-requests",
+          "zero-disables-idle-deadline"
+        ]
+      },
+      "sha256": "26244071ab85b263e4af6e7d47e434c282851ec63a63d049c2487682243b6304"
+    },
+    "unix-socket": {
+      "report": {
+        "checks": [
+          "legacy-socket-directory-real-R-HTTP",
+          "private-domain-socket-and-worker-directory",
+          "direct-socket-request-requires-worker-secret",
+          "native-upgraded-HTTP-reactivity-over-domain-socket",
+          "SockJS-reactivity-over-domain-socket",
+          "worker-sockets-cleaned-on-shutdown"
+        ]
+      },
+      "sha256": "9cb1a09863f8cda59d28ed2d440e34aaa1e91040c1b9f27f8ce94d06583ce6f3"
+    },
+    "user-logs": {
+      "report": {
+        "checks": [
+          "preserve=False:exit=0:retention-and-relay",
+          "preserve=True:exit=0:retention-and-relay",
+          "worker-account-rotates-bounded-log-files",
+          "preserve=False:exit=3:retention-and-relay",
+          "Unix-log-mode-applied-regardless-of-umask",
+          "worker-account-creates-owns-and-deletes-logs-and-directory"
+        ]
+      },
+      "sha256": "81019903e0ec379cbbb0111fb6402ec5331b0e44f4d9432a4b43acc7826cd25f"
+    },
+    "page-settings": {
+      "report": {
+        "checks": [
+          "inherited-allow-from-header",
+          "inherited-Google-Analytics-markup",
+          "location-overrides-disable-tracking-and-framing-header",
+          "script-injection-rejected-in-configuration"
+        ],
+        "external_analytics_contacted": false
+      },
+      "sha256": "b8d12615c6a0d756dfb3dd8921e5cd99ee62262570859f306c1ffad5cf420200"
+    }
+  },
+  "source_sha256": {
+    "src/access_log.rs": "d8532d7ee6e4780e52cbf11581b5cee04fb09da24133691b119bd2a38bd2f897",
+    "src/activity.rs": "15030639c4e5968d78d797c41787a3b75121453a797de8ee4d438a494f60f45c",
+    "src/analytics.rs": "e8a5ca14546de639d5c535f56ce622fed6b157b88edf089efe7c499719718a15",
+    "src/auth.rs": "8c8877f5ebabf9fdee5970996ac6605f5d53fb5bd2ec36c81684f10daba12118",
+    "src/backend.rs": "21eb5cbdad12b98025af051c6a9f8b3d80077b3f123ead52b88aa40c6a098017",
+    "src/config.rs": "c8c1752c58d7fa7c1b350a8df720b56bab5f77d77cad2981c5c3efa59cdb7dd7",
+    "src/connection.rs": "e917385b3a69c62691ea8cfa58d2a45211c3bf5ff42b497b88605ed74abb668d",
+    "src/identity.rs": "1a733b35c6b3fd819ad63a59034eaf7d33e667cc8982eb52dec9f65044528cb0",
+    "src/legacy.rs": "86958012f6648f10c48a792d046f5a8ed47e7b3cdd152cd4dfb8a81cae186291",
+    "src/lib.rs": "d4363a8af5c7b069d3ff1f556b675f53b1c1c13c57788108d77549f54e5148bf",
+    "src/main.rs": "e9d6ffa17e8af4ab74c36aab8afd3ce2d40923408284af237ca706a85a3af080",
+    "src/pool.rs": "dfe76d9f5c13704853e82564f8544dd439381133ff54d7afbd3c315536d5f911",
+    "src/proxy.rs": "83365e2e0d394129d45ab3390ae58c9b505e69be390fb1f64ba011653c3777e9",
+    "src/reload.rs": "4ff6b8e4dae48c9f57815f50910ef55623ea2a34ab6eb32de9b06243da208ebe",
+    "src/security.rs": "b95878538d8c65b2dc1ca9ee0f23a4ad0ad8aa707785ab080b4aa92bb222e5f8",
+    "src/server.rs": "0d3949a074e7c9691ce1fabf92597129021dbf1961b02ddae2e89d3a0268b5c7",
+    "src/site.rs": "f57e37bedda9fdadd567ec74f58eca990631821c206c800a958986e79f33e645",
+    "src/sockjs.rs": "2645f1c90b0159e531a18ad4c41fd3559c02c976161fd1ff2ba77e165147267f",
+    "src/templates.rs": "312505f25542bf15d490da591d80f0f22c00d8d01dfbb2a485562d99a09f19b5",
+    "src/tls.rs": "3c9e4c3e0ca288ac333889ad4835bb7243de75b03189438095e28bcd4f1de6e4",
+    "src/user_log.rs": "b23165a8678ef6c01d77d6b18646eb16b40370f451121eefad8d2094ba4fab19",
+    "src/sockjs/reconnect.rs": "8495f63e0f387576b02f52d84dd57f4f41a3bad34d7bf069fd9bcc30eb1d6864",
+    "r/bootstrap.R": "989f1aca1cd535eb569d6559c4f5bed4b538d446096ea7ba4a609da456eebfae",
+    "r/runtime.R": "1d3abb55f949ee3b6a5f7775ddf2e5acf042e71bdaa01dda54511ef983d1bf0c",
+    "assets/app.js": "e76f09c845758226325a370f440eae89475e50fb7c37f6dae5112600c251b8d8",
+    "assets/index.html": "03dc6f33647ee059004f1ca8f0b87926af74cdf5f113b1fdbb3a2a9f7f24ac9a",
+    "assets/shinyharbor-client.js": "2fa03feef9f714cfb9a76c165fca8edfe4843cf11c6f6c9c08d636949e942d0d",
+    "assets/style.css": "356436895259f7d562fc66bc488639ad3def4a42822baa9bcde1036f4cd9246f",
+    "assets/licenses/Apache-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "assets/licenses/asn1-rs-impl-0.2.0-LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "assets/licenses/asn1-rs-impl-0.2.0-LICENSE-MIT": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513",
+    "assets/licenses/manifest.json": "0c42221331ee1dd0c1504d100d84d52304b13cbbbcdb15e6c20edc684eaec1e8",
+    "assets/licenses/valuable-0.1.1-LICENSE": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+    "assets/licenses/winapi-i686-pc-windows-gnu-0.4.0-LICENSE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "assets/licenses/winapi-i686-pc-windows-gnu-0.4.0-LICENSE-MIT": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "assets/licenses/winapi-x86_64-pc-windows-gnu-0.4.0-LICENSE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "assets/licenses/winapi-x86_64-pc-windows-gnu-0.4.0-LICENSE-MIT": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "assets/licenses/yasna-0.5.2-LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "assets/licenses/yasna-0.5.2-LICENSE-MIT": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16",
+    "assets/vendor/sockjs-1.6.1.min.js": "1e0f37d073666196b0848fd7d80d525268d5adf47ea1ec459632f05bbf8e1f54",
+    "assets/vendor/sockjs-LICENSE": "8ed26c0901535830e357f6ab802d0e6c4ff889d79c00dcebd4251eceecacd57e",
+    "tests/access_logs.py": "7ffdbdca2671cc14e2ceccc89e230f8d2ab6ee7bb2130f9c2f57b1199249bf75",
+    "tests/auth_proxy.py": "b1272bce7ccffa73b10a8dac8389ac16366bf7a1349c569ace860122d3c0a788",
+    "tests/configuration.py": "38879516f1f17d84b83fe6ef70c083f5110e17e9df0acb5efb80fc1fbb87f80c",
+    "tests/dashboard.py": "aedd0a62426ffa59d53847213ec6a2871cfbccc2eb886d6fd8c0be8c1a486101",
+    "tests/gateway.py": "7fea7d6b02b8ce218865aeaa4f85ff4967e77cc1a581d6cdc0ee984d5fd8ebb6",
+    "tests/http_compression.py": "862220ebc05639fb67a7bfd96ed8d776ff26346da434c74f3523b81c8c382ae3",
+    "tests/keepalive.py": "2e9d4065d6474efa53650073df115a652c39fe10a22b0b53bdf305e5afdd8d81",
+    "tests/launcher.py": "08a7a94c1dcad9edd8dc60e950a1119a6a63b0e2ba311d034f7b000cf0704f7e",
+    "tests/live_dashboard.py": "fbb9a8733b36675863a90a52a298089b89e9bd6e519525b334df331954823494",
+    "tests/load.py": "777049ad0f1b4f67c5be1dda072478355987ef42b2727047d2e973af40624c79",
+    "tests/multiworker.py": "ea0b8e139eec7c399af818dd5aa887154ebf5acc1e8e910a91b5c0a23809751e",
+    "tests/native_compat.py": "c63823b613ed4e6c5343104415d8770e237729f097ab1f66087ccb2cc28453e9",
+    "tests/page_settings.py": "b5def4f3e45efb76d0bad9d9309fd627269090640cac267ae9d8e4f8c81c5033",
+    "tests/reconnect.py": "0c46d1b3819bb00133c5e9230dd86ca5c5d9475a5cd7f4fa8ab13778cf9c253b",
+    "tests/reload.py": "a0a27ecd959c825ec0883418698a19e5e5cc202f93cbc8056b0365e7f6c7178f",
+    "tests/reload_signal.py": "6c9890833b3565eb934f93b6b54e384d3139ff20faeb4570a920c946788e94d8",
+    "tests/requirements-gateway.txt": "4e52c115e2a271feaecc8b79147555f471c07ebdda3d677e49c0e51a24af483f",
+    "tests/requirements.txt": "f25a55a2eb8b0e494b3c37d629a5044a9ed9ea69ee79efc3132f5ed8d7dd203e",
+    "tests/resource_limits.py": "88f33d00c33ea1cbf9cb91b1598910b3fd8acccfa44944d25fb6834f2e914ee2",
+    "tests/rmarkdown.py": "4a6d10f93d4c4863632dd41db25a70e75f6530888493943d782a2da0cf91d6c3",
+    "tests/runtime.R": "38d4704df38ddaa7aed54668645ca3e832d7ff1416dde7e402d11391ba8237e2",
+    "tests/shiny_browser.py": "a8431d10ed9604c1d35cf1713e18f0a0e0d414f286ebaf3fd5d65f4b802c681f",
+    "tests/templates.py": "c0df64ceb1763431c4fe53f870c98975e49106ef24c4b4f3916a5f1757771701",
+    "tests/test_sql.py": "be921a54b450f9c94cbf7b9ee62561c9707496c4ad1bc293295296de40c04f11",
+    "tests/test_structure.py": "790c357d5a09f5e8999690b3ac3e8254d473bde5c4a762dfa06072d8b4989dea",
+    "tests/tls.py": "a32c6dd6a30a70d839ad409f96fa67d5fb195fa2ad7808ab348b079baa8992b4",
+    "tests/transports.py": "e198b60a024c4fb8dd6985056b51fdffe87297c4addff989766529fc2fa03934",
+    "tests/unicode_paths.py": "040b321a48fcdc2a232d0e01f9ffdeb26f040cbeec9d3730cac590d65c751d02",
+    "tests/unix_identity.py": "4cbe212fe3299c8eb392eddcb5164ee5ef4014ec288c99fd5b576c2b6aa3a15b",
+    "tests/unix_socket.py": "5215631385ad40a150898ac44a84d1b5cbd7f581455bf240adc30c61dd10b84f",
+    "tests/worker_logs.py": "d4968188b1c7d1a72ab03104d643685479f84e2e7fec47bf46a75f317feb066e",
+    "tools/differential_smoke.py": "382eb829001a4126f343bc97f6c753141ef78a78f342daee01fdc85c9b2d144f",
+    "tools/fetch_pebble.py": "e4948911a51b9f99d0c84a0cef5608eb25cc66e70d2a4763c4c4c13b8fce25b6",
+    "tools/package.py": "2de5c083787990517307cdd20c13477eebaf8fb8568565673607812f21faa261",
+    "tools/pebble-assets.json": "32e48c2109c6518b700c70646617ba8ba03260ede977311879acf04286f1e293",
+    "tools/release_files.py": "465efc2eb1c3c5b262ff9a4c2d23016a38277c7e4501a4bc38872f913b1352a7",
+    "tools/release_gate.py": "fd94ed684d9a13d4ed7b03b78316b26f96784784aa87048decab7765f311b172",
+    "tools/targets.json": "981f5ba2c11798911fc9adb5af4d84fb4bcedc4c844aebe04ac0f06b5892b6e9",
+    ".github/dependabot.yml": "1dc474c6199029357b5fe75e54c00b7e20d49ccfed57b3fcfb5f44a2f6e82788",
+    ".github/workflows/ci.yml": "c1fb215bb79aa9464b305c8a3f3ec57400b524e8d8ed72c9de563c0ddd7ee9bf",
+    ".github/workflows/latest-shiny.yml": "0c695606e5aca45ea96694a162e51048c5ffabd1ecf5de3bd80e580a47da776f",
+    ".github/workflows/release.yml": "9d8b670f4409d5900bda67f45e955a6a4417e96c0f2b3947439571868c2f5232",
+    "packaging/Dockerfile": "e42f7f49bcd99fc97eff77bdc00d2f0c9fe01bdbc7b392ff3887469fb8aadb07",
+    "packaging/install-service.ps1": "96e6453da30ce6f381bde082787f8825c38e42349e1603c924fe52b440cd50fd",
+    "packaging/install.ps1": "e4d4b546d807b01d142b58d6865c19150fe8d0ce15c9a7dde13e964ffd2e016a",
+    "packaging/install.sh": "e03f78c3931bb27e79761081410cde3eaa600d1c06fff01facf9bf28c871c1b0",
+    "packaging/shinyharbor.service": "c72d0f7c321af51e77cc11fb8149c83216172d194cf54221d3b704cd5add0831",
+    "Cargo.toml": "e8d8b645d5e831a92fce0baabfceed71685e952bb8a5c1d8228fb6518296b2dd",
+    "Cargo.lock": "f6a811d887b581aeb6c45f302bcf24100f0afd02f8dc8e6f358786c11204037d"
+  }
+}

@@ -1,0 +1,11 @@
+# The external TLS proxy must be the only machine that can reach this listener.
+listen = "127.0.0.1:3838"
+admin_listen = "127.0.0.1:3839"
+state_dir = "../.harbor"
+public_origin = "https://shiny.example.org"
+trusted_proxies = ["127.0.0.1/32", "::1/128"]
+
+[[apps]]
+name = "hello"
+mount = "/hello"
+path = "hello"
