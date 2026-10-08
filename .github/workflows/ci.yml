@@ -29,7 +29,7 @@ jobs:
           cargo metadata --locked --format-version 1 > /dev/null
       - id: matrix
         run: echo "value=$(python3 -c 'import json; print(json.dumps(json.load(open("tools/targets.json"))))')" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: resolved-lockfile
           path: Cargo.lock
@@ -89,7 +89,7 @@ jobs:
           python tests/keepalive.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
       - name: Package with actual lockfile and retained license texts
         run: python tools/package.py --target ${{ matrix.target }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: release-${{ matrix.target }}
           path: dist/*
@@ -161,7 +161,7 @@ jobs:
         run: |
           python tools/fetch_pebble.py
           python tests/tls.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }} --pebble .build/pebble-ci/pebble${{ runner.os == 'Windows' && '.exe' || '' }} --certificates .build/pebble-ci/certs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: browser-test-evidence-${{ matrix.runner }}
