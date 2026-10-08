@@ -46,7 +46,7 @@ tokio-tungstenite = "0.29"
 tempfile = "3.22"
 toml = "0.9"
 tower = { version = "0.5", features = ["util"] }
-tower-http = { version = "0.6", features = ["fs", "compression-gzip", "compression-deflate"] }
+tower-http = { version = "0.7", features = ["fs", "compression-gzip", "compression-deflate"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
 url = "2.5"
