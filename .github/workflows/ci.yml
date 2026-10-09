@@ -62,7 +62,7 @@ jobs:
           # Rust supplies the static musl CRT. musl-gcc's linker specs break
           # static PIE startup on x86_64 (rust-lang/rust#95926).
           echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr '[:lower:]-' '[:upper:]_')_LINKER=cc" >> "$GITHUB_ENV"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - uses: actions/setup-node@v4
@@ -130,7 +130,7 @@ jobs:
           install.packages(c('shiny', 'rmarkdown', 'testthat'), repos = 'https://cloud.r-project.org', Ncpus = 2)
           stopifnot(all(vapply(c('shiny', 'rmarkdown', 'testthat'), requireNamespace, logical(1), quietly = TRUE)))
           cat('Reference package:', as.character(packageVersion('shiny')), '\n')
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: |
