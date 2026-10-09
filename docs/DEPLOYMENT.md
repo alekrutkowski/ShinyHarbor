@@ -5,6 +5,9 @@ certified production deployment. First read SECURITY.md and COMPATIBILITY.md.
 
 ## Install a built artifact
 
+For native setup wizards and Linux packages, follow [Installation](INSTALLATION.md).
+It covers custom data drives, upgrades, background services and removal.
+
 A successful GitHub prerelease contains one archive per target, per-archive SHA-256
 files and SHA256SUMS. Extract the archive matching the machine. The only gateway
 runtime executable is `shinyharbor` or `shinyharbor.exe`; R and app packages are
@@ -15,19 +18,21 @@ any redistributed archive.
 archive after checking an explicitly supplied digest. They do not fetch a mutable
 “latest” URL, run arbitrary remote shell code, elevate privileges, or edit PATH.
 Digest verification is meaningful only when the expected digest is obtained from
-a trusted release. There is no signed installer/MSI/package-manager distribution yet.
+a trusted release. Native installer files are currently unsigned, and no hosted
+APT/DNF repository is published.
 
 The source archive contains no prebuilt binaries. For a local build use `cargo build
---release` and a C compiler. CI-created `Cargo.lock` should be reviewed and committed
-before reproducibility claims are made. glibc build/runtime floors depend on the
+--release` and a C compiler. Builds use the committed `Cargo.lock`; reproducibility
+also requires pinning the toolchain and system dependencies. glibc build/runtime floors depend on the
 selected Ubuntu runner; test the actual oldest intended distribution. musl archives
 avoid a glibc dependency but do not eliminate R's own dynamic library requirements.
 
 ## Linux service
 
-Create a dedicated `shinyharbor` system user/group. Put read-only apps under
+Native Linux packages perform service setup automatically. For manual installation,
+create a dedicated `shinyharbor` system user/group. Put read-only apps under
 `/srv/shinyharbor/apps`, config at `/etc/shinyharbor/harbor.toml`, the executable at
-`/usr/local/bin/shinyharbor`, and set `state_dir = "/var/lib/shinyharbor"` in config.
+`/usr/bin/shinyharbor`, and set `state_dir = "/var/lib/shinyharbor"` in config.
 Install R and app packages where that service account can read them. Copy the unit:
 
 ```sh
@@ -56,6 +61,9 @@ Then open the local admin URL and supply the token. HTTPS for apps does not impl
 that the separate dashboard listener is public or TLS-enabled.
 
 ## Windows
+
+The setup wizard can configure the service and its private R library. The
+instructions below describe the separate manual service helper.
 
 Install R and packages for the intended service account or a shared read-only R
 library. Use an absolute TOML literal-string `rscript` path when a service cannot
@@ -98,7 +106,8 @@ binding permission required for 443 and preserve the ACME cache volume.
 
 ## macOS and other platforms
 
-The matrix provides Intel and ARM64 macOS binary jobs. Interactive deployment uses
-the same CLI. No launchd installer or notarization is provided. Other architectures
+The matrix provides Intel and ARM64 macOS binary and PKG jobs, with per-user
+LaunchAgent shortcuts. macOS installer execution remains pending hosted CI;
+notarization is not configured. Interactive deployment uses the same CLI. Other architectures
 and operating systems are outside the initial matrix and must not be advertised as
 supported until their own build/runtime acceptance work exists.

@@ -111,6 +111,7 @@ def dependencies(meta: dict, destination: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", required=True)
+    parser.add_argument("--binary", type=Path, help="Use an executable from a custom Cargo target directory")
     parser.add_argument("--output", type=Path, default=ROOT / "dist")
     args = parser.parse_args()
     supported = {r["target"] for r in json.loads((ROOT / "tools/targets.json").read_text(encoding="utf-8"))["include"]}
@@ -118,7 +119,7 @@ def main() -> None:
         raise SystemExit("Target is not in tools/targets.json")
     version = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))["package"]["version"]
     binary_name = "shinyharbor.exe" if "windows" in args.target else "shinyharbor"
-    binary = ROOT / "target" / args.target / "release" / binary_name
+    binary = args.binary or ROOT / "target" / args.target / "release" / binary_name
     if not binary.is_file():
         raise SystemExit(f"Build artifact is missing: {binary}")
     args.output.mkdir(parents=True, exist_ok=True)
@@ -127,6 +128,8 @@ def main() -> None:
         folder = Path(temp) / stem
         folder.mkdir()
         shutil.copy2(binary, folder / binary_name)
+        shutil.copy2(ROOT / 'examples/init.toml', folder / 'harbor.toml')
+        shutil.copytree(ROOT / 'examples/hello', folder / 'apps/hello')
         for file in ["LICENSE", "README.md", "Cargo.lock", "ATTRIBUTIONS.md", "SECURITY.md", "VALIDATION.md"]:
             shutil.copy2(ROOT / file, folder / file)
         for directory in ["docs", "examples", "packaging", "conformance", "validation"]:
@@ -141,7 +144,12 @@ def main() -> None:
         else:
             archive = args.output / f"{stem}.tar.gz"
             with tarfile.open(archive, "w:gz") as target:
-                target.add(folder, arcname=stem)
+                def modes(member):
+                    member.uid = member.gid = 0
+                    member.uname = member.gname = 'root'
+                    member.mode = 0o755 if member.isdir() or member.name == f'{stem}/shinyharbor' or member.name.endswith('.sh') else 0o644
+                    return member
+                target.add(folder, arcname=stem, filter=modes)
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     archive.with_name(archive.name + ".sha256").write_text(f"{digest}  {archive.name}\n", encoding="ascii")
     print(archive)

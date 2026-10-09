@@ -25,6 +25,23 @@ current-source matrix remains unverified. See [VALIDATION](VALIDATION.md) for sc
 
 ## Start locally
 
+Native packaging supports Windows setup executables, Debian/Ubuntu DEBs,
+Fedora RPMs, Arch packages and macOS PKGs. Windows x64 and Linux x64 installers have
+been built locally; macOS and ARM installer builds await the hosted CI matrix.
+See [installation instructions](docs/INSTALLATION.md)
+for installation, upgrades, services and removal. A portable archive includes a
+configuration and example app: extract the whole archive, then run its executable
+from any working directory. R and Shiny are required to run R applications.
+
+To choose a data drive or prepare a standalone executable:
+
+```powershell
+shinyharbor setup --directory "Z:\ShinyHarborData" --install-shiny
+shinyharbor --config "Z:\ShinyHarborData\harbor.toml"
+```
+
+The following instructions are for building from source:
+
 Install R and the CRAN `shiny` package for the account that will run the service.
 Build with a current stable Rust toolchain, including a platform C compiler for
 bundled SQLite and cryptography. Windows requires the Microsoft C++ build tools.

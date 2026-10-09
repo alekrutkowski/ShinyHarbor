@@ -1,8 +1,8 @@
 # CI and release process
 
-The repository is prepared locally. No GitHub repository, Actions run or published
-release is created by this source delivery. Choose your own repository owner/name;
-there is no fabricated remote URL or upload credential.
+The repository is <https://github.com/alekrutkowski/ShinyHarbor>. Source changes
+have been pushed and initial CI jobs executed. Current hosted runs are blocked by
+account billing; see VALIDATION.md. No stable release has been published.
 
 ## First push
 
@@ -26,15 +26,12 @@ bookmark restoration and draining restarts.
 The weekly canary repeats these checks against the current CRAN package. It is a
 canary, not a commitment that every future upstream release already works.
 
-The initial source has no generated `Cargo.lock` because dependency resolution
-could not be executed during preparation. The workflow generates one when absent
-and distributes the exact same lockfile to all matrix jobs. Retrieve the
-`resolved-lockfile` artifact, review it, and commit it before treating builds as
-reproducible. Builds thereafter use `--locked`. Pin an exact Rust toolchain and
+The committed `Cargo.lock` is distributed to every matrix job. Builds use
+`--locked`. Pin an exact Rust toolchain and
 reviewed GitHub Action commit SHAs before a production/stable release.
 
-Rustfmt is applied during CI as a parse/format step; it does not currently enforce
-a clean formatting diff. Clippy checks async lock misuse, then unit tests and
+Rustfmt checks formatting without modifying source. Clippy treats warnings as
+errors, then unit tests and
 integration scripts execute. No matrix failure is suppressed. The published
 archive includes the actual lockfile, a conservative all-resolved-crates SBOM,
 Cargo metadata and retained license/copyright files. Missing crate license texts
@@ -51,7 +48,7 @@ git push origin v0.1.0-alpha.1
 ```
 
 The release workflow performs policy checks, invokes the full reusable CI, requires
-all eight archives, checks each sidecar digest, creates `SHA256SUMS`, and then
+all eight portable archives and ten native installers, checks each sidecar digest, creates `SHA256SUMS`, and then
 publishes a GitHub prerelease. A failed platform, browser job or packaging step
 prevents publication. Only the publish job receives `contents: write`; build jobs
 have read-only repository permissions. No `pull_request_target` workflow is used.
@@ -60,6 +57,21 @@ Forked PRs do not receive a publish token.
 Artifact digests detect corruption; there is no signing/notarization/attestation
 workflow in this alpha. Generated source archives from GitHub are separate from
 binary distributions and may not contain the resolved lockfile if it was not committed.
+
+## Native installers
+
+After `tools/package.py`, run `python tools/installers.py --target TARGET`.
+Windows uses the checksum-pinned compiler installed by `tools/fetch_inno.ps1`.
+Linux musl targets require `dpkg-deb`, `rpmbuild`, `tar` and `zstd`; they produce
+DEB, RPM and Arch packages. macOS uses Apple's `pkgbuild` and `productbuild`.
+Installer payloads include dependency notices and preserve user data on removal.
+
+The CI matrix exercises Windows install/upgrade/uninstall, inspects all Linux
+package formats, runs a Debian service lifecycle test, and installs/removes each
+macOS package. These jobs must actually pass before claiming platform validation.
+The release manifest rejects a missing installer as well as a missing archive.
+This repository does not yet publish APT/DNF repositories, Homebrew taps or AUR
+entries, and code-signing identities are not provisioned.
 
 ## Stable release
 

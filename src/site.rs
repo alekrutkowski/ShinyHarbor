@@ -19,6 +19,7 @@ pub enum Target {
 pub fn private_paths(config: &crate::config::Config, file: Option<&Path>) -> Vec<PathBuf> {
     let mut paths = vec![config.state_dir.clone()];
     paths.extend(config.socket_dir.clone());
+    paths.extend(config.r_library.clone());
     paths.push(config.state_dir.with_extension("users"));
     paths.extend(file.map(Path::to_owned));
     paths.extend(config.access_log.iter().map(|log| log.path.clone()));

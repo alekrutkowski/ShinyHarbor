@@ -9,6 +9,7 @@ mod backend;
 pub mod config;
 mod connection;
 pub mod identity;
+pub mod installation;
 pub mod legacy;
 pub mod pool;
 pub mod proxy;

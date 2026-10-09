@@ -106,15 +106,14 @@ class Structure(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             directory = Path(temp)
             files = []
-            for row in targets:
-                ext = 'zip' if 'windows' in row['target'] else 'tar.gz'
-                path = directory / f"shinyharbor-{version}-{row['target']}.{ext}"
+            for name in tool.expected_files(version, targets):
+                path = directory / name
                 path.write_bytes(b'Synthetic artifact used only to test digest verification')
                 digest = hashlib.sha256(path.read_bytes()).hexdigest()
                 path.with_name(path.name + '.sha256').write_text(f'{digest}  {path.name}\n')
                 files.append(path)
-            self.assertEqual(len(tool.verify(directory)), 8)
-            self.assertEqual(len((directory / 'SHA256SUMS').read_text(encoding="utf-8").splitlines()), 8)
+            self.assertEqual(len(tool.verify(directory)), 18)
+            self.assertEqual(len((directory / 'SHA256SUMS').read_text(encoding="utf-8").splitlines()), 18)
             files[0].write_bytes(b'tampered')
             with self.assertRaises(ValueError):
                 tool.verify(directory)

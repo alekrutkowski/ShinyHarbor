@@ -1,0 +1,211 @@
+{
+  "date": "2026-10-09",
+  "certifies_full_compatibility": false,
+  "scope": "Local x64 Windows per-user installer lifecycle, Windows/Linux musl first-run integration, and Linux package payload inspection. No local service-installation or distro package-manager lifecycle certification.",
+  "unexecuted": [
+    "Windows service installation",
+    "Debian/Fedora/Arch package-manager lifecycles",
+    "macOS installer builds and lifecycle",
+    "ARM installer builds and lifecycle"
+  ],
+  "hosted_ci_blocker": "GitHub account payments/spending limit; no runner starts.",
+  "rust_tests": {
+    "windows_x64": 30,
+    "scope": "Before final main.rs-only R package argument/download adjustment; final binaries separately passed installation checks."
+  },
+  "clippy": "Windows and Linux musl all-targets -D warnings passed before final main.rs-only download adjustment.",
+  "rustfmt": "Final Rust source passed cargo fmt --all --check.",
+  "python_tests": 18,
+  "reports": {
+    "installation-win32": {
+      "report": {
+        "suite": "installation",
+        "platform": "win32",
+        "passed": true,
+        "checks": [
+          "setup-creates-config-example-and-R-library-in-selected-directory",
+          "repeat-setup-preserves-user-config-and-app-data",
+          "missing-explicit-config-reports-path-and-remedy",
+          "bare-launch-follows-installer-data-pointer-with-Unicode-and-spaces",
+          "paths-command-resolves-installation-without-secrets",
+          "R-discovery-without-PATH-and-real-Shiny-startup",
+          "bare-portable-executable-finds-adjacent-config-from-unrelated-directory"
+        ]
+      },
+      "sha256": "a76d330957219d1dbab723c9e86f7332862d731ee457cb139c79f2f8ade1fa15"
+    },
+    "installation-linux": {
+      "report": {
+        "suite": "installation",
+        "platform": "linux",
+        "passed": true,
+        "checks": [
+          "setup-creates-config-example-and-R-library-in-selected-directory",
+          "repeat-setup-preserves-user-config-and-app-data",
+          "missing-explicit-config-reports-path-and-remedy",
+          "bare-launch-follows-installer-data-pointer-with-Unicode-and-spaces",
+          "paths-command-resolves-installation-without-secrets",
+          "R-discovery-without-PATH-and-real-Shiny-startup",
+          "bare-portable-executable-finds-adjacent-config-from-unrelated-directory"
+        ]
+      },
+      "sha256": "1fcbd91476a1374e29686b8595c6d7abb950a5a6badc6504c68801e8e8614b15"
+    },
+    "windows-installer": {
+      "report": {
+        "suite": "windows-installer",
+        "checks": [
+          "silent-install-with-custom-program-and-data-directories",
+          "upgrade-preserves-configuration-and-application-data",
+          "installed-executable-discovers-data-from-unrelated-directory",
+          "uninstall-removes-program-and-preserves-user-data"
+        ],
+        "passed": true
+      },
+      "sha256": "9ab7317061ba86c6884059177579e58677fd331b114a97f288cff845a1535174"
+    },
+    "linux-packages": {
+      "report": {
+        "suite": "linux-packages",
+        "passed": true,
+        "checks": [
+          "shinyharbor_0.1.0~alpha.1-1_amd64.deb: metadata, hooks, configuration, service, licenses and executable",
+          "shinyharbor-0.1.0~alpha.1-1.x86_64.rpm: metadata, hooks, configuration, service, licenses and executable",
+          "shinyharbor-0.1.0_alpha.1-1-x86_64.pkg.tar.zst: metadata, hooks, configuration, service, licenses and executable"
+        ],
+        "scope": "Extracted package inspection/execution; does not claim distro installation lifecycle validation."
+      },
+      "sha256": "64f05316fe5add880678e323b7d5ac5b8812570929edd91e14f1deef77da0961"
+    },
+    "shiny-package-setup": {
+      "report": {
+        "suite": "private-shiny-package-setup",
+        "passed": true,
+        "platform": "win32",
+        "r": "R version 4.6.1 (2026-06-24 ucrt)",
+        "shiny": "1.14.0",
+        "checks": [
+          "optimized-executable-installs-Shiny-from-CRAN",
+          "Shiny-loads-from-selected-private-library-with-user-and-site-libraries-disabled"
+        ],
+        "private_library_package_count": 30,
+        "binary_sha256": "b9fbb65569a560abdb747635a0b2b507cfb851f2f31445634d862f2e6fc75e26"
+      },
+      "sha256": "c8cc2ca96e6fc7ed38e3921569d5b565d8010e0abd092d4d3b6881617ac0ac47"
+    },
+    "legacy-cli": {
+      "report": {
+        "suite": "legacy-cli",
+        "passed": true,
+        "checks": [
+          "original-positional-config-with-spaces",
+          "top-level-config-option",
+          "local-legacy-default-config",
+          "check-uses-same-default-search",
+          "native-config-takes-precedence",
+          "ambiguous-config-arguments-rejected"
+        ]
+      },
+      "sha256": "86c7a61ef495f972ed35544c84dc9f23c5dbd39c3ba5a6ba999748fc96fef04f"
+    }
+  },
+  "binary_sha256": {
+    "target/x86_64-pc-windows-msvc/release/shinyharbor.exe": "b9fbb65569a560abdb747635a0b2b507cfb851f2f31445634d862f2e6fc75e26",
+    ".build/linux-target/x86_64-unknown-linux-musl/release/shinyharbor": "3357766f5e47dfa40456f1e5a40c2ed66158b050f730274ada0d4ebac8cb4aab"
+  },
+  "source_sha256": {
+    "src/access_log.rs": "d8532d7ee6e4780e52cbf11581b5cee04fb09da24133691b119bd2a38bd2f897",
+    "src/activity.rs": "15030639c4e5968d78d797c41787a3b75121453a797de8ee4d438a494f60f45c",
+    "src/analytics.rs": "e8a5ca14546de639d5c535f56ce622fed6b157b88edf089efe7c499719718a15",
+    "src/auth.rs": "8c8877f5ebabf9fdee5970996ac6605f5d53fb5bd2ec36c81684f10daba12118",
+    "src/backend.rs": "21eb5cbdad12b98025af051c6a9f8b3d80077b3f123ead52b88aa40c6a098017",
+    "src/config.rs": "34680e26a7bc66f9ad6a1f3ec84d0933bd35330cdcb357c24322c2d339c11ac2",
+    "src/connection.rs": "e917385b3a69c62691ea8cfa58d2a45211c3bf5ff42b497b88605ed74abb668d",
+    "src/identity.rs": "809dd04386ea17598b954d3813b25a3e179dca1f0c93ccf3fc68c4328b8a68e9",
+    "src/installation.rs": "6c51568de91e275511de04c5ed61fe9be25b54ec1824b1782e0426b0b12e0545",
+    "src/legacy.rs": "fb980635988c99f45a3800df8fabcfee9f67ca4b5bed3641889546b722471cca",
+    "src/lib.rs": "2bb5135365b4c400c75cdbd0fe47b3d15c7528ed1a6fee023d743c87851078c6",
+    "src/main.rs": "860d5594283e33715903a8ebf149e713ac4e3142959c49f2fdc143f7de7a0c9b",
+    "src/pool.rs": "b074f2ea9d3028f36e896e71020fc5dd9a9b8af33ab7bec4f69731cfdf1a8081",
+    "src/proxy.rs": "abb854039a6c928b3437246dbf94bbe09e8e6d2f0c921b4163e1a64e3edce796",
+    "src/reload.rs": "d652571c66c257cca887c79636b6d8486b49e1c41bb058376b31582dd37f3c1e",
+    "src/security.rs": "b95878538d8c65b2dc1ca9ee0f23a4ad0ad8aa707785ab080b4aa92bb222e5f8",
+    "src/server.rs": "357c865b319ff7d524f4bb8983bbc688b5a6e51b4166aac13f250d6d4d22fee4",
+    "src/site.rs": "6a270dea5c48e3b98476693a3f548789dba957f70b0e3191504e6d4d830fddba",
+    "src/sockjs.rs": "f144575bd79ab6ba4c03897b0d821c707445a1d0782cdc0e0a127e311cf81365",
+    "src/templates.rs": "312505f25542bf15d490da591d80f0f22c00d8d01dfbb2a485562d99a09f19b5",
+    "src/tls.rs": "f1c9b72f80b01d13c2f5a9b592e930aedcd102aa9a82ad60b920f5d6776aaf1c",
+    "src/user_log.rs": "b23165a8678ef6c01d77d6b18646eb16b40370f451121eefad8d2094ba4fab19",
+    "src/sockjs/reconnect.rs": "f56080d9b0b4044443e7e1bca102a9b6d7fd794f321c9bcd33a1c3423b2f36ac",
+    "tests/access_logs.py": "114df3f3e1de388a9880c9ade087ac5b7999fcf30bfa301b6b7d09e2fb8ae0ad",
+    "tests/auth_proxy.py": "ec6a55e44bc6c599a0fa90816ff04034c5e8d3ae5771ed5cf9c2ffcc842f896f",
+    "tests/bookmark_migration.py": "539fe597fb03b2d3fb9979589675d005a6b5c514e1997c8abfdf1aaec8a5bbc1",
+    "tests/bookmark_migration_host.py": "f6785981a2500f5166572269735039f1fd034f6eda2f0a30d741cb9f694c33af",
+    "tests/configuration.py": "a2115accdcd0b2568c5b5d0d7bae990fb135ade38c57f1d224fe82ecf2247809",
+    "tests/dashboard.py": "aedd0a62426ffa59d53847213ec6a2871cfbccc2eb886d6fd8c0be8c1a486101",
+    "tests/gateway.py": "1b1befb3846bf19b8cfddb16b1cf029ea43b180710421e8d852f20b1715c0143",
+    "tests/http_compression.py": "851db76520ac4391385b7d716dd90ac84e6f47a399c0b966aa97b1d91e7cc66c",
+    "tests/installation.py": "560fa73e3eb82ee20e1f4add105c071b5c9d8727e29756167b67c504e392582b",
+    "tests/keepalive.py": "7c16e6eeda26bdf083eed960dfd5b3986b2087b460f0574c82cb6adf890fdb31",
+    "tests/large_messages.py": "2f3ce3c15a5e9aa628ee2f27878fafad2b127ccc5af0d4bd3512e4b9b28b5993",
+    "tests/launcher.py": "4aced1d2c2b1d0a8d11fece1219ea3fe18d55eed4415393855a801d5569e0e90",
+    "tests/legacy_cli.py": "35982f12331ae4c5c40c305cb712ab65806b10589ca93902d889f86b421a1b4a",
+    "tests/linux_install.sh": "e23421be2c80b9b4aab45c79223584c8fee6ba9c6a80b5fe5ba036c7f6e8e74b",
+    "tests/linux_packages.py": "ebddbc863e0c337f97b75d7850a8e967909e0c988850acf4a038bdaeec418de2",
+    "tests/listener_tls.py": "ce134b2ded00bf417f92ee1528e9e1e9a71d56865cb82184dee85d899c49a27a",
+    "tests/live_dashboard.py": "88c8ec0f00e63e00e00f3eb387269aa810ba353c5dec5dec1dcda7a819387e59",
+    "tests/load.py": "032c8ab771bc1d38d99ee8adf06a5cc7f0c46a08b05b864b07da27e2f11b0921",
+    "tests/multiworker.py": "c60545daf5b84181969083e2919a022cd3edb083c03ffc0de3e6139efca1f9e2",
+    "tests/native_compat.py": "f575e8853e4ec87eaff58d6ec1d584c397c5c9d05cb8153ef3e3ffd30846dcf1",
+    "tests/page_settings.py": "4d104d22ddfff77c5e499a22c985ef7bfaa47ce966ebdcda80a3a6c4506f9eb9",
+    "tests/reconnect.py": "f310faa8a9eaf9507d634a9602e0d12e4b358c14635d2478e1f143850b5f713f",
+    "tests/reload.py": "dbba9137505546460f067f24958e5bc54c3190a154bf680157fd222b2920e851",
+    "tests/reload_signal.py": "8e852c878378851574e11c60ef0b308b00e12f56156b76f078fe6dd849dcc4cf",
+    "tests/requirements-gateway.txt": "4e52c115e2a271feaecc8b79147555f471c07ebdda3d677e49c0e51a24af483f",
+    "tests/requirements.txt": "f25a55a2eb8b0e494b3c37d629a5044a9ed9ea69ee79efc3132f5ed8d7dd203e",
+    "tests/resource_limits.py": "37eb288cb37f93229f72da22fd5fe08c0aa61e1e3e3f0e3d70dd833ad2250d7a",
+    "tests/response_headers.py": "c7e6665b9680ab48201ecfa83b3ff981924cdbebb1fbf0fd9568b528173e9d4b",
+    "tests/rmarkdown.py": "5ee3b50feb86eb8de40cb5a637dea984700e4b8838e8d4291848288f2910daac",
+    "tests/runtime.R": "38d4704df38ddaa7aed54668645ca3e832d7ff1416dde7e402d11391ba8237e2",
+    "tests/server_logging.py": "b52c708f1657a147e05f9ebf7837f643589d4082e6559918ad835389faca75e5",
+    "tests/shiny_browser.py": "5ef135e84f3bf0d4edf60339b4c854294ba9713fea521b42808717e274f1676b",
+    "tests/templates.py": "bf2927311f61648cc3501f7a951fb01edb68d156777ebd0a774bddbf8d29f303",
+    "tests/test_sql.py": "be921a54b450f9c94cbf7b9ee62561c9707496c4ad1bc293295296de40c04f11",
+    "tests/test_structure.py": "765ca0b8e7f94d05b98f95b6cee1bd315c78467666c619d3a7855bf1063bb904",
+    "tests/test_support.py": "574b2dac21fe02a46094603e246ff8b8382942dc2b0ade2acae7646de03cc475",
+    "tests/tls.py": "30bf41dd730556047ec142e823cbe140fa50d70b712da04d296706ea536ca5bc",
+    "tests/transports.py": "3cab09160936b74d8ba391898a450a4879bc33831ecf934dd2216a647956e2a1",
+    "tests/unicode_paths.py": "27216c6e64c24eb764164ba8d2f78c8fe763529ce3089e521aa3e0777489031f",
+    "tests/unix_identity.py": "803f996548a755f5e47449fb4c096916f1f403292bf90d2d8ce605950bafb24f",
+    "tests/unix_socket.py": "7a8107e905f2128ae860f0d8e065b7bdb7519c82ffda679e2f319bc9c03c093a",
+    "tests/windows_installer.ps1": "c1c078efd4e8f02e0e1c633b06d80ac1b08a7d4e75fdad71b5b3d4db3905c3a2",
+    "tests/worker_environment.py": "6410087928d8eb6dbcc656b6f73f4e51917808dd7994b218137dd516b8ce4aa1",
+    "tests/worker_logs.py": "d38adb8c1f3f096e7d07d446f77cd7b20de3dede6855d21ac73395c664a805d8",
+    "tools/differential_smoke.py": "382eb829001a4126f343bc97f6c753141ef78a78f342daee01fdc85c9b2d144f",
+    "tools/fetch_inno.ps1": "ea00d14490bec7ae64c0fa62557c864a1a7d5dca16265f74f81dcfb895e89d77",
+    "tools/fetch_pebble.py": "e4948911a51b9f99d0c84a0cef5608eb25cc66e70d2a4763c4c4c13b8fce25b6",
+    "tools/installers.py": "28512d7f36687fd577e3febf3b9cef58218e3d02a2b3faa8bee4692ac0ebb5ed",
+    "tools/package.py": "6e58499ef8947eb7c7be81ae82286c0310d3d420e58f907a47296ece9e9d1017",
+    "tools/pebble-assets.json": "32e48c2109c6518b700c70646617ba8ba03260ede977311879acf04286f1e293",
+    "tools/release_files.py": "de5e50beb8607acc86f9a51548c927bed1210e40879467273e16b624bd69177d",
+    "tools/release_gate.py": "fd94ed684d9a13d4ed7b03b78316b26f96784784aa87048decab7765f311b172",
+    "tools/targets.json": "981f5ba2c11798911fc9adb5af4d84fb4bcedc4c844aebe04ac0f06b5892b6e9",
+    ".github/dependabot.yml": "ad6f76310bfc547212e334905f7f7aa5f2ec3b981061798797eb32e51eb0140a",
+    ".github/workflows/ci.yml": "a4eec86b195c25efed94f702a0480102dd5be3f9c5f3c808427cca5f4d535898",
+    ".github/workflows/latest-shiny.yml": "0c695606e5aca45ea96694a162e51048c5ffabd1ecf5de3bd80e580a47da776f",
+    ".github/workflows/release.yml": "9d8b670f4409d5900bda67f45e955a6a4417e96c0f2b3947439571868c2f5232",
+    "packaging/Dockerfile": "e42f7f49bcd99fc97eff77bdc00d2f0c9fe01bdbc7b392ff3887469fb8aadb07",
+    "packaging/install-service.ps1": "96e6453da30ce6f381bde082787f8825c38e42349e1603c924fe52b440cd50fd",
+    "packaging/install.ps1": "e4d4b546d807b01d142b58d6865c19150fe8d0ce15c9a7dde13e964ffd2e016a",
+    "packaging/install.sh": "e03f78c3931bb27e79761081410cde3eaa600d1c06fff01facf9bf28c871c1b0",
+    "packaging/linux.toml": "2dcbdfa9a98ccefd40fd8c0c318e7ced7d1753af77fd50631a1e41c001076a87",
+    "packaging/shinyharbor.service": "90dec54445116348d265808132563e83951563ad3e9d31c1554653d6e5657e7b",
+    "packaging/windows-service.ps1": "34ec401ce7eefc2dd25a34d635dc7feb259024074c983967072711be5b1512ba",
+    "packaging/windows.iss": "da891700e7df66e2eefb3b62e366e0378898cd982ffa59cf3a1f9cba3027b592",
+    "packaging/macos/service.sh": "b4037be4049ebeeb40346d5de2efe4a467003b11cff70e129fc89a8694e5b83c",
+    "packaging/macos/uninstall.sh": "7f5c331a74d1fbaa941b6f742aad3e3b79ef04c48cf629d34c53f883212327de",
+    "Cargo.toml": "c6091af3e643e607699f85d5377b4b7346c39942e70e3763b9666ad8fa4f919d",
+    "Cargo.lock": "47801c7de217d73abee538455388a8b62752f4550f8b32a2807be48f423f9d61",
+    "examples/init.toml": "26de7be34d347aac4518ba4b45e523ecfe396a35dec951344085c826a1651a39"
+  }
+}

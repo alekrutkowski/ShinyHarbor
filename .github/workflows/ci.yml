@@ -90,10 +90,47 @@ jobs:
           python tests/response_headers.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/server_logging.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/legacy_cli.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/installation.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/access_logs.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/keepalive.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
       - name: Package with actual lockfile and retained license texts
         run: python tools/package.py --target ${{ matrix.target }}
+      - name: Linux installer tools
+        if: matrix.musl
+        run: sudo apt-get update && sudo apt-get install -y rpm zstd cpio
+      - name: Windows installer compiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tools/fetch_inno.ps1
+      - name: Build native installers
+        if: matrix.musl || runner.os != 'Linux'
+        run: python tools/installers.py --target ${{ matrix.target }}
+      - name: Windows installation, upgrade and removal
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/windows_installer.ps1 -Installer (Get-ChildItem dist/*-setup.exe).FullName
+      - name: Inspect Linux installer payloads
+        if: matrix.musl
+        run: python tests/linux_packages.py --directory dist
+      - name: Debian installation, service, upgrade and removal
+        if: matrix.musl
+        run: sh tests/linux_install.sh dist/*.deb
+      - name: macOS package installation and removal
+        if: runner.os == 'macOS'
+        run: |
+          test ! -e /usr/local/bin/shinyharbor
+          sudo installer -pkg dist/*.pkg -target /
+          /usr/local/bin/shinyharbor --version
+          test -x '/Applications/ShinyHarbor/Start ShinyHarbor.command'
+          sh -n /usr/local/libexec/shinyharbor/service.sh
+          sudo /usr/local/libexec/shinyharbor/uninstall.sh
+          test ! -e /usr/local/bin/shinyharbor
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-test-evidence-${{ matrix.target }}
+          path: test-results/
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.target }}

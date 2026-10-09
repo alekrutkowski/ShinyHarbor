@@ -1,5 +1,6 @@
 use anyhow::{Context, Result, ensure};
 use clap::{Parser, Subcommand};
+use shinyharbor::installation::{default_configuration, user_directory};
 use shinyharbor::{config::Config, security, server};
 use std::{
     path::{Path, PathBuf},
@@ -21,6 +22,18 @@ struct Cli {
 }
 #[derive(Subcommand)]
 enum Command {
+    /// Show resolved installation paths without exposing credentials.
+    Paths {
+        #[arg(short, long, default_value_os_t = default_configuration())]
+        config: PathBuf,
+    },
+    /// Set up apps and configuration; optionally install Shiny into a private R library.
+    Setup {
+        #[arg(long, default_value_os_t = user_directory())]
+        directory: PathBuf,
+        #[arg(long)]
+        install_shiny: bool,
+    },
     /// Write a local configuration and working example without overwriting files.
     Init {
         #[arg(default_value = ".")]
@@ -69,18 +82,6 @@ enum Command {
         config: PathBuf,
     },
 }
-fn default_configuration() -> PathBuf {
-    for path in ["harbor.toml", "shiny-server.conf"] {
-        if Path::new(path).is_file() {
-            return path.into();
-        }
-    }
-    #[cfg(unix)]
-    if Path::new("/etc/shiny-server/shiny-server.conf").is_file() {
-        return "/etc/shiny-server/shiny-server.conf".into();
-    }
-    "harbor.toml".into()
-}
 fn main() -> Result<()> {
     let cli = Cli::parse();
     #[cfg(windows)]
@@ -91,12 +92,33 @@ fn main() -> Result<()> {
         .with_env_filter(logging_filter()?)
         .with_writer(std::io::stderr)
         .init();
+    let bare_launch = cli.command.is_none()
+        && cli.config.is_none()
+        && cli.legacy_config.is_none()
+        && std::env::var_os("SHINYHARBOR_CONFIG").is_none();
+    let default = default_configuration();
+    if bare_launch && !default.is_file() {
+        println!("Welcome to ShinyHarbor. Creating your application directory.");
+        setup(&user_directory(), false)?;
+    }
     match cli.command.unwrap_or(Command::Serve {
         config: cli
             .config
             .or(cli.legacy_config)
             .unwrap_or_else(default_configuration),
     }) {
+        Command::Paths { config } => {
+            let cfg = Config::load(&config)?;
+            println!(
+                "{}",
+                serde_json::json!({"config": std::fs::canonicalize(config)?, "state_dir": cfg.state_dir, "rscript": cfg.rscript, "r_library": cfg.r_library})
+            );
+            Ok(())
+        }
+        Command::Setup {
+            directory,
+            install_shiny,
+        } => setup(&directory, install_shiny),
         Command::Init { directory } => initialize(&directory),
         Command::Check { config } => {
             let c = Config::load(&config)?;
@@ -190,6 +212,7 @@ fn initialize(directory: &Path) -> Result<()> {
     );
     let app = directory.join("apps").join("hello");
     std::fs::create_dir_all(&app)?;
+    std::fs::create_dir_all(directory.join("R/library"))?;
     write_new(&app.join("app.R"), include_str!("../examples/hello/app.R"))?;
     write_new(&path, include_str!("../examples/init.toml"))?;
     let c = Config::load(&path)?;
@@ -199,6 +222,56 @@ fn initialize(directory: &Path) -> Result<()> {
         path.display(),
         path.display(),
         path.display(),
+        path.display()
+    );
+    Ok(())
+}
+fn setup(directory: &Path, install_shiny: bool) -> Result<()> {
+    let path = directory.join("harbor.toml");
+    if !path.exists() {
+        initialize(directory)?;
+    } else {
+        println!("Keeping existing configuration: {}", path.display());
+    }
+    let config = Config::load(&path)?;
+    if install_shiny {
+        let library = config.r_library.as_ref().context(
+            "Set r_library in your existing TOML configuration before using --install-shiny",
+        )?;
+        std::fs::create_dir_all(library)?;
+        println!(
+            "Installing Shiny from CRAN into {}. This may take several minutes.",
+            library.display()
+        );
+        let mut command = std::process::Command::new(&config.rscript);
+        command.args(["--vanilla", "-e", "lib <- commandArgs(TRUE)[1]; install.packages('shiny', lib=lib, repos='https://cloud.r-project.org'); stopifnot(file.exists(file.path(lib, 'shiny', 'DESCRIPTION')), requireNamespace('shiny', quietly=TRUE))"]);
+        if config.rscript.file_stem().is_some_and(|name| {
+            name.eq_ignore_ascii_case("R") || name.eq_ignore_ascii_case("Rterm")
+        }) {
+            command.arg("--args");
+        }
+        let status = command
+            .arg(shinyharbor::installation::r_path(library))
+            .env("R_LIBS", shinyharbor::installation::r_path(library))
+            .env("R_LIBS_USER", shinyharbor::installation::r_path(library))
+            .env("R_LIBS_SITE", "")
+            .status()
+            .with_context(|| {
+                format!(
+                    "Cannot start R at {}. Install R from https://cran.r-project.org/ and retry.",
+                    config.rscript.display()
+                )
+            })?;
+        ensure!(
+            status.success(),
+            "Shiny installation failed. Check the R output above and retry setup --install-shiny."
+        );
+    }
+    println!(
+        "Apps: {}\nStart: shinyharbor --config \"{}\"\nR: {}\nCheck R and Shiny: shinyharbor doctor --config \"{}\"",
+        directory.join("apps").display(),
+        path.display(),
+        config.rscript.display(),
         path.display()
     );
     Ok(())
@@ -245,11 +318,15 @@ async fn doctor(c: Config) -> Result<()> {
     executables.dedup();
     for exe in executables {
         let mut cmd = tokio::process::Command::new(exe);
+        if let Some(library) = &c.r_library {
+            cmd.env("R_LIBS", shinyharbor::installation::library_path(library));
+        }
         cmd.args(["--vanilla", "-e", "cat(R.version.string, '\\n'); stopifnot(requireNamespace('shiny', quietly=TRUE)); cat('shiny ', as.character(packageVersion('shiny')), '\\n', sep='')"])
             .kill_on_drop(true);
         let output = tokio::time::timeout(Duration::from_secs(30), cmd.output())
             .await
-            .context("R check timed out")??;
+            .context("R check timed out")?
+            .with_context(|| format!("Cannot start R at {}. Install R from https://cran.r-project.org/ or set rscript in your configuration.", exe.display()))?;
         print!(
             "{}: {}",
             exe.display(),
@@ -257,7 +334,7 @@ async fn doctor(c: Config) -> Result<()> {
         );
         ensure!(
             output.status.success(),
-            "R/shiny check failed: {}",
+            "R/shiny check failed. Run `shinyharbor setup --directory <your-data-directory> --install-shiny` to install Shiny, or install it in this R library. Details: {}",
             String::from_utf8_lossy(&output.stderr)
         );
     }

@@ -73,7 +73,8 @@ pub async fn run(config: Config, stop: CancellationToken) -> Result<()> {
     run_config(config, None, stop).await
 }
 pub async fn run_file(path: &Path, stop: CancellationToken) -> Result<()> {
-    let path = std::fs::canonicalize(path)?;
+    let path = std::fs::canonicalize(path).with_context(|| format!(
+        "Cannot find configuration {}. Run `shinyharbor setup` first, or pass `--config <file>`.", path.display()))?;
     run_config(Config::load(&path)?, Some(path), stop).await
 }
 async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationToken) -> Result<()> {

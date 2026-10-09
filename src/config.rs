@@ -16,6 +16,7 @@ pub struct Config {
     pub state_dir: PathBuf,
     pub socket_dir: Option<PathBuf>,
     pub rscript: PathBuf,
+    pub r_library: Option<PathBuf>,
     pub apps_dir: Option<PathBuf>,
     pub trusted_proxies: Vec<IpNet>,
     pub public_origin: Option<String>,
@@ -51,6 +52,7 @@ impl Default for Config {
             state_dir: ".harbor".into(),
             socket_dir: None,
             rscript: "Rscript".into(),
+            r_library: None,
             apps_dir: None,
             trusted_proxies: vec![],
             public_origin: None,
@@ -426,6 +428,9 @@ impl Config {
             .parent()
             .context("Configuration has no parent directory")?;
         cfg.state_dir = relative(base, &cfg.state_dir);
+        if let Some(path) = &mut cfg.r_library {
+            *path = relative(base, path);
+        }
         if let Some(path) = &mut cfg.socket_dir {
             *path = relative(base, path);
         }
@@ -440,7 +445,9 @@ impl Config {
                 *path = relative(base, path);
             }
         }
-        if cfg.rscript.components().count() > 1 {
+        if cfg.rscript == Path::new("Rscript") {
+            cfg.rscript = crate::installation::rscript();
+        } else if cfg.rscript.components().count() > 1 {
             cfg.rscript = relative(base, &cfg.rscript);
         }
         if let Some(dir) = cfg.apps_dir.take() {
@@ -458,6 +465,11 @@ impl Config {
             .chain(cfg.sites.iter_mut().map(|s| &mut s.app_defaults))
         {
             app.path = relative(base, &app.path);
+            if let Some(library) = &cfg.r_library {
+                app.environment
+                    .entry("R_LIBS".into())
+                    .or_insert_with(|| crate::installation::library_path(library));
+            }
             if let Some(p) = &mut app.bookmark_state_dir {
                 *p = relative(base, p);
             }

@@ -1,5 +1,30 @@
 # Delivery-time validation
 
+## 2026-10-09 installers and first-run repair
+
+The missing-configuration startup error is repaired. A portable archive now
+contains its configuration and example app, and the executable finds them from
+another working directory. Native setup preserves existing apps/settings,
+discovers R, and can install Shiny into a selected private R library.
+
+| Executed check | Result | Scope |
+| --- | --- | --- |
+| Optimized executables | Windows x64 and Linux x64 musl built | Final startup/setup implementation |
+| Installation and startup | Seven checks on each executable passed | Custom paths with spaces/Unicode, data preservation, actionable missing-config error, installer pointer, adjacent portable config, R discovery without PATH and actual Shiny HTTP |
+| Windows setup executable | Install/upgrade/uninstall passed | Per-user silent installation into custom program/data folders; edited configuration and app data survive removal |
+| Private Shiny installation | Passed with R 4.6.1 and Shiny 1.14.0 | Real CRAN download; 30 packages in the private library; Shiny loads with personal/site libraries disabled |
+| Linux DEB/RPM/Arch | All three packages built and inspected | Checksums, metadata/dependencies, hook syntax, config/service paths, notices and extracted executable startup |
+| Static/regression checks | Windows 30 Rust tests; Windows/Linux musl Clippy passed; 18 Python tests and Rust formatting passed | Rust unit tests precede the final CLI-only R argument/download adjustment; final executables and installation checks include that adjustment |
+
+Windows service installation and actual Debian/Fedora/Arch package-manager
+lifecycles have not been executed locally. CI includes a Debian service lifecycle
+test. macOS Intel/Apple Silicon PKG and Windows/Linux ARM installer generation are
+implemented in the native matrix but have not run: hosted CI remains blocked by
+the account billing error described below. Windows/macOS installers are unsigned.
+There is no published APT/DNF repository or AUR/Homebrew entry.
+These checks do not establish full Shiny Server or Professional compatibility.
+Reports and source/executable hashes are in `validation/2026-10-09-installers.json`.
+
 ## 2026-10-09 continuation
 
 Interrupted work was reviewed, completed and committed. Per-listener TLS and

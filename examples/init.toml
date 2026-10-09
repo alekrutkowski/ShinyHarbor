@@ -2,6 +2,7 @@
 listen = "127.0.0.1:3838"
 admin_listen = "127.0.0.1:3839"
 state_dir = ".harbor"
+r_library = "R/library"
 
 [tls]
 mode = "off"

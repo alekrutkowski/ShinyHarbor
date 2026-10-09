@@ -13,8 +13,11 @@ See `examples/shiny-server.conf` and the supported subset in
 Both `shinyharbor serve --config shiny-server.conf` and the original-style
 `shinyharbor shiny-server.conf` start the server. `shinyharbor --config FILE` is
 also accepted. Without an explicit path, commands look for `harbor.toml`, then
-`shiny-server.conf` in the working directory, then on Unix the existing
-`/etc/shiny-server/shiny-server.conf`. Windows service installation still uses an
+`shiny-server.conf` in the working directory, then the installer data directory,
+files alongside the executable, per-user settings and system locations.
+`SHINYHARBOR_CONFIG` overrides this search. Unix system locations include
+`/etc/shinyharbor/harbor.toml` and `/etc/shiny-server/shiny-server.conf`.
+Windows service installation still uses an
 explicit path. Legacy configurations use the `R` environment variable to select
 the executable, falling back to `R` on PATH; an inherited `r_path` directive
 takes precedence. TOML continues to use its `rscript` setting.
@@ -25,6 +28,7 @@ takes precedence. TOML continues to use its `rscript` setting.
 | `admin_listen` | `127.0.0.1:3839` | Must be loopback; separate admin HTTP listener |
 | `state_dir` | `.harbor` | Exclusive instance directory; contains secrets and analytics |
 | `rscript` | `Rscript` | Default R interpreter |
+| `r_library` | absent | Additional R library, resolved relative to this file; setup can install Shiny here |
 | `apps_dir` | absent | Scan immediate app subdirectories at startup |
 | `trusted_proxies` | `[]` | CIDRs allowed to supply forwarding information |
 | `public_origin` | absent | HTTPS origin when TLS terminates at an external trusted proxy |
@@ -38,6 +42,12 @@ Keep a TLS-terminated backend private even when setting `public_origin`. This is
 operator assertion about deployment, not cryptographic proof that every incoming
 connection used HTTPS. TLS off is appropriate for local development; public
 plaintext requires an explicit choice and still does not safely transport credentials.
+
+The default `Rscript` is discovered on PATH, through `R_HOME`, or in standard R
+installation directories on Windows/macOS/Linux. Explicit executable paths take
+precedence. `r_library` is passed through `R_LIBS`, preserving the service account's
+usual libraries; explicit app `environment.R_LIBS` overrides this value. The
+configured R library is protected from static file serving.
 
 ## Public response headers
 
