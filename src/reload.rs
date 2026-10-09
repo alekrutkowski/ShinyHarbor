@@ -8,9 +8,9 @@ use std::{
 
 pub struct Control {
     current: RwLock<Arc<AppState>>,
-    path: Option<PathBuf>,
+    pub(crate) path: Option<PathBuf>,
     retired: Mutex<Vec<Arc<Pool>>>,
-    reloading: tokio::sync::Mutex<()>,
+    pub(crate) reloading: tokio::sync::Mutex<()>,
 }
 impl Control {
     pub fn new(state: Arc<AppState>, path: Option<PathBuf>) -> Arc<Self> {
@@ -62,6 +62,9 @@ impl Control {
             .clone()
             .context("Reload requires a configuration file")?;
         let config = tokio::task::spawn_blocking(move || Config::load(&path)).await??;
+        self.apply(config).await
+    }
+    pub(crate) async fn apply(self: &Arc<Self>, config: Config) -> Result<()> {
         let previous = self.snapshot();
         ensure!(
             fixed_settings(&config)? == fixed_settings(&previous.config)?,
@@ -182,7 +185,7 @@ impl Control {
         Ok(())
     }
 }
-fn fixed_settings(config: &Config) -> Result<serde_json::Value> {
+pub(crate) fn fixed_settings(config: &Config) -> Result<serde_json::Value> {
     let mut value = serde_json::to_value(config)?;
     for key in [
         "apps",

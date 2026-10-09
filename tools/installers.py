@@ -61,7 +61,7 @@ def documentation(source, target):
         shutil.copytree(source / name, target / name)
 
 
-PREPARE = '''for path in /var/lib/shinyharbor /var/lib/shinyharbor/R /var/lib/shinyharbor/R/library /srv/shinyharbor /srv/shinyharbor/apps /srv/shinyharbor/apps/hello; do
+PREPARE = '''for path in /etc/shinyharbor /etc/shinyharbor/harbor.toml /var/lib/shinyharbor /var/lib/shinyharbor/R /var/lib/shinyharbor/R/library /srv/shinyharbor /srv/shinyharbor/apps /srv/shinyharbor/apps/hello; do
   if [ -L "$path" ]; then
     echo "Refusing to change permissions through a symbolic link: $path" >&2
     exit 1
@@ -69,12 +69,13 @@ PREPARE = '''for path in /var/lib/shinyharbor /var/lib/shinyharbor/R /var/lib/sh
 done
 getent group shinyharbor >/dev/null || groupadd --system shinyharbor
 id -u shinyharbor >/dev/null 2>&1 || useradd --system --gid shinyharbor --home-dir /var/lib/shinyharbor --shell /usr/sbin/nologin shinyharbor
+install -d -o root -g shinyharbor -m 0770 /etc/shinyharbor
+chown root:shinyharbor /etc/shinyharbor/harbor.toml
+chmod 0660 /etc/shinyharbor/harbor.toml
 install -d -o shinyharbor -g shinyharbor -m 0700 /var/lib/shinyharbor
 install -d -o shinyharbor -g shinyharbor -m 0750 /var/lib/shinyharbor/R /var/lib/shinyharbor/R/library
 install -d -m 0755 /srv/shinyharbor/apps/hello
-if [ ! -e /srv/shinyharbor/apps/hello/app.R ]; then
-  install -m 0644 /usr/share/shinyharbor/hello/app.R /srv/shinyharbor/apps/hello/app.R
-fi
+/usr/bin/shinyharbor example --directory /srv/shinyharbor/apps/hello
 '''
 STOP = '''if [ -d /run/systemd/system ]; then
   systemctl stop shinyharbor.service || true
@@ -244,6 +245,10 @@ def macos(source, target, version, output, temporary):
     for script in ['service.sh', 'uninstall.sh']:
         write(root / 'usr/local/libexec/shinyharbor' / script, (ROOT / 'packaging/macos' / script).read_text(), 0o755)
     shortcuts = {
+        'Open applications.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor open apps\n',
+        'Usage dashboard.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor open dashboard\n',
+        'Server administration.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor open admin\n',
+        'Terminal monitor.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor tui\n',
         'Start ShinyHarbor.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor\n',
         'Run at login.command': '#!/bin/sh\n/usr/local/libexec/shinyharbor/service.sh start\n',
         'Stop background server.command': '#!/bin/sh\n/usr/local/libexec/shinyharbor/service.sh stop\n',
@@ -252,8 +257,6 @@ def macos(source, target, version, output, temporary):
     }
     for name, content in shortcuts.items():
         write(root / 'Applications/ShinyHarbor' / name, content, 0o755)
-    write(root / 'Applications/ShinyHarbor/Applications.webloc', plistlib.dumps({'URL': 'http://127.0.0.1:3838/'}).decode())
-    write(root / 'Applications/ShinyHarbor/Dashboard.webloc', plistlib.dumps({'URL': 'http://127.0.0.1:3839/'}).decode())
     resources = temporary / 'mac-resources'
     write(resources / 'welcome.html', '<html><body><h1>Welcome to ShinyHarbor</h1><p>Installs the server and shortcuts in Applications/ShinyHarbor. Your apps and settings stay in your home folder and are preserved during upgrades and removal.</p><p>Install R from cran.r-project.org, then use Install Shiny R package and Start ShinyHarbor. Use Run at login for a background service.</p></body></html>')
     shutil.copy2(source / 'LICENSE', resources / 'license.txt')

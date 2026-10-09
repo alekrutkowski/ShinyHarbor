@@ -1,6 +1,61 @@
 //! Configuration and R discovery for portable archives and native installers.
 use std::path::{Path, PathBuf};
 
+/// Update only the known, unmodified first-release example; preserve users' apps.
+pub fn example(directory: &Path) -> anyhow::Result<()> {
+    use sha2::{Digest, Sha256};
+    use std::io::Write;
+    std::fs::create_dir_all(directory)?;
+    let path = directory.join("app.R");
+    let bundled = include_str!("../examples/hello/app.R");
+    if path.exists() {
+        let old = std::fs::read_to_string(&path)?;
+        let normalized = old.replace("\r\n", "\n");
+        let hash = hex::encode(Sha256::digest(normalized.trim().as_bytes()));
+        if hash != "c7cb63762ebfe32c4a783257481aff2e4cb5f179b8c198385f5419214d43f8f0" {
+            println!("Keeping existing example/app: {}", path.display());
+            return Ok(());
+        }
+        let backup = directory.join(format!(
+            ".app.R-before-update-{}.bak",
+            crate::security::random_id()
+        ));
+        let mut file = crate::security::private_create(&backup)?;
+        file.write_all(old.as_bytes())?;
+        file.sync_all()?;
+        let mut draft = tempfile::Builder::new()
+            .prefix(".example-")
+            .tempfile_in(directory)?;
+        draft.write_all(bundled.as_bytes())?;
+        draft
+            .as_file()
+            .set_permissions(std::fs::metadata(&path)?.permissions())?;
+        draft.as_file().sync_all()?;
+        anyhow::ensure!(
+            std::fs::read_to_string(&path)? == old,
+            "Example changed while preparing update; it was not overwritten"
+        );
+        draft.persist(&path)?;
+        println!(
+            "Updated the unmodified example to Sampling Lab. Backup: {}",
+            backup.display()
+        );
+    } else {
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)?;
+        file.write_all(bundled.as_bytes())?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            file.set_permissions(std::fs::Permissions::from_mode(0o644))?;
+        }
+        println!("Created Sampling Lab: {}", path.display());
+    }
+    Ok(())
+}
+
 pub fn user_directory() -> PathBuf {
     #[cfg(windows)]
     if let Some(base) = std::env::var_os("LOCALAPPDATA") {

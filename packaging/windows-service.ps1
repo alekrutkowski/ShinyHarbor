@@ -48,7 +48,12 @@ for ($Current = $State; $Current; $Current = [IO.Path]::GetDirectoryName($Curren
 }
 # The installer owns only this data directory; R needs read/execute access.
 & icacls $DataDirectory /grant '*S-1-5-19:(OI)(CI)RX'
-if ($LASTEXITCODE -ne 0) { throw 'Could not grant service access to the data folder.' }
+if ($LASTEXITCODE -ne 0) { throw 'Cannot grant service read access to application data.' }
+# Allow atomic configuration writes, without granting modification of app files.
+& icacls $DataDirectory /grant '*S-1-5-19:(W)' '*S-1-3-0:(OI)(CI)(IO)F'
+if ($LASTEXITCODE -ne 0) { throw 'Cannot grant service configuration-directory write access.' }
+& icacls $Config /grant '*S-1-5-19:M'
+if ($LASTEXITCODE -ne 0) { throw 'Cannot grant service configuration write access.' }
 New-Item -ItemType Directory -Path $State -Force | Out-Null
 & icacls $State /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-19:(OI)(CI)M'
 if ($LASTEXITCODE -ne 0) { throw 'Could not protect service state.' }
@@ -65,4 +70,7 @@ if ($Service) {
 & sc.exe failure ShinyHarbor reset= 86400 actions= restart/5000/restart/15000
 if ($LASTEXITCODE -ne 0) { throw 'Could not configure service recovery.' }
 Start-Service ShinyHarbor
-Write-Host 'ShinyHarbor is running. Apps: http://127.0.0.1:3838/  Dashboard: http://127.0.0.1:3839/'
+Write-Host 'ShinyHarbor is running. Configured addresses:'
+& $Binary open apps --print --config $Config
+& $Binary open dashboard --print --config $Config
+& $Binary open admin --print --config $Config

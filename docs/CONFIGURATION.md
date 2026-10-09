@@ -172,7 +172,42 @@ backends use round-robin assignment plus signed affinity. Failed requests are no
 replayed on another server. This deliberately avoids duplicating side effects but
 does not provide automatic failover or active-session migration.
 
+## Browser administration
+
+The private admin listener serves usage statistics at `/` and configuration
+administration at `/admin`. Both require the existing admin bearer token to
+access data; the configuration API is not mounted on the app listener.
+See [the beginner workflow](../README.md#manage-server-settings).
+
+`GET /api/config` returns the source, revision digest, saved configuration and
+running effective configuration. `POST /api/config` takes `revision` and either
+`source` (TOML or the existing `.conf` syntax) or `changes` (guided setting paths).
+Without `save: true`, it only validates. Validation resolves relative paths
+against the real configuration directory and loads configured PEM files.
+Saving checks the revision again, makes a private backup in
+`.shinyharbor-backups`, then atomically replaces the file. Stale revisions get
+HTTP 409; invalid settings get HTTP 400. Cross-origin browser writes are denied.
+Configuration responses are marked `no-store`; the browser does not persist tokens.
+
+Editable source includes credentials and environment variables when configured.
+The token grants full configuration access, including executable paths. Treat
+it as an administrator credential. Filesystem permissions still apply. Backups
+are not automatically pruned. Keep the configuration directory outside app roots;
+hidden backup and temporary paths are also blocked by static-file routing.
+
+Changes accepted by the existing live reload mechanism are applied immediately.
+Global listener, TLS, state, analytics and transport changes are saved for a
+restart. The response and UI distinguish `saved` and `restart_required` from
+the running values. Restarting is deliberately a separate service operation.
+Neither validation nor saving obtains an ACME certificate or installs packages.
+
 ## TLS
+
+The default `mode = "off"` serves plain HTTP on the app listener. Opening that
+port with `https://` produces a TLS protocol error; it does not enable TLS. For
+trusted development certificates, see [HTTPS on your own computer](../README.md#https-on-your-own-computer).
+Public ACME certificates cannot be issued for `localhost`. TLS settings here
+apply to the app listener; the separate loopback admin listener still serves HTTP.
 
 Top-level `http_allow_compression = true` enables gzip/deflate negotiation for
 ordinary HTTP responses. The legacy root directive has the same name. Small

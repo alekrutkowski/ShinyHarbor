@@ -2,7 +2,7 @@
 
 For a guided first installation, start with the [README](../README.md).
 Download the installer matching your operating system and CPU from
-[GitHub Releases](https://github.com/alekrutkowski/ShinyHarbor/releases/tag/v0.1.0-alpha.1).
+[GitHub Releases](https://github.com/alekrutkowski/ShinyHarbor/releases/tag/v0.1.0-alpha.2).
 Local builds are in `dist/`; the release workflow also produces GitHub artifacts.
 Windows x64 and Linux x64 packages have been built locally. macOS and ARM
 installer builds remain pending while GitHub hosted CI is blocked by account billing.

@@ -50,8 +50,10 @@ Name: service; Description: "Run in the background as a Windows service"; Flags:
 [Icons]
 Name: "{group}\Start ShinyHarbor"; Filename: "{app}\shinyharbor.exe"; Parameters: "--config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
 Name: "{autodesktop}\ShinyHarbor"; Filename: "{app}\shinyharbor.exe"; Parameters: "--config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"; Tasks: desktopicon
-Name: "{group}\Open applications"; Filename: "http://127.0.0.1:3838/"
-Name: "{group}\Usage dashboard"; Filename: "http://127.0.0.1:3839/"
+Name: "{group}\Open applications"; Filename: "{app}\shinyharbor.exe"; Parameters: "open apps --config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
+Name: "{group}\Usage dashboard"; Filename: "{app}\shinyharbor.exe"; Parameters: "open dashboard --config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
+Name: "{group}\Server administration"; Filename: "{app}\shinyharbor.exe"; Parameters: "open admin --config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
+Name: "{group}\Terminal monitor"; Filename: "{app}\shinyharbor.exe"; Parameters: "tui --config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
 Name: "{group}\Edit configuration"; Filename: "{sys}\notepad.exe"; Parameters: """{code:DataDirectory}\harbor.toml"""
 Name: "{group}\Application folders"; Filename: "{code:DataDirectory}\apps"
 Name: "{group}\Installation guide"; Filename: "{sys}\notepad.exe"; Parameters: """{app}\README.md"""
@@ -62,6 +64,10 @@ Filename: "{app}\shinyharbor.exe"; Parameters: "--config ""{code:DataDirectory}\
 
 [UninstallDelete]
 Type: files; Name: "{app}\data-directory.txt"
+
+[InstallDelete]
+Type: files; Name: "{group}\Open applications.url"
+Type: files; Name: "{group}\Usage dashboard.url"
 
 [Code]
 var

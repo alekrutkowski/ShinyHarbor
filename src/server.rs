@@ -243,6 +243,15 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
     };
     let admin = Router::new()
         .route("/", get(dashboard))
+        .route("/admin", get(administration))
+        .route("/admin/", get(administration))
+        .route("/admin.js", get(admin_javascript))
+        .route("/admin.css", get(admin_stylesheet))
+        .route("/admin/reference", get(configuration_reference))
+        .route(
+            "/api/config",
+            get(crate::management::get).post(crate::management::edit),
+        )
         .route("/app.js", get(javascript))
         .route("/style.css", get(stylesheet))
         .route("/healthz", get(health))
@@ -501,7 +510,7 @@ fn compressible(
             .flat_map(|v| v.split(','))
             .any(|directive| directive.trim().eq_ignore_ascii_case("no-transform"))
 }
-fn authorized(headers: &HeaderMap, state: &AppState) -> bool {
+pub(crate) fn authorized(headers: &HeaderMap, state: &AppState) -> bool {
     headers
         .get(header::AUTHORIZATION)
         .and_then(|h| h.to_str().ok())
@@ -531,6 +540,30 @@ async fn dashboard() -> Response {
     secure_asset(
         include_str!("../assets/index.html"),
         "text/html; charset=utf-8",
+    )
+}
+async fn administration() -> Response {
+    secure_asset(
+        include_str!("../assets/admin.html"),
+        "text/html; charset=utf-8",
+    )
+}
+async fn admin_javascript() -> Response {
+    secure_asset(
+        include_str!("../assets/admin.js"),
+        "text/javascript; charset=utf-8",
+    )
+}
+async fn admin_stylesheet() -> Response {
+    secure_asset(
+        include_str!("../assets/admin.css"),
+        "text/css; charset=utf-8",
+    )
+}
+async fn configuration_reference() -> Response {
+    secure_asset(
+        include_str!("../docs/CONFIGURATION.md"),
+        "text/plain; charset=utf-8",
     )
 }
 async fn javascript() -> Response {

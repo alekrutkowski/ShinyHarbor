@@ -36,7 +36,8 @@ case "${1:-}" in
     plist=$saved_plist
     launchctl bootout "$domain/$label" 2>/dev/null || true
     launchctl bootstrap "$domain" "$plist"
-    echo 'Running at http://127.0.0.1:3838/ and on future logins.'
+    echo 'Running now and on future logins. Application address:'
+    /usr/local/bin/shinyharbor open apps --print --config "$data/harbor.toml"
     ;;
   *) echo 'Usage: service.sh start|stop' >&2; exit 2;;
 esac

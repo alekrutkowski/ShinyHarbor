@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 use tokio_util::sync::CancellationToken;
+mod terminal;
 
 #[derive(Parser)]
 #[command(version, about = "Host R Shiny apps with HTTPS, process pools and a private usage dashboard", long_about = None, args_conflicts_with_subcommands = true)]
@@ -22,6 +23,31 @@ struct Cli {
 }
 #[derive(Subcommand)]
 enum Command {
+    /// Install Sampling Lab, updating the old bundled example only if unmodified.
+    Example {
+        #[arg(long, default_value_os_t = user_directory().join("apps/hello"))]
+        directory: PathBuf,
+    },
+    /// Show a live terminal dashboard for an already running server (Q exits).
+    Tui {
+        #[arg(short, long, default_value_os_t = default_configuration())]
+        config: PathBuf,
+        /// Print a readable status snapshot, including when output is redirected.
+        #[arg(long)]
+        once: bool,
+        #[arg(long, default_value_t = 100, value_parser = clap::value_parser!(u16).range(40..=240))]
+        width: u16,
+    },
+    /// Open apps, the dashboard, or administration using configured ports and TLS.
+    Open {
+        #[arg(value_enum, default_value = "apps")]
+        page: terminal::Page,
+        #[arg(short, long, default_value_os_t = default_configuration())]
+        config: PathBuf,
+        /// Print the address instead of opening a browser.
+        #[arg(long)]
+        print: bool,
+    },
     /// Show resolved installation paths without exposing credentials.
     Paths {
         #[arg(short, long, default_value_os_t = default_configuration())]
@@ -107,6 +133,25 @@ fn main() -> Result<()> {
             .or(cli.legacy_config)
             .unwrap_or_else(default_configuration),
     }) {
+        Command::Example { directory } => shinyharbor::installation::example(&directory),
+        Command::Tui {
+            config,
+            once,
+            width,
+        } => runtime()?.block_on(terminal::run(&config, once, width)),
+        Command::Open {
+            page,
+            config,
+            print,
+        } => {
+            let config = Config::load(&config)?;
+            if print {
+                println!("{}", terminal::page_url(&config, page));
+                Ok(())
+            } else {
+                terminal::open(&config, page)
+            }
+        }
         Command::Paths { config } => {
             let cfg = Config::load(&config)?;
             println!(
@@ -213,15 +258,18 @@ fn initialize(directory: &Path) -> Result<()> {
     let app = directory.join("apps").join("hello");
     std::fs::create_dir_all(&app)?;
     std::fs::create_dir_all(directory.join("R/library"))?;
-    write_new(&app.join("app.R"), include_str!("../examples/hello/app.R"))?;
+    shinyharbor::installation::example(&app)?;
     write_new(&path, include_str!("../examples/init.toml"))?;
     let c = Config::load(&path)?;
     let _ = server::admin_token(&c.state_dir)?;
     println!(
-        "Created {}\nRun: shinyharbor doctor --config \"{}\"\nThen: shinyharbor serve --config \"{}\"\nApplication: http://127.0.0.1:3838/hello/\nDashboard: http://127.0.0.1:3839/\nUnlock it with: shinyharbor admin-token --config \"{}\"",
+        "Configured {}\nRun: shinyharbor doctor --config \"{}\"\nThen: shinyharbor serve --config \"{}\"\nApplications: {}\nDashboard: {}\nAdministration: {}\nUnlock it with: shinyharbor admin-token --config \"{}\"",
         path.display(),
         path.display(),
         path.display(),
+        terminal::page_url(&c, terminal::Page::Apps),
+        terminal::page_url(&c, terminal::Page::Dashboard),
+        terminal::page_url(&c, terminal::Page::Admin),
         path.display()
     );
     Ok(())
@@ -232,6 +280,10 @@ fn setup(directory: &Path, install_shiny: bool) -> Result<()> {
         initialize(directory)?;
     } else {
         println!("Keeping existing configuration: {}", path.display());
+        let example = directory.join("apps/hello");
+        if example.join("app.R").is_file() {
+            shinyharbor::installation::example(&example)?;
+        }
     }
     let config = Config::load(&path)?;
     if install_shiny {

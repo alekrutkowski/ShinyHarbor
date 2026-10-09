@@ -416,11 +416,20 @@ impl Config {
             )
         })?;
         let raw = std::fs::read_to_string(&absolute)?;
+        Self::from_text(&raw, &absolute)
+    }
+    /// Validate an editor's draft using the real file's syntax and base directory.
+    pub fn from_text(raw: &str, absolute: &Path) -> Result<Self> {
+        ensure!(
+            absolute.is_absolute(),
+            "Configuration path must be absolute"
+        );
+        let path = absolute;
         let mut cfg: Self = if absolute.extension().is_some_and(|e| e == "conf") {
-            crate::legacy::parse(&raw)
+            crate::legacy::parse(raw)
                 .with_context(|| format!("Invalid Shiny Server configuration {}", path.display()))?
         } else {
-            toml::from_str(&raw).context(
+            toml::from_str(raw).context(
                 "Invalid TOML configuration (use a .conf extension for Shiny Server syntax)",
             )?
         };

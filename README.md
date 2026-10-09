@@ -6,7 +6,7 @@ ShinyHarbor starts your R apps, serves their pages, and provides a private usage
 dashboard. It can also obtain and renew HTTPS certificates. You keep writing
 ordinary Shiny code; your visitors only need a browser.
 
-**Current version: 0.1.0-alpha.1, for evaluation.** This is **not a certified drop-in replacement**
+**Current version: 0.1.0-alpha.2, for evaluation.** This is **not a certified drop-in replacement**
 for Posit's Shiny Server, and full Shiny Server Professional compatibility is not
 complete. Windows x64 and Linux x64 have local validation; macOS and ARM installer
 builds are pending. See [what has actually been tested](VALIDATION.md).
@@ -18,7 +18,8 @@ builds are pending. See [what has actually been tested](VALIDATION.md).
    [Fedora](#fedora), [Arch Linux](#arch-linux), or [macOS](#macos).
 3. [Try the example, then add your own app](#add-your-own-shiny-app).
 4. [Open the usage dashboard](#open-the-usage-dashboard).
-5. When you are ready, [share apps with other people](#share-apps-with-other-people).
+5. [Manage server settings](#manage-server-settings) or try the [terminal monitor](#use-the-terminal-monitor).
+6. When you are ready, [share apps with other people](#share-apps-with-other-people).
 
 Also: [other Linux distributions](#other-linux-distributions) ·
 [portable ZIP/tar downloads](#portable-downloads) ·
@@ -41,16 +42,19 @@ compile Rust or install Cargo to use it.
 ShinyHarbor initially accepts connections from **the server computer itself**.
 The address `127.0.0.1` means “this computer.” Getting the example working locally
 is the first step; making it available to other computers is a separate step below.
+The initial setup uses **HTTP**, for example `http://127.0.0.1:3838/`. Changing
+`http` to `https` in the browser does not enable encryption on the server. For
+local HTTPS, follow [HTTPS on your own computer](#https-on-your-own-computer).
 
 ## Choose your download
 
-Open [**GitHub Releases**](https://github.com/alekrutkowski/ShinyHarbor/releases/tag/v0.1.0-alpha.1)
+Open [**GitHub Releases**](https://github.com/alekrutkowski/ShinyHarbor/releases/tag/v0.1.0-alpha.2)
 and expand **Assets**. Choose an installer from this table. GitHub's automatically
 generated **Source code** downloads contain source files, not an installer.
 
 | Your computer | Download for this alpha | Availability |
 | --- | --- | --- |
-| Windows on Intel/AMD, 64-bit | [Windows setup `.exe`][windows-setup] | Available; install, upgrade and uninstall tested |
+| Windows on Intel/AMD, 64-bit | [Windows setup `.exe`][windows-setup] | Available; see version-specific checks in [VALIDATION.md](VALIDATION.md) |
 | Debian or Ubuntu, Intel/AMD 64-bit | [Debian/Ubuntu `.deb`][linux-deb] | Available; package and executable checked |
 | Fedora, Intel/AMD 64-bit | [Fedora `.rpm`][linux-rpm] | Available; package and executable checked |
 | Arch Linux, Intel/AMD 64-bit | [Arch `.pkg.tar.zst`][linux-arch] | Available; package and executable checked |
@@ -140,7 +144,7 @@ the downloaded file**. For the current Intel/AMD 64-bit package, run:
 
 ```sh
 sudo apt update
-sudo apt install ./shinyharbor_0.1.0-alpha.1-1_amd64.deb
+sudo apt install ./shinyharbor_0.1.0-alpha.2-1_amd64.deb
 ```
 
 `sudo` asks for your Linux account password to allow system installation. The
@@ -165,7 +169,7 @@ validated. Continue with [Linux folders and service controls](#linux-folders-and
 Download the [`.rpm` package][linux-rpm]. Open a **Terminal in its download folder**:
 
 ```sh
-sudo dnf install ./shinyharbor-0.1.0-alpha.1-1.x86_64.rpm
+sudo dnf install ./shinyharbor-0.1.0-alpha.2-1.x86_64.rpm
 systemctl status shinyharbor --no-pager
 sudo -u shinyharbor shinyharbor doctor --config /etc/shinyharbor/harbor.toml
 ```
@@ -185,7 +189,7 @@ Download the [Arch package][linux-arch]. Open a **Terminal in its download folde
 
 ```sh
 sudo pacman -Syu --needed r base-devel
-sudo pacman -U ./shinyharbor-0.1.0_alpha.1-1-x86_64.pkg.tar.zst
+sudo pacman -U ./shinyharbor-0.1.0_alpha.2-1-x86_64.pkg.tar.zst
 ```
 
 The first command also updates the system's packages, following
@@ -297,8 +301,8 @@ On Windows, right-click the ZIP and select **Extract All**. On Linux, you can
 extract from a Terminal in your download folder:
 
 ```sh
-tar -xzf shinyharbor-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz
-cd shinyharbor-0.1.0-alpha.1-x86_64-unknown-linux-musl
+tar -xzf shinyharbor-0.1.0-alpha.2-x86_64-unknown-linux-musl.tar.gz
+cd shinyharbor-0.1.0-alpha.2-x86_64-unknown-linux-musl
 ```
 
 On Windows, open PowerShell in the extracted folder:
@@ -321,6 +325,34 @@ Install R first. `setup` installs Shiny when requested and keeps existing settin
 The server stays in this terminal; **Ctrl+C** stops it. Open
 <http://127.0.0.1:3838/hello/> to try it. A bare executable also finds the settings
 beside it, even when launched from another working directory.
+
+## Explore Sampling Lab
+
+The example at `/hello/` is **Sampling Lab**, an interactive statistics lesson
+using Shiny and base R. No plotting or statistics packages need to be installed.
+
+![Sampling Lab running through ShinyHarbor: controls, statistical summaries and a base-R plot](docs/sampling-lab.png)
+
+1. Keep the initial bell-shaped population and click **Run experiment**. The
+   histogram is one random sample; the curve is its known population.
+2. Open **Sampling distribution** to see estimates from 2,000 independent
+   samples. Open **Interval coverage** to see which confidence intervals contain
+   the true mean.
+3. Choose a right-skewed population and a small sample size, then run again.
+   Compare observed coverage with the nominal confidence level. Increase the
+   sample size and explore what changes.
+4. Download the sample, all simulated intervals, or a PDF plot report. A fixed
+   seed makes the experiment reproducible. Each browser session has its own
+   experiment; changes take effect only when you click **Run experiment**.
+
+The lesson explains its assumptions and Monte Carlo uncertainty. Its live
+updates and downloads also demonstrate ordinary Shiny functionality through
+ShinyHarbor. Open the usage dashboard in another tab to observe the traffic.
+
+Upgrading updates the original alpha.1 example only when its `app.R` is still
+unmodified, keeping a hidden backup. Your own edits are preserved. To install a
+fresh copy elsewhere, use `shinyharbor example --directory /path/to/new-app`;
+on Windows use `& $Harbor example --directory "C:\path\to\new-app"`.
 
 ## Add your own Shiny app
 
@@ -420,6 +452,290 @@ available automatically. See [analytics settings](docs/CONFIGURATION.md#analytic
 increase connection counts. The analytics database does not store raw IP addresses,
 but app code and other logs may record their own data. Analytics can be disabled.
 
+## Manage server settings
+
+On the server computer, open **<http://127.0.0.1:3839/admin>**. If you changed
+`admin_listen`, use that port instead. The Windows installer also creates a
+**Server administration** shortcut. The dashboard has a **Server settings** link.
+This administration address is on the private dashboard port, not the public
+app port. It continues to use **HTTP** when your apps use HTTPS.
+
+Unlock it using the [same admin token as the dashboard](#open-the-usage-dashboard).
+The token stays only in page memory. Refreshing or locking the page clears it.
+Anyone with this token can read sensitive configuration and change how the
+server runs, so keep it private.
+
+- **Everyday settings** provides labelled controls and explanations for HTTPS,
+  connection addresses, R, server data, statistics and transport limits.
+- **Full configuration** edits every supported option, including app definitions,
+  worker counts, access rules and legacy `shiny-server.conf` files. Use this for
+  settings beyond the guided controls.
+- **Running settings** shows all effective values, including defaults and
+  resolved paths, with a search box. These are what the server is using now.
+- **Settings reference** contains the complete bundled configuration guide and
+  works without an Internet connection.
+
+Change a setting, click **1. Validate changes**, review the result, then click
+**2. Save and apply**. Validation does not change the file. Invalid settings or
+unreadable/mismatched PEM certificate files are rejected. If another editor has
+changed the file, refresh and reconcile your edits instead of overwriting them.
+
+App routes and access rules can be applied live while existing sessions drain
+normally. Ports, TLS, analytics and other global settings need a restart. The
+button then says **Save for next restart**, and the page shows platform-specific
+restart instructions. **Saved** does not mean **already active**. Configuration
+changes do not move data directories or install missing R packages for you.
+
+Each save puts a private backup in `.shinyharbor-backups` beside the configuration
+file and replaces the file atomically. Backups may contain secrets. To undo a
+change, copy the desired backup over `harbor.toml` locally, run `check`, then
+reload or restart as appropriate. Old backups are retained until you remove
+them; keep the ones you need, and include them in your disk-space planning.
+
+The server account needs write access to the configuration file **and its parent
+directory**. New Linux packages configure this for the `shinyharbor` account and
+allow that directory through the systemd service's filesystem restrictions.
+An existing manually deployed or locked-down service may be read-only; the page
+will explain the write failure. Do not make the directory writable by everyone.
+R app deployment remains a trusted operation: app code running as the server
+account shares its filesystem permissions.
+
+For remote administration, use the SSH tunnel below. Do not expose the admin
+port through your firewall. There is no settings editor on the public app listener.
+
+## Use the terminal monitor
+
+Start ShinyHarbor as usual, then open a **second terminal** and run:
+
+```sh
+shinyharbor tui --config /path/to/harbor.toml
+```
+
+On Windows, use the **Terminal monitor** shortcut, or:
+
+```powershell
+& $Harbor tui --config "$env:LOCALAPPDATA\ShinyHarbor\harbor.toml"
+```
+
+On packaged Linux, the service's private token belongs to its service account:
+
+```sh
+sudo -u shinyharbor shinyharbor tui --config /etc/shinyharbor/harbor.toml
+```
+
+The TUI is a live terminal interface showing server status, app workers and
+connections. Use **Tab** or **1 / 2 / 3** to switch panels, **Up / Down** to scroll
+apps, and **R** to refresh. **A** opens administration, **D** the usage dashboard,
+and **O** the apps in a browser on desktop systems. On a headless server, use
+the displayed addresses through an SSH tunnel on your own computer instead.
+**Q**, **Esc**, or **Ctrl+C** closes the monitor; it does not stop the server.
+
+For logs, scripts, or a terminal that cannot run an interactive interface:
+
+```sh
+shinyharbor tui --once --config /path/to/harbor.toml
+shinyharbor open admin --print --config /path/to/harbor.toml
+```
+
+The first command prints a readable status snapshot. The second prints the
+configured administration URL. `open apps` and `open dashboard` work similarly;
+omit `--print` to open the browser. Installer shortcuts on Windows and macOS use
+these commands so they follow your configured ports and HTTPS mode.
+
+## HTTPS on your own computer
+
+For a first local test, the supplied **HTTP** address is sufficient. If you want
+to test HTTPS, you need a certificate for `localhost` and must tell ShinyHarbor
+to use it. The certificate also needs to be trusted by your browser.
+[Let's Encrypt cannot issue certificates for `localhost`](https://letsencrypt.org/docs/certificates-for-localhost/).
+Its automatic certificate service is for a real domain, as described below.
+
+These steps use [mkcert](https://github.com/FiloSottile/mkcert), a small tool for
+local development certificates. This is an optional setup on **your own test
+computer**, not the certificate setup to use for a public server.
+
+1. Install mkcert for your operating system. These commands install the
+   certificate tool; they do not yet make its certificates trusted.
+
+   **Windows**, in PowerShell with WinGet:
+
+   ```powershell
+   winget install --exact --id FiloSottile.mkcert
+   ```
+
+   Close and reopen PowerShell if `mkcert` is not recognised afterwards.
+
+   **macOS**, with [Homebrew](https://brew.sh/) already installed:
+
+   ```sh
+   brew install mkcert nss
+   ```
+
+   **Debian / Ubuntu**:
+
+   ```sh
+   sudo apt update
+   sudo apt install mkcert libnss3-tools
+   ```
+
+   Ubuntu provides mkcert in its **Universe** repository. If apt cannot find it,
+   enable that repository using the Ubuntu instructions linked earlier.
+
+   **Fedora**:
+
+   ```sh
+   sudo dnf install mkcert nss-tools
+   ```
+
+   **Arch Linux** (perform a full upgrade, not a partial one):
+
+   ```sh
+   sudo pacman -Syu mkcert nss
+   ```
+
+   For another distribution, or a computer without these package managers, use
+   [mkcert's official installation instructions and downloads](https://github.com/FiloSottile/mkcert#installation).
+   The NSS tools help mkcert configure browsers that use an NSS certificate store.
+2. Run the following command **only if you want to trust certificates issued by
+   mkcert's local certificate authority on this computer**. It changes your
+   certificate trust settings and may ask for administrator approval:
+
+   ```sh
+   mkcert -install
+   ```
+
+   Run this as your usual desktop account, not with `sudo` in front. mkcert will
+   request elevated access if necessary. It must run on the computer **where
+   the browser is used**. Installing trust on a remote server alone does not
+   make your laptop trust its certificates. For a remote server, use the
+   [public-domain HTTPS steps](#publish-at-your-own-https-address) or an SSH tunnel.
+
+3. Open a terminal in your ShinyHarbor **data folder**: the folder containing
+   `harbor.toml`, not the `apps` subfolder. For the default Windows installation:
+
+   ```powershell
+   Set-Location "$env:LOCALAPPDATA\ShinyHarbor"
+   New-Item -ItemType Directory -Path certs -Force
+   mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
+   ```
+
+   **macOS default data folder**:
+
+   ```sh
+   cd "$HOME/Library/Application Support/ShinyHarbor"
+   mkdir -p certs
+   mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
+   chmod 600 certs/localhost-key.pem
+   ```
+
+   **Portable Linux**, after opening your chosen data folder (the default is
+   `$HOME/.local/share/shinyharbor`):
+
+   ```sh
+   mkdir -p certs
+   mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
+   chmod 600 certs/localhost-key.pem
+   ```
+
+   **Packaged Debian / Ubuntu / Fedora / Arch service**, on the same computer as
+   your test browser: generate files in your own private temporary folder, then
+   install them where the service can read them. This does not copy the CA's
+   signing key into the server directory.
+
+   ```sh
+   certwork=$(mktemp -d)
+   mkcert -cert-file "$certwork/localhost.pem" -key-file "$certwork/localhost-key.pem" localhost 127.0.0.1 ::1
+   sudo install -d -o root -g shinyharbor -m 0750 /etc/shinyharbor/certs
+   sudo install -o root -g shinyharbor -m 0640 "$certwork/localhost.pem" /etc/shinyharbor/certs/localhost.pem
+   sudo install -o root -g shinyharbor -m 0640 "$certwork/localhost-key.pem" /etc/shinyharbor/certs/localhost-key.pem
+   rm -- "$certwork/localhost.pem" "$certwork/localhost-key.pem"
+   rmdir -- "$certwork"
+   ```
+
+   On a **Windows background service**, LocalService also needs read access to
+   the certificate and private key. The service installer grants read access
+   under the selected data directory. If you applied a more restrictive ACL or
+   keep certificates elsewhere, grant that account read access to those files
+   and their containing directory. Keep certificates and private keys outside
+   every folder served as an app or static website.
+4. Back up `harbor.toml`. Replace its existing `[tls]` block with the following;
+   do not add a second `[tls]` block:
+
+   ```toml
+   [tls]
+   mode = "pem"
+   cert = "certs/localhost.pem"
+   key = "certs/localhost-key.pem"
+   ```
+
+   Alternatively, unlock **Server administration → Everyday settings → HTTPS
+   certificates**, choose **Use certificate files (PEM)**, and enter these paths.
+   Validate, then save. The page will explain that a restart is required.
+
+   Keep the top-level `listen = "127.0.0.1:3838"` and `admin_listen` settings, or
+   the custom ports you already chose. Certificate paths are relative to the
+   configuration file. In a configuration with several `[[servers]]`, a server's
+   own TLS setting can override this default; see [TLS settings](docs/CONFIGURATION.md#tls).
+5. Save the file, run `check` using your executable and config path, then stop and
+   start ShinyHarbor. For the default Windows installation:
+
+   ```powershell
+   $Harbor = "$env:LOCALAPPDATA\Programs\ShinyHarbor\shinyharbor.exe"
+   & $Harbor check --config "$env:LOCALAPPDATA\ShinyHarbor\harbor.toml"
+   ```
+
+   If validation succeeds, press **Ctrl+C** in the running server's window and
+   open **Start ShinyHarbor** again. For a background service, use the restart
+   instructions for your platform above. Restarting disconnects active apps.
+
+   On **packaged Linux**:
+
+   ```sh
+   sudo -u shinyharbor shinyharbor check --config /etc/shinyharbor/harbor.toml
+   sudo systemctl restart shinyharbor
+   sudo systemctl status shinyharbor --no-pager
+   ```
+
+   On **macOS**, stop a foreground server with Ctrl+C and start it again. For
+   the packaged background service, use **Stop background server**, then **Run
+   at login**, or run:
+
+   ```sh
+   /usr/local/libexec/shinyharbor/service.sh stop
+   /usr/local/libexec/shinyharbor/service.sh start
+   ```
+
+   For **any portable installation**, Ctrl+C stops the foreground process;
+   repeat your `shinyharbor serve --config ...` command to start it again.
+6. Open **`https://localhost:3838/hello/`**, replacing `3838` if you chose a
+   different app port. The app port now serves HTTPS. The **usage dashboard
+   still uses HTTP** on its separate local port, normally
+   `http://127.0.0.1:3839/`. Fully restart your browser if it has not picked up
+   the new certificate trust settings.
+
+   You should see Sampling Lab without a certificate warning. On Windows,
+   `Invoke-WebRequest https://localhost:3838/hello/` also checks Windows trust;
+   on Linux/macOS use `curl https://localhost:3838/hello/`. Replace the port as
+   needed. Do not add an option that disables certificate verification.
+
+   After changing your settings, `shinyharbor open apps --print` shows the
+   configured app address. `shinyharbor open admin --print` shows the separate
+   administration address. Add `--config /path/to/harbor.toml` for a custom file.
+
+Certificates created by mkcert are not renewed automatically. Before the expiry
+date it prints, rerun the certificate-generation command with the same filenames;
+ShinyHarbor loads valid replacement files within five seconds. Keep mkcert's
+`rootCA-key.pem` private and do not share it or commit it to Git. To return to
+HTTP, restore `[tls]` to just `mode = "off"` and restart. To remove mkcert's local
+certificate authority from the trust stores it manages, use `mkcert -uninstall`;
+this also affects other local projects using that authority.
+
+The public-domain ACME mode below **does** obtain and renew certificates
+automatically. The local PEM mode above reloads files you replace; it does not
+renew them for you. On packaged Linux, repeat both generation and `install`
+commands when renewing so the service receives the new files and correct
+permissions. Avoid deleting the ACME state directory during upgrades.
+
 ## Share apps with other people
 
 An address beginning `127.0.0.1` only works on the computer where it is opened.
@@ -489,6 +805,64 @@ ShinyHarbor renews certificates while it is running. Back up and retain its stat
 directory, including `acme`, so account keys and certificates survive upgrades.
 The dashboard remains private; use the SSH tunnel for remote administration.
 
+### HTTPS deployment details by platform
+
+The `[tls]` configuration and certificate renewal behavior are the same on all
+platforms. The surrounding service and firewall setup differs:
+
+| Platform | Configuration and restart | What to check for public HTTPS |
+| --- | --- | --- |
+| Windows, foreground | Your selected data folder; stop the old process and use **Start ShinyHarbor** | Permit the ShinyHarbor executable through Windows Firewall on TCP 443 and 80. Use the actual installed executable path. |
+| Windows service | Selected data folder, commonly `C:\ProgramData\ShinyHarbor`; `Restart-Service ShinyHarbor` in administrator PowerShell | The service uses LocalService, not your desktop account. It needs writable state for ACME and read access to PEM keys. |
+| Debian / Ubuntu package | `/etc/shinyharbor/harbor.toml`; `sudo systemctl restart shinyharbor` | The supplied systemd unit allows binding ports 443/80. If UFW is enabled, allow `443/tcp` and `80/tcp`. |
+| Fedora package | Same config and restart as above | If firewalld is enabled, allow its `https` and `http` services in the server's active zone, then reload firewalld. |
+| Arch Linux package | Same config and restart as above | Use the rules for whichever firewall you installed; Arch does not mandate one firewall manager. |
+| macOS package / launch agent | `~/Library/Application Support/ShinyHarbor/harbor.toml`; stop/start using the supplied service shortcuts | Allow incoming connections for ShinyHarbor in macOS Firewall settings. The launch agent runs as you, at login. |
+| Portable Linux/macOS | Your chosen file; stop and repeat `serve --config ...` | Configure your service manager, firewall and low-port access. The portable archive does not change them. |
+
+For example, on **Ubuntu with UFW already enabled**, the public-app rules are:
+
+```sh
+sudo ufw allow 443/tcp
+sudo ufw allow 80/tcp
+```
+
+On **Fedora with firewalld**, use the appropriate zone if your server does not
+use the default one:
+
+```sh
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --reload
+```
+
+On **Windows**, an administrator can add a rule for the actual installed binary:
+
+```powershell
+$Harbor = "$env:LOCALAPPDATA\Programs\ShinyHarbor\shinyharbor.exe"
+New-NetFirewallRule -DisplayName "ShinyHarbor public HTTPS" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 80,443 -Program $Harbor
+```
+
+Change `$Harbor` for an all-users or custom installation. These are publishing
+steps: do not open the dashboard/admin port. Your router or cloud firewall may
+also need rules; a local firewall rule alone does not configure those.
+
+If a Unix/macOS account cannot bind port 443, keep R running as an ordinary
+account. An administrator can forward public TCP 443 to a higher local port,
+such as 8443, **without terminating TLS**. With that forwarding in place, use
+`listen = "0.0.0.0:8443"`, `http_redirect_listen = "0.0.0.0:8080"` and
+`public_origin = "https://your-real-domain"` as top-level settings, and forward
+public TCP 80 to local 8080. Keep the ACME block above. Let's Encrypt still
+connects to **public port 443**; just changing the local port without forwarding
+will not work. Alternatively, let a trusted reverse proxy manage public TLS;
+see [proxy configuration](examples/proxy-tls.toml).
+
+After restarting, open your real HTTPS domain from another computer. Verify that
+the browser accepts its certificate and that Sampling Lab runs an experiment.
+If issuance fails, inspect the server/service log and check domain DNS, both
+IPv4/IPv6 routes when present, the public port, and certificate-state permissions.
+Do not disable certificate checks to turn a failed test into a successful one.
+
 **HTTPS encrypts traffic; it does not decide who may use an app.** Apps are
 accessible without a login by default. For private apps, configure
 [password protection](docs/CONFIGURATION.md#password-protection) or
@@ -528,6 +902,8 @@ a sample configuration: do not overwrite your working `harbor.toml` with it.
 | The example works, but your app does not | Run the app in a fresh R session, check its data paths, and inspect its worker log in the state directory's `logs` subfolder. Use paths relative to the app folder instead of your own desktop. |
 | “Address already in use” | Check whether another ShinyHarbor or Shiny Server is already running. Stop the duplicate, or select unused app/dashboard ports in `harbor.toml`. |
 | A colleague cannot open your link | `127.0.0.1` is local to each computer. Follow the sharing instructions; check the server is on and its domain/firewall settings are correct. |
+| `ERR_SSL_PROTOCOL_ERROR` / “localhost sent an invalid response” | You may be opening `https://` on a port that serves HTTP. The default `[tls]` mode is `off`: use the supplied `http://` app address, or follow [local HTTPS setup](#https-on-your-own-computer). The dashboard uses HTTP on its own port even when app HTTPS is enabled. |
+| Local HTTPS says the certificate is not trusted | The server is now speaking TLS, but your browser does not trust its certificate. Follow the mkcert trust step, restart the browser, and use a hostname listed in the certificate. Do not disable certificate verification. |
 | Browser certificate warning with test HTTPS | `production = false` creates a test certificate. Complete the HTTPS steps and switch to production; do not send users the staging-certificate endpoint. |
 
 `check` validates configuration; `doctor` checks R and Shiny. Neither command
@@ -545,13 +921,13 @@ It does not replace a trusted publisher signature.
 Windows PowerShell, using the actual downloaded filename:
 
 ```powershell
-Get-FileHash .\shinyharbor-0.1.0-alpha.1-x86_64-pc-windows-msvc-setup.exe -Algorithm SHA256
+Get-FileHash .\shinyharbor-0.1.0-alpha.2-x86_64-pc-windows-msvc-setup.exe -Algorithm SHA256
 ```
 
 Linux, with the installer and its sidecar in the same directory:
 
 ```sh
-sha256sum -c shinyharbor_0.1.0-alpha.1-1_amd64.deb.sha256
+sha256sum -c shinyharbor_0.1.0-alpha.2-1_amd64.deb.sha256
 ```
 
 On macOS, use `shasum -a 256 FILE` and compare the value. `SHA256SUMS` on the release
@@ -607,9 +983,9 @@ Further documentation:
 License: MIT, copyright Alek Rutkowski. Bundled dependency notices accompany the
 downloads; external-runtime acknowledgments are in [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
 
-[windows-setup]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0-alpha.1-x86_64-pc-windows-msvc-setup.exe
-[linux-deb]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor_0.1.0-alpha.1-1_amd64.deb
-[linux-rpm]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0-alpha.1-1.x86_64.rpm
-[linux-arch]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0_alpha.1-1-x86_64.pkg.tar.zst
-[windows-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0-alpha.1-x86_64-pc-windows-msvc.zip
-[linux-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz
+[windows-setup]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0-alpha.2-x86_64-pc-windows-msvc-setup.exe
+[linux-deb]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor_0.1.0-alpha.2-1_amd64.deb
+[linux-rpm]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0-alpha.2-1.x86_64.rpm
+[linux-arch]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0_alpha.2-1-x86_64.pkg.tar.zst
+[windows-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0-alpha.2-x86_64-pc-windows-msvc.zip
+[linux-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0-alpha.2-x86_64-unknown-linux-musl.tar.gz

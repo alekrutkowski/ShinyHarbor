@@ -75,7 +75,7 @@ entries, and code-signing identities are not provisioned.
 
 ## Manually published evaluation prerelease
 
-At the repository owner's explicit request, `v0.1.0-alpha.1` is being published
+At the repository owner's explicit request, the `v0.1.0-alpha.1` and `v0.1.0-alpha.2` evaluation releases are published
 with the locally validated Windows x64 and Linux x64 artifacts while hosted CI
 is blocked by account billing. This is a partial-platform **prerelease**, not a
 successful execution of the full release workflow described above.
@@ -89,8 +89,8 @@ full-matrix requirement in `tools/release_files.py` remains unchanged.
 
 Missing macOS/ARM installers, untested package-manager/service lifecycles and
 unsigned installers are stated in the release notes. The source tag includes the
-beginner README; the executables were built from the same Rust sources before the
-documentation update. No stable-release gate or CI requirement has been weakened.
+beginner README; the manifest binds executable hashes to the compiled sources
+and identifies any documentation-only packaging refresh. No stable-release gate or CI requirement has been weakened.
 An existing published release must not be silently overwritten by a later matrix
 run; use a new version for subsequent releases.
 

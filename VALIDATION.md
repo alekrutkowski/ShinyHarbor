@@ -1,5 +1,34 @@
 # Delivery-time validation
 
+## 2026-10-09 alpha.2 usability release
+
+The optimized Windows x64 and Linux x64 musl executables were rebuilt for
+`0.1.0-alpha.2`. New source-bound evidence is in
+[`validation/2026-10-09-alpha2.json`](validation/2026-10-09-alpha2.json).
+
+| Executed check | Result | Scope |
+| --- | --- | --- |
+| Rust unit tests | 34 Windows / 36 Linux passed | Includes config patching, origin rejection, TUI rendering and URL selection |
+| Clippy and formatting | Passed | Both native targets, all-targets, warnings denied; rustfmt |
+| Repository checks | 19 passed | Configuration, workflow/release policy and SQLite checks |
+| Administration | 18 Windows / 14 Linux checks passed | Authentication, origin checks, invalid-save rejection, preview, atomic save, comments, private backup, conflicts, live apply, restart state, legacy syntax and CLI links |
+| Administration browser | Included in Windows checks | Real Edge page, guided changes, reference, preview/save, mobile layout, token lock and no token storage |
+| Sampling Lab | Eight Windows browser checks passed | Live R, independent sessions, three plots, explicit runs, CSV and PDF downloads, responsive layout, no JS errors |
+| Statistical correctness | Passed in R 4.6.1 / Shiny 1.14.0 | Agreement with t.test, densities, normal coverage, seed isolation, reproducibility and reactive controls |
+| Terminal interaction | Four Linux PTY checks passed | Raw keyboard navigation, uppercase quit, terminal restoration and server survival |
+| Installation/upgrade | Nine checks on each OS passed | First run, Unicode paths, config/data preservation, known-example upgrade with backup, customized-app preservation, real R discovery and Shiny startup |
+| HTTPS regression | Eight checks on each OS passed | Verified independent TLS listeners, PEM reload, mixed HTTP/HTTPS, secure affinity cookies, conflicts and private-key protection |
+
+The release manifest records installer-specific checks separately. The older
+alpha.1 installer lifecycle results below do not certify this version's complete
+fresh-install/uninstall lifecycle. Windows SCM and actual Debian/Fedora/Arch
+package-manager service lifecycles remain unverified. Localhost certificate trust
+was exercised on Windows; the other OS commands are documented, not all executed.
+macOS/ARM builds and the complete hosted CI matrix remain pending. The preceding
+hosted runs failed before runners started because of account billing. No stable
+release or full Shiny Server/Professional parity claim is made.
+
+
 ## 2026-10-09 installers and first-run repair
 
 The missing-configuration startup error is repaired. A portable archive now

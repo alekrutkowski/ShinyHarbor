@@ -50,6 +50,21 @@ async def exercise(binary, check_r):
         await command('setup', '--directory', str(data))
         assert config.read_text(encoding='utf-8') == original and marker.read_text() == 'keep this'
         checks.append('repeat-setup-preserves-user-config-and-app-data')
+        example = data / 'apps/hello/app.R'
+        current_example = example.read_bytes()
+        old_example = (Path(__file__).parent / 'fixtures/hello-alpha1.R').read_bytes()
+        example.write_bytes(old_example)
+        await command('setup', '--directory', str(data))
+        assert example.read_bytes() == current_example
+        assert any(p.read_bytes() == old_example for p in example.parent.glob('.app.R-before-update-*.bak'))
+        assert config.read_text(encoding='utf-8') == original
+        checks.append('upgrade-refreshes-unmodified-old-example-with-backup')
+        customized = current_example + b'\n# my own customized app\n'
+        example.write_bytes(customized)
+        await command('setup', '--directory', str(data))
+        await command('example', '--directory', str(example.parent))
+        assert example.read_bytes() == customized
+        checks.append('upgrade-and-example-command-preserve-customized-app')
         missing = dict(environment, SHINYHARBOR_CONFIG=str(root / 'missing.toml'))
         _, error = await command(env=missing, expected=1)
         assert 'Cannot find configuration' in error and 'setup' in error

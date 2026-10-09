@@ -80,6 +80,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_*.py' -v
           node --check assets/app.js
+          node --check assets/admin.js
           node --check assets/shinyharbor-client.js
       - name: Build release executable
         run: cargo build --locked --release --target ${{ matrix.target }}
@@ -93,6 +94,10 @@ jobs:
           python tests/installation.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/access_logs.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/keepalive.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/management.py --skip-browser --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+      - name: Interactive terminal keyboard and restoration
+        if: runner.os != 'Windows'
+        run: python tests/terminal_pty.py --binary target/${{ matrix.target }}/release/shinyharbor
       - name: Package with actual lockfile and retained license texts
         run: python tools/package.py --target ${{ matrix.target }}
       - name: Linux installer tools
@@ -198,6 +203,9 @@ jobs:
           python tests/page_settings.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/listener_tls.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/live_dashboard.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/management.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/sampling_lab.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          Rscript --vanilla tests/sampling_lab.R
       - name: Unix reload signals
         if: runner.os != 'Windows'
         run: |
