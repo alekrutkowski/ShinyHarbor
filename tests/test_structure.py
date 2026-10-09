@@ -118,6 +118,14 @@ class Structure(unittest.TestCase):
             with self.assertRaises(ValueError):
                 tool.verify(directory)
 
+    def test_release_filenames_are_safe_for_github_assets(self):
+        tool = load_tool('release_files')
+        version = tomllib.loads((ROOT / 'Cargo.toml').read_text(encoding='utf-8'))['package']['version']
+        targets = json.loads((ROOT / 'tools/targets.json').read_text(encoding='utf-8'))['include']
+        # GitHub rewrites '~' to '.', breaking links and checksum sidecars.
+        for name in tool.expected_files(version, targets):
+            self.assertRegex(name, r'^[A-Za-z0-9._-]+$')
+
     def test_examples_are_valid_toml(self):
         for path in (ROOT / 'examples').glob('*.toml'):
             config = tomllib.loads(path.read_text(encoding="utf-8"))

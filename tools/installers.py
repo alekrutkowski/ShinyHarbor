@@ -133,7 +133,9 @@ set -eu
 if [ "$1" = purge ]; then deb-systemd-helper purge shinyharbor.service >/dev/null || true; fi
 if [ -d /run/systemd/system ]; then systemctl daemon-reload; fi
 ''', 0o755)
-    deb_file = output / f'shinyharbor_{native_version}-1_{deb_arch}.deb'
+    # GitHub rewrites '~' in asset names. Keep native ordering in metadata,
+    # but use the Cargo version (safe characters) in downloadable filenames.
+    deb_file = output / f'shinyharbor_{version}-1_{deb_arch}.deb'
     run('dpkg-deb', '--root-owner-group', '--build', deb, deb_file)
     checksum(deb_file)
 
@@ -184,7 +186,7 @@ if [ -d /run/systemd/system ]; then systemctl daemon-reload; fi
     rpms = list((rpm_top / 'RPMS').rglob('*.rpm'))
     if len(rpms) != 1:
         raise RuntimeError('Expected one RPM')
-    rpm_file = output / rpms[0].name
+    rpm_file = output / f'shinyharbor-{version}-1.{machine}.rpm'
     shutil.copy2(rpms[0], rpm_file)
     checksum(rpm_file)
 

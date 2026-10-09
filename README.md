@@ -140,7 +140,7 @@ the downloaded file**. For the current Intel/AMD 64-bit package, run:
 
 ```sh
 sudo apt update
-sudo apt install ./shinyharbor_0.1.0~alpha.1-1_amd64.deb
+sudo apt install ./shinyharbor_0.1.0-alpha.1-1_amd64.deb
 ```
 
 `sudo` asks for your Linux account password to allow system installation. The
@@ -165,7 +165,7 @@ validated. Continue with [Linux folders and service controls](#linux-folders-and
 Download the [`.rpm` package][linux-rpm]. Open a **Terminal in its download folder**:
 
 ```sh
-sudo dnf install ./shinyharbor-0.1.0~alpha.1-1.x86_64.rpm
+sudo dnf install ./shinyharbor-0.1.0-alpha.1-1.x86_64.rpm
 systemctl status shinyharbor --no-pager
 sudo -u shinyharbor shinyharbor doctor --config /etc/shinyharbor/harbor.toml
 ```
@@ -551,7 +551,7 @@ Get-FileHash .\shinyharbor-0.1.0-alpha.1-x86_64-pc-windows-msvc-setup.exe -Algor
 Linux, with the installer and its sidecar in the same directory:
 
 ```sh
-sha256sum -c shinyharbor_0.1.0~alpha.1-1_amd64.deb.sha256
+sha256sum -c shinyharbor_0.1.0-alpha.1-1_amd64.deb.sha256
 ```
 
 On macOS, use `shasum -a 256 FILE` and compare the value. `SHA256SUMS` on the release
@@ -608,8 +608,8 @@ License: MIT, copyright Alek Rutkowski. Bundled dependency notices accompany the
 downloads; external-runtime acknowledgments are in [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
 
 [windows-setup]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0-alpha.1-x86_64-pc-windows-msvc-setup.exe
-[linux-deb]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor_0.1.0~alpha.1-1_amd64.deb
-[linux-rpm]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0~alpha.1-1.x86_64.rpm
+[linux-deb]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor_0.1.0-alpha.1-1_amd64.deb
+[linux-rpm]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0-alpha.1-1.x86_64.rpm
 [linux-arch]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0_alpha.1-1-x86_64.pkg.tar.zst
 [windows-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0-alpha.1-x86_64-pc-windows-msvc.zip
 [linux-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.1/shinyharbor-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz

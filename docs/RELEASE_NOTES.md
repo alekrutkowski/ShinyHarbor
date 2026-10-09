@@ -9,8 +9,8 @@ and troubleshooting for R users.
 | Computer | File to choose under Assets |
 | --- | --- |
 | Windows Intel/AMD 64-bit | `shinyharbor-0.1.0-alpha.1-x86_64-pc-windows-msvc-setup.exe` |
-| Debian/Ubuntu Intel/AMD 64-bit | `shinyharbor_0.1.0~alpha.1-1_amd64.deb` |
-| Fedora Intel/AMD 64-bit | `shinyharbor-0.1.0~alpha.1-1.x86_64.rpm` |
+| Debian/Ubuntu Intel/AMD 64-bit | `shinyharbor_0.1.0-alpha.1-1_amd64.deb` |
+| Fedora Intel/AMD 64-bit | `shinyharbor-0.1.0-alpha.1-1.x86_64.rpm` |
 | Arch Linux Intel/AMD 64-bit | `shinyharbor-0.1.0_alpha.1-1-x86_64.pkg.tar.zst` |
 | Portable Windows / Linux x64 | The `.zip` / `-linux-musl.tar.gz` archive |
 

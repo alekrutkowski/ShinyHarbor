@@ -21,9 +21,8 @@ def expected_files(version: str, targets: list[dict]) -> list[str]:
         elif row['musl']:
             architecture = 'aarch64' if target.startswith('aarch64') else 'x86_64'
             deb_arch = 'arm64' if architecture == 'aarch64' else 'amd64'
-            native = version.replace('-', '~', 1)
-            files += [f'shinyharbor_{native}-1_{deb_arch}.deb',
-                      f'shinyharbor-{native}-1.{architecture}.rpm',
+            files += [f'shinyharbor_{version}-1_{deb_arch}.deb',
+                      f'shinyharbor-{version}-1.{architecture}.rpm',
                       f'shinyharbor-{version.replace("-", "_")}-1-{architecture}.pkg.tar.zst']
     return files
 
