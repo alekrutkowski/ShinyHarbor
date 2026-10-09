@@ -15,7 +15,9 @@ runtime metadata. R remains 4.6.1 with Shiny 1.14.0.
 | Large Shiny messages | Six Windows checks passed | 3 MiB input/output over WebSocket and XHR polling, unacknowledged replay after reconnect, configured HTTP limit enforcement |
 | Reconnect regression | Nine checks passed | Browser recovery plus six wire cases also rerun against Posit Shiny Server 1.5.23.1030 |
 | Independent listener TLS | Eight checks passed on Windows and Linux | Different trusted certificates, mixed HTTP/HTTPS, isolated reload, protected keys, inherited settings and routing headers |
-| Worker environment | Six Windows / nine Linux checks passed | Literal supervisor arguments, inheritance/clearing, runtime metadata; Linux additionally verifies Bash profile loading, precedence and app working directory |
+| Worker environment | Six Windows / eleven Linux checks passed | Literal supervisor arguments, inheritance/clearing, runtime metadata; Linux additionally verifies Bash profiles, app working directory, `R` environment selection and `r_path` precedence |
+| Original CLI startup | Six checks passed on Windows and Linux | Positional config paths with spaces, root `--config`, default file search, native precedence and ambiguous-argument rejection |
+| Upstream bookmark migration | Two real-browser cases passed | Posit-written bookmarks restored by ShinyHarbor and the reverse, with fresh browser contexts and the same Unix app path/account/store |
 | Unix worker credentials | Six checks passed | Root gateway starts Bash and supervisor under the unprivileged R account, with UID/groups, private state and Unix worker sockets |
 | Native regression | 13 Windows checks passed | Real R, legacy config, static HTTP, bookmarks, worker restart and surviving sessions |
 | R runtime and launcher | 35 R assertions and seven launcher checks passed | Per-worker authentication, real R reactivity and bookmark restoration after an R restart |
@@ -30,13 +32,18 @@ musl then passed all 32 Rust tests locally. Browser CI also exposed missing Linu
 `libuv` headers and a Windows temporary-file cleanup race; both were corrected.
 
 The [next CI run](https://github.com/alekrutkowski/ShinyHarbor/actions/runs/37889526817)
-failed before any runner or steps started. The token can read Actions jobs but
-cannot read its diagnostic Checks annotation. The account-side cause remains
-unconfirmed. This prevents verification of the corrected macOS builds and the
-complete current-source matrix. The five earlier successful jobs do not certify
+failed before any runner or steps started. The subsequent run on `75cf8c0`,
+[37894240644](https://github.com/alekrutkowski/ShinyHarbor/actions/runs/37894240644),
+failed at the same point. The user supplied GitHub's annotation confirming failed
+account payments or an insufficient spending limit. Downloaded log archives for
+these runs contain no entries. Billing must be resolved before hosted CI can run.
+This prevents verification of the corrected macOS builds and the complete
+current-source matrix. The five earlier successful jobs do not certify
 later changes. No stable release or full-compatibility claim is made.
 Machine-readable reports and source hashes for this continuation are retained in
 `validation/2026-10-09.json`.
+Subsequent CLI, interpreter selection and bookmark migration evidence is retained
+in `validation/2026-10-09-migration.json`.
 
 ## 2026-10-08 executable validation
 

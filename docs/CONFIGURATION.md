@@ -2,12 +2,22 @@
 
 All paths are relative to the configuration file unless absolute. Bare `Rscript`
 is searched through the service account's PATH; a path containing components is
-resolved from the config directory. Unknown TOML fields are errors. Restart the
-server to apply configuration changes. There is no live config reload.
+resolved from the config directory. Unknown TOML fields are errors. Application
+routes and access policies support live reload; listeners and global settings
+currently require a restart. See the reload section below.
 
 Files with a `.conf` extension select the native Shiny Server syntax parser.
 See `examples/shiny-server.conf` and the supported subset in
 [compatibility](COMPATIBILITY.md). Other extensions select TOML.
+
+Both `shinyharbor serve --config shiny-server.conf` and the original-style
+`shinyharbor shiny-server.conf` start the server. `shinyharbor --config FILE` is
+also accepted. Without an explicit path, commands look for `harbor.toml`, then
+`shiny-server.conf` in the working directory, then on Unix the existing
+`/etc/shiny-server/shiny-server.conf`. Windows service installation still uses an
+explicit path. Legacy configurations use the `R` environment variable to select
+the executable, falling back to `R` on PATH; an inherited `r_path` directive
+takes precedence. TOML continues to use its `rscript` setting.
 
 | Top-level key | Default | Meaning |
 | --- | --- | --- |

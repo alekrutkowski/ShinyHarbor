@@ -26,7 +26,7 @@ insufficient for server compatibility. The outstanding surface includes:
 | `run_as`, `user_dirs`, ownership, supplementary groups, login shell profiles | Unix UID/GID/groups, private data directories and Bash login profiles tested; user_dirs supported. Supervisors execute under the R account. PAM sessions and arbitrary Windows account switching remain open |
 | Multiple original listeners/vhosts and template/log semantics | Multiple listeners/vhosts, custom directory/status-error templates, worker log modes/retention, worker-owned logging and HTTP access logs tested; specialized template/error contracts and merged log naming remain open |
 | `restart.txt`, SIGHUP reload and reload-preserving sessions | Application reloads preserve real sessions and transfers; invalid changes roll back. Listener/TLS/global-setting changes require restart, so complete upstream reload parity remains open |
-| Server-side bookmarking storage/access contract | Save and browser restoration across R workers tested; imported upstream stores remain unverified |
+| Server-side bookmarking storage/access contract | Save/restoration across R workers and bidirectional import with Posit Shiny Server tested using one shared app path/account/store. Arbitrary custom bookmark callbacks and uploaded-file state remain under review |
 | Complete app environment and session identity contract | Hosted runtime metadata, login profiles, supervisor arguments and Basic/proxy credentials tested. Complete upstream environment and native professional identity providers remain incomplete |
 | R Markdown, widgets, caching, ranges, streaming and edge cases | Real reactive R Markdown and relative assets pass three browser routes; comprehensive rendering/caching equivalence remains unverified |
 | Professional authentication providers, scheduler, access policy and monitoring | Proxy SSO, inherited user/group policies, load-factor worker scaling and idle-session limits tested; native PAM/LDAP/OIDC providers and licensed professional differential testing remain open |
@@ -62,6 +62,33 @@ configurable session replay and shared queue budgets. This removes the earlier
 unlimited message sizes or exhaustive compatibility at every boundary.
 
 ## Native configuration subset added 2026-10-07
+
+Original positional CLI startup (`shinyharbor FILE.conf`), local default config
+search and explicit `--config` startup are supported. On Unix the search also
+includes `/etc/shiny-server/shiny-server.conf`. The legacy `R` environment variable
+selects the default interpreter; `r_path` overrides it.
+
+### Bookmark migration checks
+
+`tests/bookmark_migration_host.py` creates isolated copies of `examples/session`
+and starts an independently installed Posit server alongside ShinyHarbor, under
+the same Unix account with one app path and bookmark root. It runs a real browser
+test that saves numeric input on each host and restores it through the other:
+
+```sh
+python tests/bookmark_migration_host.py --binary target/debug/shinyharbor \
+  --reference-binary /opt/shiny-server/bin/shiny-server
+```
+
+Install the browser test dependencies first. The reference server is not bundled.
+For a browser running outside the Unix host, `--serve-only` writes the two URLs to
+`test-results/bookmark-fixture.json`; pass them to `tests/bookmark_migration.py`
+with `--reference` and `--candidate`. Create `test-results/bookmark-fixture.stop`
+to stop the pair. Fixtures also expire after five minutes and remove their test
+store. Production bookmark data is never used by this harness. These cases passed
+against Posit Shiny Server 1.5.23.1030 with Shiny 1.14.0 on both hosts.
+
+### Parser and runtime scope
 
 The `.conf` loader supports `server`, `listen`, nested `location`, `app_dir`,
 `site_dir`, `directory_index`, `redirect`, `app_init_timeout`, `app_idle_timeout`,

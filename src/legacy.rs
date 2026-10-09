@@ -431,6 +431,10 @@ pub fn parse(input: &str) -> Result<Config> {
     let root = settings(&nodes, &Settings::default(), "root")?;
     let mut cfg = Config {
         template_dir: root.app.template_dir.clone(),
+        rscript: std::env::var_os("R")
+            .filter(|path| !path.is_empty())
+            .map(PathBuf::from)
+            .unwrap_or_else(|| "R".into()),
         ..Config::default()
     };
     for d in &nodes {

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import shutil
 import sys
 
 from aiohttp import ClientSession, ClientTimeout
@@ -29,6 +30,7 @@ shinyApp(fluidPage(
   tags$pre(id='supervisor', Sys.getenv('HARBOR_TEST_SUPERVISOR', 'absent')),
   tags$pre(id='server', jsonlite::toJSON(shiny::serverInfo(), auto_unbox=TRUE)),
   tags$pre(id='port', Sys.getenv('SHINY_PORT')),
+  tags$pre(id='interpreter', Sys.getenv('HARBOR_TEST_R_SELECTION', 'absent')),
   tags$pre(id='working', normalizePath(getwd(), winslash='/'))),
   function(input, output, session) {})
 ''', encoding='utf-8')
@@ -63,7 +65,7 @@ os.execvp(sys.argv[2], sys.argv[2:])
             "[[apps]]\nname='environment'\nmount='/supervised'\n"
             f"path={json.dumps(str(app))}\nsupervisor={json.dumps(command)}\n", encoding='utf-8')
 
-        async def exercise(config, admin, expected, cleared=False):
+        async def exercise(config, admin, expected, cleared=False, interpreter='absent'):
             with (results / f'worker-environment-{sys.platform}.log').open('ab') as log:
                 process = await asyncio.create_subprocess_exec(str(binary), 'serve', '--config', str(config),
                     env=environment, stdout=log, stderr=log)
@@ -85,6 +87,7 @@ os.execvp(sys.argv[2], sys.argv[2:])
                                 assert info['shinyServer'] is True and info['edition'] == 'ShinyHarbor', info
                                 assert info['version'] != 'development', info
                                 assert 0 < int(fields['port']) < 65536, fields
+                                assert fields['interpreter'] == interpreter, fields
                 finally:
                     process.terminate()
                     await asyncio.wait_for(process.wait(), 20)
@@ -110,6 +113,18 @@ location /clear {{ app_dir {quote(app.as_posix())}; exec_supervisor ""; }}
             (home / '.bash_login').unlink()
             await exercise(config, 3839, 'third')
             checks.append('Bash-profile-precedence-and-fallback')
+            actual_r = shutil.which('R')
+            assert actual_r, 'R must be installed for the interpreter selection test'
+            wrapper = root / 'custom interpreter' / 'R'
+            wrapper.parent.mkdir()
+            wrapper.write_text('#!/bin/sh\nexport HARBOR_TEST_R_SELECTION=selected\nexec ' + shlex.quote(actual_r) + ' "$@"\n')
+            wrapper.chmod(0o700)
+            environment['R'] = str(wrapper)
+            await exercise(config, 3839, 'third', interpreter='selected')
+            checks.append('legacy-R-environment-selects-interpreter')
+            config.write_text('r_path ' + quote(actual_r) + ';\n' + config.read_text(encoding='utf-8'), encoding='utf-8')
+            await exercise(config, 3839, 'third')
+            checks.append('r_path-overrides-R-environment')
     report = {'suite': 'worker-environment', 'passed': True, 'platform': sys.platform, 'checks': checks}
     (results / f'worker-environment-{sys.platform}.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))

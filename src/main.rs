@@ -8,8 +8,14 @@ use std::{
 use tokio_util::sync::CancellationToken;
 
 #[derive(Parser)]
-#[command(version, about = "Host R Shiny apps with HTTPS, process pools and a private usage dashboard", long_about = None)]
+#[command(version, about = "Host R Shiny apps with HTTPS, process pools and a private usage dashboard", long_about = None, args_conflicts_with_subcommands = true)]
 struct Cli {
+    /// Start with a configuration file, using the original Shiny Server CLI form.
+    #[arg(value_name = "CONFIG", conflicts_with = "config")]
+    legacy_config: Option<PathBuf>,
+    /// Start directly with a configuration file.
+    #[arg(short, long, value_name = "CONFIG")]
+    config: Option<PathBuf>,
     #[command(subcommand)]
     command: Option<Command>,
 }
@@ -22,27 +28,27 @@ enum Command {
     },
     /// Start the application and private admin listeners.
     Serve {
-        #[arg(short, long, default_value = "harbor.toml")]
+        #[arg(short, long, default_value_os_t = default_configuration())]
         config: PathBuf,
     },
     /// Validate configuration, paths, routes and credentials without starting R.
     Check {
-        #[arg(short, long, default_value = "harbor.toml")]
+        #[arg(short, long, default_value_os_t = default_configuration())]
         config: PathBuf,
     },
     /// Reload application routes and access rules without closing existing sessions.
     Reload {
-        #[arg(short, long, default_value = "harbor.toml")]
+        #[arg(short, long, default_value_os_t = default_configuration())]
         config: PathBuf,
     },
     /// Check configuration and report installed R/package versions.
     Doctor {
-        #[arg(short, long, default_value = "harbor.toml")]
+        #[arg(short, long, default_value_os_t = default_configuration())]
         config: PathBuf,
     },
     /// Print the local dashboard token. Treat the output as a secret.
     AdminToken {
-        #[arg(short, long, default_value = "harbor.toml")]
+        #[arg(short, long, default_value_os_t = default_configuration())]
         config: PathBuf,
     },
     /// Hash a password read from the terminal, never from an argument.
@@ -63,6 +69,18 @@ enum Command {
         config: PathBuf,
     },
 }
+fn default_configuration() -> PathBuf {
+    for path in ["harbor.toml", "shiny-server.conf"] {
+        if Path::new(path).is_file() {
+            return path.into();
+        }
+    }
+    #[cfg(unix)]
+    if Path::new("/etc/shiny-server/shiny-server.conf").is_file() {
+        return "/etc/shiny-server/shiny-server.conf".into();
+    }
+    "harbor.toml".into()
+}
 fn main() -> Result<()> {
     let cli = Cli::parse();
     #[cfg(windows)]
@@ -77,7 +95,10 @@ fn main() -> Result<()> {
         .with_writer(std::io::stderr)
         .init();
     match cli.command.unwrap_or(Command::Serve {
-        config: "harbor.toml".into(),
+        config: cli
+            .config
+            .or(cli.legacy_config)
+            .unwrap_or_else(default_configuration),
     }) {
         Command::Init { directory } => initialize(&directory),
         Command::Check { config } => {

@@ -404,9 +404,11 @@
       "scope": "behavior",
       "description": "URL and server bookmark storage, restoration and isolation",
       "implemented": false,
-      "progress": "Server-side bookmark save and restoration across R workers passed through the Rust gateway; imported upstream state remains unverified.",
+      "progress": "Server-side bookmarks survive R worker replacement. Posit Shiny Server 1.5.23.1030 and ShinyHarbor restore each other's numeric-input bookmarks using the same Unix app path/account/store. Custom callbacks, uploaded-file state and arbitrary existing stores remain under review.",
       "candidate_tests_or_sources": [
-        "tests/native_compat.py"
+        "tests/native_compat.py",
+        "tests/bookmark_migration.py",
+        "tests/bookmark_migration_host.py"
       ]
     },
     {
@@ -414,9 +416,10 @@
       "scope": "behavior",
       "description": "session$request, session$clientData, identity and environment contract",
       "implemented": false,
-      "progress": "Real Shiny session identity and per-worker secret exercised via R launcher; full environment contract still open.",
+      "progress": "Hosted-runtime metadata identifies ShinyHarbor before app evaluation. Unix Bash profiles, supervisor credentials, R environment selection and r_path precedence pass. Basic/proxy session identity and worker authentication pass. Complete environment parity remains under review.",
       "candidate_tests_or_sources": [
-        "src/proxy.rs",
+        "tests/worker_environment.py",
+        "tests/unix_identity.py",
         "tests/runtime.R",
         "tests/launcher.py"
       ]

@@ -721,8 +721,12 @@ async fn start_worker(
         .collect();
     arguments.push(rscript.as_os_str().to_owned());
     arguments.extend(["--no-save".into(), "--no-restore".into()]);
-    if rscript.file_stem().is_some_and(|name| name == "R") {
-        arguments.push("--file".into());
+    if rscript
+        .file_stem()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.eq_ignore_ascii_case("R") || name.eq_ignore_ascii_case("Rterm"))
+    {
+        arguments.extend(["--slave".into(), "-f".into()]);
     }
     arguments.push(bootstrap.into_os_string());
     let executable = if app.login_shell {
