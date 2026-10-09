@@ -16,6 +16,14 @@ local({
   if (is.na(runtime)) stop("Missing runtime integration file")
   source(runtime, local = TRUE)
   app <- harbor_path(app)
+  socket <- Sys.getenv("HARBOR_SOCKET")
+  port <- if (nzchar(socket)) structure(socket, mask = strtoi("077", 8L)) else httpuv::randomPort()
+  # This is the hosted-runtime protocol target, not a claim of conformance.
+  # serverInfo() identifies the actual implementation and package version.
+  Sys.setenv(SHINY_PORT = as.character(port), SHINY_SERVER_VERSION = "1.5.23")
+  shiny:::setServerInfo(shinyServer = TRUE, edition = "ShinyHarbor",
+    version = Sys.getenv("HARBOR_SERVER_VERSION", "development"),
+    protocolVersion = "1.5.23")
   harbor_configure(app, Sys.getenv("HARBOR_BOOKMARKS"),
     Sys.getenv("HARBOR_SHARED_SECRET"),
     sanitize = identical(Sys.getenv("HARBOR_SANITIZE_ERRORS", "true"), "true"))
@@ -25,8 +33,6 @@ local({
     writeLines(url, temp, useBytes = TRUE)
     if (!file.rename(temp, ready_file)) stop("Cannot publish readiness file")
   }
-  socket <- Sys.getenv("HARBOR_SOCKET")
-  port <- if (nzchar(socket)) structure(socket, mask = strtoi("077", 8L)) else NULL
   if (grepl("\\.rmd$", app, ignore.case = TRUE)) {
     if (!requireNamespace("rmarkdown", quietly = TRUE)) stop("Install rmarkdown")
     rmarkdown::run(file = app, auto_reload = FALSE,

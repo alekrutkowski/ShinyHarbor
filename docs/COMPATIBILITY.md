@@ -7,7 +7,7 @@ This repository is an initial implementation, not a completed replacement. Nothi
 in a successful build, dashboard screenshot, or five-feature browser smoke check
 would justify calling it fully compatible. Stable release publication is blocked.
 
-Reference information checked on 2026-10-02: CRAN Shiny 1.14.0, published 2026-06-21;
+Reference information checked on 2026-10-09: CRAN Shiny 1.14.0, published 2026-06-21;
 Shiny Server documentation/build 1.5.23.1030. The upstream development branches can
 contain later changes. Exact source commits and runtime versions must be recorded
 for any eventual conformance run. “Latest” also requires a continuously updated
@@ -23,14 +23,14 @@ insufficient for server compatibility. The outstanding surface includes:
 | Complete `shiny-server.conf` syntax, scope, inheritance, overrides and diagnostics | Native parser and opt-in app overrides; unsupported directives fail. Complete grammar/directive equivalence remains open |
 | SockJS fallback transports, protocol selection and session lifecycle | Seven real-browser modes pass; obsolete IE/XDomainRequest and exhaustive protocol edge cases remain unverified |
 | Shiny Server reconnect contract and server-managed session IDs | Numbered replay, n/o session IDs, multiplexing and 15-second grace implemented; six wire cases pass against upstream and browser recovery preserves real R state |
-| `run_as`, `user_dirs`, ownership, supplementary groups, login shell profiles | Unix UID/GID/supplementary groups and private data directories tested; user_dirs supported. Login shell/PAM sessions and arbitrary Windows account switching remain open |
+| `run_as`, `user_dirs`, ownership, supplementary groups, login shell profiles | Unix UID/GID/groups, private data directories and Bash login profiles tested; user_dirs supported. Supervisors execute under the R account. PAM sessions and arbitrary Windows account switching remain open |
 | Multiple original listeners/vhosts and template/log semantics | Multiple listeners/vhosts, custom directory/status-error templates, worker log modes/retention, worker-owned logging and HTTP access logs tested; specialized template/error contracts and merged log naming remain open |
 | `restart.txt`, SIGHUP reload and reload-preserving sessions | Application reloads preserve real sessions and transfers; invalid changes roll back. Listener/TLS/global-setting changes require restart, so complete upstream reload parity remains open |
 | Server-side bookmarking storage/access contract | Save and browser restoration across R workers tested; imported upstream stores remain unverified |
-| Complete app environment and session identity contract | Basic and trusted proxy identities populate Shiny credentials; real browser tests cover users, groups and changed-group reconnect denial. Complete upstream environment and native professional identity providers remain incomplete |
+| Complete app environment and session identity contract | Hosted runtime metadata, login profiles, supervisor arguments and Basic/proxy credentials tested. Complete upstream environment and native professional identity providers remain incomplete |
 | R Markdown, widgets, caching, ranges, streaming and edge cases | Real reactive R Markdown and relative assets pass three browser routes; comprehensive rendering/caching equivalence remains unverified |
 | Professional authentication providers, scheduler, access policy and monitoring | Proxy SSO, inherited user/group policies, load-factor worker scaling and idle-session limits tested; native PAM/LDAP/OIDC providers and licensed professional differential testing remain open |
-| All operating systems and architectures | Windows x64 and Linux x64 compiled/tested locally; eight-target release workflows await execution |
+| All operating systems and architectures | Five native build/package jobs passed on the initial commit; Windows x64 and Linux x64 GNU/musl tested locally. Corrected macOS builds and the complete current-source matrix remain unverified; see VALIDATION.md |
 | Production TLS issuance and renewal | Actual local ACME challenge, trusted issuance, cache restart and automatic renewal passed; public CA deployment remains untested |
 | Operational hardening, load testing, independent security review | Bounded queues and a 10,000-request optimized gateway load probe tested; broader load/failure testing and independent review remain open |
 
@@ -49,8 +49,17 @@ gaps include complete listener/global-setting reload semantics. Independent TLS
 certificates and mixed HTTP/HTTPS listeners now pass eight live checks; virtual
 hosts sharing an address still require identical TLS settings. Unix socket mode
 is unavailable on Windows, which uses private
-loopback TCP workers. Exact log naming, login-shell behavior, directive edge cases
-and the upstream default environment remain under comparison.
+loopback TCP workers. Exact log naming, directive edge cases and the complete
+upstream default environment remain under comparison. Inherited `exec_supervisor`
+supports quoted executable/argument prefixes; shell expansion requires a wrapper
+script. Unix legacy configurations now use Bash login profiles, with precedence,
+working-directory restoration and dropped worker privileges tested.
+
+Large Shiny inputs, outputs and replay have real R/browser checks at 3 MiB over
+WebSocket and XHR polling. The default encoded message limit is 64 MiB, with
+configurable session replay and shared queue budgets. This removes the earlier
+1 MiB gateway and 2 MiB browser-buffer restrictions; it does not establish
+unlimited message sizes or exhaustive compatibility at every boundary.
 
 ## Native configuration subset added 2026-10-07
 

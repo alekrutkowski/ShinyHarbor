@@ -145,6 +145,7 @@ jobs:
           python tests/transports.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/multiworker.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/reconnect.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/large_messages.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/auth_proxy.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/rmarkdown.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/resource_limits.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
@@ -152,6 +153,7 @@ jobs:
           python tests/http_compression.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/unicode_paths.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/worker_logs.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/worker_environment.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/templates.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/page_settings.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/listener_tls.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}

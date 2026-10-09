@@ -30,6 +30,7 @@ pub struct Config {
     pub max_inflight: usize,
     pub sockjs_heartbeat_seconds: f64,
     pub sockjs_disconnect_seconds: f64,
+    pub sockjs: SockJsLimits,
     pub tls: Tls,
     pub analytics: Analytics,
     pub users: BTreeMap<String, String>,
@@ -63,6 +64,7 @@ impl Default for Config {
             max_inflight: 8192,
             sockjs_heartbeat_seconds: 25.0,
             sockjs_disconnect_seconds: 5.0,
+            sockjs: SockJsLimits::default(),
             tls: Tls::default(),
             analytics: Analytics::default(),
             users: BTreeMap::new(),
@@ -72,6 +74,24 @@ impl Default for Config {
             sites: vec![],
             redirects: vec![],
             upstreams: vec![],
+        }
+    }
+}
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct SockJsLimits {
+    pub max_message_bytes: usize,
+    pub max_replay_bytes: usize,
+    pub max_replay_messages: usize,
+    pub memory_budget_bytes: usize,
+}
+impl Default for SockJsLimits {
+    fn default() -> Self {
+        Self {
+            max_message_bytes: 64 * 1024 * 1024,
+            max_replay_bytes: 128 * 1024 * 1024,
+            max_replay_messages: 2048,
+            memory_budget_bytes: 512 * 1024 * 1024,
         }
     }
 }
@@ -153,6 +173,8 @@ pub struct App {
     pub mount: String,
     pub path: PathBuf,
     pub rscript: Option<PathBuf>,
+    pub login_shell: bool,
+    pub supervisor: Vec<String>,
     pub max_workers: usize,
     pub sessions_per_worker: usize,
     pub load_factor: f64,
@@ -187,6 +209,8 @@ impl Default for App {
             mount: String::new(),
             path: PathBuf::new(),
             rscript: None,
+            login_shell: false,
+            supervisor: vec![],
             max_workers: 4,
             sessions_per_worker: 20,
             load_factor: 1.0,
@@ -570,6 +594,25 @@ impl Config {
             "Admin must bind to loopback; publish it through an authenticated TLS proxy or an SSH tunnel"
         );
         ensure!(self.max_inflight > 0, "max_inflight must be positive");
+        ensure!(
+            (1024..=1024 * 1024 * 1024).contains(&self.sockjs.max_message_bytes),
+            "SockJS max_message_bytes must be between 1 KiB and 1 GiB"
+        );
+        ensure!(
+            (self.sockjs.max_message_bytes + 1024..=2 * 1024 * 1024 * 1024)
+                .contains(&self.sockjs.max_replay_bytes),
+            "SockJS max_replay_bytes must exceed max_message_bytes by at least 1 KiB and be at most 2 GiB"
+        );
+        ensure!(
+            (1..=1_000_000).contains(&self.sockjs.max_replay_messages),
+            "SockJS max_replay_messages must be 1..1000000"
+        );
+        ensure!(
+            self.sockjs.memory_budget_bytes
+                >= self.sockjs.max_replay_bytes + 2 * self.sockjs.max_message_bytes + 4096
+                && self.sockjs.memory_budget_bytes <= u32::MAX as usize,
+            "SockJS memory_budget_bytes must hold replay plus two maximum messages and 4 KiB, and be below 4 GiB"
+        );
         for (name, value) in [
             ("sockjs_heartbeat_seconds", self.sockjs_heartbeat_seconds),
             ("sockjs_disconnect_seconds", self.sockjs_disconnect_seconds),
@@ -742,6 +785,19 @@ impl Config {
             ensure!(
                 !app.environment.keys().any(|k| k.starts_with("HARBOR_")),
                 "HARBOR_* environment names are reserved"
+            );
+            ensure!(
+                !app.login_shell || cfg!(unix),
+                "login_shell requires Unix Bash; Windows workers use the service environment"
+            );
+            ensure!(
+                app.supervisor.len() <= 256
+                    && app
+                        .supervisor
+                        .first()
+                        .is_none_or(|program| !program.is_empty())
+                    && app.supervisor.iter().all(|arg| !arg.contains('\0')),
+                "supervisor requires a nonempty executable and at most 256 NUL-free arguments"
             );
             for protocol in &app.disable_protocols {
                 ensure!(

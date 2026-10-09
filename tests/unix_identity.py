@@ -19,13 +19,16 @@ async def main(binary, account, sockets=False):
         root.chmod(0o755)
         app = root / "app"
         app.mkdir(mode=0o755)
-        (app / "app.R").write_text('library(shiny)\nshinyApp(fluidPage(tags$pre(id="account", Sys.info()[["effective_user"]]), tags$pre(id="groups", system("id -G", intern=TRUE))), function(input, output, session) {})\n')
+        (app / "app.R").write_text('library(shiny)\nshinyApp(fluidPage(tags$pre(id="account", Sys.info()[["effective_user"]]), tags$pre(id="supervisor", Sys.getenv("HARBOR_TEST_SUPERVISOR_UID")), tags$pre(id="groups", system("id -G", intern=TRUE))), function(input, output, session) {})\n')
+        supervisor = app / 'supervisor.sh'
+        supervisor.write_text('export HARBOR_TEST_SUPERVISOR_UID="$(id -u)"\nexec "$@"\n')
         config = root / "harbor.toml"
         public, admin = free_port(), free_port()
         config.write_text(f"listen='127.0.0.1:{public}'\nadmin_listen='127.0.0.1:{admin}'\nshutdown_grace_seconds=1\n"
                           + ("socket_dir='sockets'\n" if sockets else "") +
                           f"[[apps]]\nname='identity'\nmount='/identity'\npath='{app}'\n"
-                          f"run_as=['harbor-no-such-account', '{account}']\n")
+                          f"run_as=['harbor-no-such-account', '{account}']\nlogin_shell=true\n"
+                          f"supervisor=['/bin/sh', '{supervisor}']\n")
         with (root / "server.log").open("wb") as log:
             proc = await asyncio.create_subprocess_exec(str(binary.resolve()), "serve", "--config", str(config), stdout=log, stderr=log)
             try:
@@ -39,6 +42,7 @@ async def main(binary, account, sockets=False):
                                 print(path.name, path.read_text())
                         assert response.status == 200, body
                         assert f'id="account">{account}</pre>' in body, body
+                        assert f'id="supervisor">{user.pw_uid}</pre>' in body, body
                         expected = " ".join(str(g) for g in sorted(os.getgrouplist(account, user.pw_gid)))
                         import re
                         actual = re.search(r'id="groups">([^<]+)</pre>', body).group(1)
@@ -49,7 +53,7 @@ async def main(binary, account, sockets=False):
             finally:
                 proc.terminate()
                 await asyncio.wait_for(proc.wait(), 15)
-    return {"suite":"unix-identity", "passed":True, "checks":["named-user-fallback", "worker-uid", "supplementary-groups", "private-gateway-state", "user-owned-bookmarks"]}
+    return {"suite":"unix-identity", "passed":True, "checks":["named-user-fallback", "worker-uid", "supplementary-groups", "private-gateway-state", "user-owned-bookmarks", "login-shell-supervisor-drops-privileges"]}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

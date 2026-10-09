@@ -353,6 +353,67 @@ thread pool. This addresses the ownership requirements of NFS root-squash setups
 the local tests verify Unix credentials and file operations, not an actual NFS mount.
 On Windows, the service account manages its logs.
 
+## Large Shiny messages and reconnect buffers
+
+The native SockJS gateway accepts messages up to 64 MiB by default. Large plots,
+table updates and custom messages can therefore exceed the previous 1 MiB limit.
+Use a root TOML table to change the limits:
+
+```toml
+[sockjs]
+max_message_bytes = 67108864
+max_replay_bytes = 134217728
+max_replay_messages = 2048
+memory_budget_bytes = 536870912
+```
+
+`max_message_bytes` limits encoded WebSocket messages and HTTP send bodies,
+including framing overhead. The replay settings bound unacknowledged messages
+per logical session; they also configure the browser's send buffer, measured in
+UTF-8 bytes. Acknowledgments release buffered data. `memory_budget_bytes` limits
+queued/replay storage shared across gateway sessions; it is not a total process
+memory limit and excludes transient encoding, network buffers and R workers.
+These limits allocate memory only as messages arrive, not at startup.
+
+Message limits accept 1 KiB through 1 GiB. Replay storage must exceed the message
+limit by at least 1 KiB and cannot exceed 2 GiB. The shared budget must accommodate
+the replay limit, two maximum messages and 4 KiB, and must be below 4 GiB.
+Exhaustion closes the affected transport/session rather than growing without
+bound. Limits are server-wide and changing them requires a restart. Legacy
+`.conf` configurations use the defaults. Direct upstream proxy tunnels retain
+their streaming behavior.
+
+## R startup profiles and supervisors
+
+On Unix, native `.conf` configurations start workers through `/bin/bash --login`.
+Bash reads `/etc/profile`, then the first readable file among `.bash_profile`,
+`.bash_login` and `.profile` in the R account's home. Credential changes happen
+before Bash starts. The worker returns to the app directory after reading profiles.
+TOML starts R directly by default; set `login_shell = true` on an app or in a site's
+`app_defaults` to opt in. Windows uses the service environment and rejects an
+explicit `login_shell = true`.
+
+The inherited legacy directive `exec_supervisor "nice -n 10";` prefixes the R
+command with a supervisor. An empty string clears an inherited supervisor. The
+TOML equivalent is `supervisor = ["nice", "-n", "10"]`. Supervisors run under the
+same account as R, and their descendants belong to the worker process group or
+Windows Job Object. They must remain in the foreground and return the R exit
+status. Executables must be available in the worker's environment.
+
+Supervisor strings use POSIX argument quoting; shell expansion, operators and
+redirection are not evaluated. Use a wrapper script when those are needed.
+Arguments and app paths are passed literally, including spaces and metacharacters.
+App-local `.shiny_app.conf` files cannot change the supervisor or login-shell policy.
+Login profiles and supervisor scripts are trusted application-account code.
+
+Before evaluating app code, the launcher sets `SHINY_PORT` to the worker's private
+TCP port or Unix socket and fills `shiny::serverInfo()` with `shinyServer = TRUE`,
+`edition = "ShinyHarbor"` and the actual ShinyHarbor version. The separate
+`SHINY_SERVER_VERSION` / `protocolVersion` value `1.5.23` is the target runtime
+protocol used by Shiny's hosted-environment version check. It is not a conformance
+certificate or a claim that Posit's software is running. The shared secret and
+bookmark callbacks still protect this hosted runtime.
+
 ## Unix worker sockets
 
 Set root `socket_dir = "/run/shinyharbor/sockets"` in TOML or

@@ -6,16 +6,19 @@ The complete compatibility/acceptance requirement is not satisfied.
 
 ## Trust boundary
 
-Applications and their R startup files are trusted executable code. Native workers
-run under the server account, not a separate per-app UID or security sandbox. They
-can access whatever files, network destinations and secrets that account can
-access, including state-directory contents when filesystem permissions allow it.
+Applications, R startup files, login profiles and supervisors are trusted executable
+code. Workers use the service account by default. Unix `run_as` can assign worker
+UID/GID and supplementary groups; credentials change before login profiles or
+supervisors execute. This is not a security sandbox. Workers can access whatever
+files, network destinations and secrets their account can access, including
+state-directory contents when filesystem permissions allow it.
 Do not host mutually untrusted tenants under one instance. OS containers or separate
 accounts/instances must enforce tenant boundaries. Process groups and Windows Job
 Objects provide lifecycle management, not security isolation or memory quotas.
 
-Native R listens on loopback. Other local processes may still reach its ports and
-bypass gateway authentication. Protect the host and isolate workloads. HTTP upstream
+Native R listens on loopback or a private Unix socket and requires a per-worker
+shared secret for HTTP and WebSockets. A process running as the same account may
+still read worker credentials. Protect the host and isolate workloads. HTTP upstream
 traffic must remain on a trusted local/private network. No encrypted upstream
 transport is supplied. Original Shiny Server edition limits remain in upstream mode.
 
@@ -64,12 +67,15 @@ compliance guarantee is made.
 ## Availability and resource limits
 
 Proxy requests/tunnels, startup concurrency, password hashing, event queue capacity
-and worker counts are bounded. Bodies and WebSockets stream with backpressure
-instead of being buffered in full. SQLite updates run on a dedicated thread.
-These design choices have not been benchmarked here.
+and worker counts are bounded. HTTP proxy bodies and direct WebSocket tunnels
+stream with backpressure. SockJS messages and reconnect replay are buffered under
+configurable message, session and shared queue budgets. These budgets do not cap
+all transient allocations or R memory. SQLite updates run on a dedicated thread.
+An environment-specific gateway load probe is recorded in `VALIDATION.md`.
 
 `max_inflight` does not bound all accepted idle TCP sockets or slow clients before
-request dispatch. No complete slowloris defense, per-IP quota, application memory
+request dispatch. Socket inactivity deadlines close stalled clients, but there is
+no complete slowloris defense, per-IP quota, application memory
 quota, global log disk quota, or cardinality quota for referrer aggregates is provided.
 Use an audited edge proxy and OS limits for public deployment only after further
 review. Worker log files rotate at 10 MiB plus one backup; old-worker files accumulate
@@ -82,9 +88,9 @@ analytics can deliberately drop events and show an explicit count.
 
 ## Supply chain and reports
 
-No Rust lockfile was fabricated. CI resolves one shared lockfile when absent and
-packages it with releases. Before production/stable use, review and commit that
-lockfile, pin the Rust toolchain and action SHAs, run dependency advisories, and
+A generated Rust lockfile is committed, tested and packaged with releases.
+Before production/stable use, review updates to that lockfile, pin the Rust
+toolchain and action SHAs, run dependency advisories, and
 review transitive license notices. Actions currently use recognizable version tags;
 these are not immutable provenance guarantees. Checksums detect corruption, not
 malicious replacement of both an artifact and its checksum. Binaries are not

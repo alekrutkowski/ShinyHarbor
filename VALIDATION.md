@@ -1,5 +1,43 @@
 # Delivery-time validation
 
+## 2026-10-09 continuation
+
+Interrupted work was reviewed, completed and committed. Per-listener TLS and
+platform CI fixes are in commit `b3fbfcaeafd6fceea84c0808a28063f9da4394d1`.
+Further changes add configurable large-message/replay budgets, UTF-8 browser
+buffer accounting, Bash startup profiles, inherited worker supervisors and hosted
+runtime metadata. R remains 4.6.1 with Shiny 1.14.0.
+
+| Executed check | Result | Scope |
+| --- | --- | --- |
+| Rust regression tests | 30 Windows / 32 Linux GNU / 32 Linux musl passed | Includes replay acknowledgment/budget recovery; Linux has additional OS identity and symlink checks |
+| Optimized Windows executable | Build and 14 gateway checks passed | Real streaming, WebSockets, forwarding, authentication, analytics and dashboard headers |
+| Large Shiny messages | Six Windows checks passed | 3 MiB input/output over WebSocket and XHR polling, unacknowledged replay after reconnect, configured HTTP limit enforcement |
+| Reconnect regression | Nine checks passed | Browser recovery plus six wire cases also rerun against Posit Shiny Server 1.5.23.1030 |
+| Independent listener TLS | Eight checks passed on Windows and Linux | Different trusted certificates, mixed HTTP/HTTPS, isolated reload, protected keys, inherited settings and routing headers |
+| Worker environment | Six Windows / nine Linux checks passed | Literal supervisor arguments, inheritance/clearing, runtime metadata; Linux additionally verifies Bash profile loading, precedence and app working directory |
+| Unix worker credentials | Six checks passed | Root gateway starts Bash and supervisor under the unprivileged R account, with UID/groups, private state and Unix worker sockets |
+| Native regression | 13 Windows checks passed | Real R, legacy config, static HTTP, bookmarks, worker restart and surviving sessions |
+| R runtime and launcher | 35 R assertions and seven launcher checks passed | Per-worker authentication, real R reactivity and bookmark restoration after an R restart |
+| Repository/SQLite | 18 tests passed | SQL behavior, configuration, workflow syntax and release gate |
+
+The initial [GitHub matrix run](https://github.com/alekrutkowski/ShinyHarbor/actions/runs/37801819021)
+on `906f55169f05bcf4577ab781be20e395e09f04bc` completed native build/package jobs
+for Linux x64 GNU, Linux ARM64 GNU/musl, and Windows x64/ARM64. macOS compilation
+failed on Apple-specific group APIs; Linux x64 musl test startup failed with the
+`musl-gcc` static-PIE linker. Both code/toolchain fixes are committed. Linux x64
+musl then passed all 32 Rust tests locally. Browser CI also exposed missing Linux
+`libuv` headers and a Windows temporary-file cleanup race; both were corrected.
+
+The [next CI run](https://github.com/alekrutkowski/ShinyHarbor/actions/runs/37889526817)
+failed before any runner or steps started. The token can read Actions jobs but
+cannot read its diagnostic Checks annotation. The account-side cause remains
+unconfirmed. This prevents verification of the corrected macOS builds and the
+complete current-source matrix. The five earlier successful jobs do not certify
+later changes. No stable release or full-compatibility claim is made.
+Machine-readable reports and source hashes for this continuation are retained in
+`validation/2026-10-09.json`.
+
 ## 2026-10-08 executable validation
 
 Rust 1.99.0 builds succeeded on Windows x64 and WSL Ubuntu x64. The Windows

@@ -6,7 +6,6 @@ use std::collections::VecDeque;
 use tokio::sync::oneshot;
 
 const GRACE: Duration = Duration::from_secs(15);
-const MAX_REPLAY: usize = 2 * 1024 * 1024;
 
 #[derive(Default)]
 pub(super) struct Registry {
@@ -153,10 +152,16 @@ impl Protocol {
         }
         Ok(())
     }
-    fn output(&mut self, value: &str, budget: &Arc<Semaphore>) -> Result<String> {
+    fn output(
+        &mut self,
+        value: &str,
+        budget: &Arc<Semaphore>,
+        limits: &crate::config::SockJsLimits,
+    ) -> Result<String> {
         let value = format!("{:X}#{value}", self.sent);
         ensure!(
-            self.bytes + value.len() <= MAX_REPLAY && self.replay.len() < 2048,
+            self.bytes + value.len() <= limits.max_replay_bytes
+                && self.replay.len() < limits.max_replay_messages,
             "Reconnect replay budget exceeded"
         );
         let permit = budget
@@ -340,7 +345,7 @@ async fn run(
                 if channels.get(&event.channel).is_none_or(|c| c.generation != event.generation) { continue; }
                 if event.closed { channels.remove(&event.channel); }
                 let value = if robust {
-                    match protocol.output(&event.message.text, &state.sockjs.budget) {
+                    match protocol.output(&event.message.text, &state.sockjs.budget, &state.config.sockjs) {
                         Ok(value) => value, Err(_) => { final_code = 4704; final_reason = "Session replay limit exceeded"; break; }
                     }
                 } else { event.message.text };
@@ -433,7 +438,8 @@ async fn channel_task(
         }
         let (allowed_users, allowed_groups) = pool.access_policy()?;
         if !allowed_users.is_empty() || !allowed_groups.is_empty() {
-            ensure!(peer.ip().is_loopback() || !matches!(state.config.tls, crate::config::Tls::Off {}) || state.config.public_origin.is_some(), "Authentication requires TLS");
+            let tls = state.config.servers.get(parent.server()).map_or(&state.config.tls, |s| state.config.listener_tls(s.listen));
+            ensure!(peer.ip().is_loopback() || !matches!(tls, crate::config::Tls::Off {}) || state.config.public_origin.is_some(), "Authentication requires TLS");
         }
         let user = state.auth.authorize_request(&headers, peer.ip(), &allowed_users, &allowed_groups).await.map_err(|_| anyhow::anyhow!("Access denied"))?;
         let worker = if pool.name() == parent.name() { worker.as_deref() } else { None };
@@ -531,9 +537,16 @@ mod tests {
     #[test]
     fn sequence_replay_and_budgets() {
         let budget = Arc::new(Semaphore::new(1024));
+        let limits = crate::config::SockJsLimits::default();
         let mut p = Protocol::default();
-        assert_eq!(p.output("0|m|hello", &budget).unwrap(), "0#0|m|hello");
-        assert_eq!(p.output("0|m|world", &budget).unwrap(), "1#0|m|world");
+        assert_eq!(
+            p.output("0|m|hello", &budget, &limits).unwrap(),
+            "0#0|m|hello"
+        );
+        assert_eq!(
+            p.output("0|m|world", &budget, &limits).unwrap(),
+            "1#0|m|world"
+        );
         p.receive("ACK 1", None).unwrap();
         p.waiting = true;
         assert!(p.receive("0#data", None).is_err());
@@ -545,5 +558,27 @@ mod tests {
         assert!(p.receive("ACK 3", None).is_err());
         p.receive("ACK 2", None).unwrap();
         assert_eq!(budget.available_permits(), 1024);
+    }
+    #[test]
+    fn configured_replay_limits_recover_after_acknowledgment() {
+        let budget = Arc::new(Semaphore::new(1024));
+        let mut limits = crate::config::SockJsLimits {
+            max_replay_bytes: 16,
+            max_replay_messages: 1,
+            ..Default::default()
+        };
+        let mut protocol = Protocol::default();
+        protocol.output("hello", &budget, &limits).unwrap();
+        assert!(protocol.output("another", &budget, &limits).is_err());
+        protocol.acknowledge(1).unwrap();
+        assert_eq!(budget.available_permits(), 1024);
+        limits.max_replay_messages = 8;
+        assert!(
+            protocol
+                .output("this is larger than sixteen bytes", &budget, &limits)
+                .is_err()
+        );
+        assert_eq!(budget.available_permits(), 1024);
+        protocol.output("next", &budget, &limits).unwrap();
     }
 }

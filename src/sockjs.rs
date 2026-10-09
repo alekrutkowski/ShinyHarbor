@@ -34,7 +34,6 @@ use tokio_tungstenite::tungstenite::{
 };
 use tokio_util::sync::CancellationToken;
 
-const MAX_MESSAGE: usize = 1024 * 1024;
 mod reconnect;
 const CACHE: &str = "no-store, no-cache, no-transform, must-revalidate, max-age=0";
 const CLOSED: &str = "c[3000,\"Session closed\"]";
@@ -105,11 +104,11 @@ pub struct Hub {
     budget: Arc<Semaphore>,
     reconnect: reconnect::Registry,
 }
-impl Default for Hub {
-    fn default() -> Self {
+impl Hub {
+    pub fn new(memory_budget: usize) -> Self {
         Self {
             entries: Mutex::new(HashMap::new()),
-            budget: Arc::new(Semaphore::new(32 * 1024 * 1024)),
+            budget: Arc::new(Semaphore::new(memory_budget)),
             reconnect: reconnect::Registry::default(),
         }
     }
@@ -427,7 +426,7 @@ pub async fn handle(
             h.as_bytes()
                 .starts_with(b"application/x-www-form-urlencoded")
         });
-        let body = match to_bytes(req.into_body(), MAX_MESSAGE).await {
+        let body = match to_bytes(req.into_body(), state.config.sockjs.max_message_bytes).await {
             Ok(b) => b,
             Err(_) => return StatusCode::PAYLOAD_TOO_LARGE.into_response(),
         };
@@ -464,8 +463,8 @@ pub async fn handle(
         };
         let heartbeat = Duration::from_secs_f64(state.config.sockjs_heartbeat_seconds);
         return upgrade
-            .max_message_size(MAX_MESSAGE)
-            .max_frame_size(MAX_MESSAGE)
+            .max_message_size(state.config.sockjs.max_message_bytes)
+            .max_frame_size(state.config.sockjs.max_message_bytes)
             .on_upgrade(move |socket| async move {
                 let _permit = permit;
                 websocket(socket, session, heartbeat).await;
@@ -653,8 +652,8 @@ async fn connect_backend(
         );
     }
     let config = WebSocketConfig::default()
-        .max_message_size(Some(MAX_MESSAGE))
-        .max_frame_size(Some(MAX_MESSAGE));
+        .max_message_size(Some(state.config.sockjs.max_message_bytes))
+        .max_frame_size(Some(state.config.sockjs.max_message_bytes));
     let (backend, _) = tokio::time::timeout(Duration::from_secs(30), async {
         let stream = crate::backend::Stream::connect(&lease.worker).await?;
         Ok::<_, anyhow::Error>(

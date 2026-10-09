@@ -215,6 +215,7 @@ impl Default for Settings {
                 max_workers: 1,
                 sessions_per_worker: 100,
                 idle_seconds: 5,
+                login_shell: cfg!(unix),
                 ..App::default()
             },
             index: false,
@@ -256,6 +257,10 @@ fn settings(nodes: &[Directive], parent: &Settings, scope: &str) -> Result<Setti
             "required_group" => { d.arity(0, 256)?; result.app.allowed_groups = d.args.clone(); }
             "members_of" if scope != "application" => { d.arity(0, 256)?; result.app.members_of = d.args.clone(); }
             "r_path" => result.app.rscript = Some(d.one()?.into()),
+            "exec_supervisor" => {
+                result.app.supervisor = shell_words::split(d.one()?)
+                    .map_err(|_| d.error("exec_supervisor contains unclosed quotes"))?;
+            }
             "sockjs_heartbeat_delay" | "sockjs_disconnect_delay" if scope == "root" => {
                 let value: f64 = d.one()?.parse().map_err(|_| d.error("expected positive seconds"))?;
                 ensure!(value.is_finite() && value > 0.0 && value <= 86400.0, "Invalid SockJS timeout");

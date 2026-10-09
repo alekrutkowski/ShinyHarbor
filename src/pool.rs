@@ -177,6 +177,7 @@ pub enum Pool {
         rscript: PathBuf,
         state: PathBuf,
         socket_dir: Option<PathBuf>,
+        transport_limits: crate::config::SockJsLimits,
         log_tasks: tokio_util::task::TaskTracker,
         workers: Arc<Mutex<Vec<Arc<Worker>>>>,
         starting: Arc<AsyncMutex<()>>,
@@ -211,6 +212,7 @@ impl Pool {
             app: Box::new(app),
             state: cfg.state_dir.clone(),
             socket_dir: cfg.socket_dir.clone(),
+            transport_limits: cfg.sockjs.clone(),
             log_tasks,
             workers: Arc::new(Mutex::new(vec![])),
             starting: Arc::new(AsyncMutex::new(())),
@@ -393,6 +395,7 @@ impl Pool {
                 rscript,
                 state,
                 socket_dir,
+                transport_limits,
                 log_tasks,
                 workers,
                 starting,
@@ -412,8 +415,15 @@ impl Pool {
                     return Ok(lease);
                 }
                 let _slot = startup.acquire().await.context("Startup limiter closed")?;
-                let worker =
-                    start_worker(app, rscript, state, socket_dir.as_deref(), log_tasks).await?;
+                let worker = start_worker(
+                    app,
+                    rscript,
+                    state,
+                    socket_dir.as_deref(),
+                    log_tasks,
+                    transport_limits,
+                )
+                .await?;
                 let lease = worker.lease(websocket, app.sessions_per_worker)?;
                 let mut all = workers.lock().unwrap_or_else(|p| p.into_inner());
                 if !accepting.load(Ordering::Acquire) {
@@ -610,6 +620,7 @@ async fn start_worker(
     state: &Path,
     socket_root: Option<&Path>,
     log_tasks: &tokio_util::task::TaskTracker,
+    transport_limits: &crate::config::SockJsLimits,
 ) -> Result<Arc<Worker>> {
     let identity = crate::identity::resolve(app)?;
     let socket_directory = socket_root
@@ -701,16 +712,41 @@ async fn start_worker(
             None
         }
     };
-    let mut cmd = CommandWrap::with_new(rscript, |cmd| {
-        cmd.arg("--no-save").arg("--no-restore");
-        if rscript.file_stem().is_some_and(|name| name == "R") {
-            cmd.arg("--file").arg(&bootstrap);
+    // Positional arguments keep paths, quotes and metacharacters out of shell
+    // code. Identity::apply drops credentials before Bash reads any profiles.
+    let mut arguments: Vec<std::ffi::OsString> = app
+        .supervisor
+        .iter()
+        .map(std::ffi::OsString::from)
+        .collect();
+    arguments.push(rscript.as_os_str().to_owned());
+    arguments.extend(["--no-save".into(), "--no-restore".into()]);
+    if rscript.file_stem().is_some_and(|name| name == "R") {
+        arguments.push("--file".into());
+    }
+    arguments.push(bootstrap.into_os_string());
+    let executable = if app.login_shell {
+        std::ffi::OsStr::new("/bin/bash")
+    } else {
+        arguments[0].as_os_str()
+    };
+    let mut cmd = CommandWrap::with_new(executable, |cmd| {
+        if app.login_shell {
+            cmd.args([
+                "--login",
+                "-c",
+                "cd -- \"$1\" && shift && exec \"$@\"",
+                "shinyharbor-worker",
+            ])
+            .arg(working)
+            .args(&arguments);
         } else {
-            cmd.arg(&bootstrap);
+            cmd.args(&arguments[1..]);
         }
         cmd.current_dir(working)
             .envs(&app.environment)
             .env("HARBOR_APP", &app.path)
+            .env("HARBOR_SERVER_VERSION", env!("CARGO_PKG_VERSION"))
             .env("HARBOR_READY", &ready)
             .env("HARBOR_SOCKET", socket.as_deref().unwrap_or(Path::new("")))
             .env("HARBOR_RUNTIME", runtime_root.join("runtime.R"))
@@ -728,6 +764,14 @@ async fn start_worker(
             .env("SHINY_APP", &app.path)
             .env("WORKER_ID", &id)
             .env("HARBOR_WORKER_TICKET", &ticket)
+            .env(
+                "HARBOR_SEND_BUFFER_BYTES",
+                transport_limits.max_replay_bytes.to_string(),
+            )
+            .env(
+                "HARBOR_SEND_BUFFER_MESSAGES",
+                transport_limits.max_replay_messages.to_string(),
+            )
             .env(
                 "HARBOR_RECONNECT",
                 if app.reconnect { "true" } else { "false" },
@@ -751,7 +795,7 @@ async fn start_worker(
     cmd.wrap(process_wrap::tokio::JobObject);
     let mut child = Starting(Some(cmd.spawn().with_context(|| {
         format!(
-            "Cannot start {} for {}. Install R or configure rscript.",
+            "Cannot start {} for {}. Check rscript, supervisor and /bin/bash if login_shell is enabled.",
             rscript.display(),
             app.name
         )

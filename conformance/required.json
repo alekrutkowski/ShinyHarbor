@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "certification": "unverified",
-  "review_date": "2026-10-08",
+  "review_date": "2026-10-09",
   "reference_shiny_server": "1.5.23.1030",
   "reference_shiny_cran": "1.14.0",
   "scope_note": "This is a required-work inventory, not a complete proof specification. Smoke tests do not set these cases to implemented. Professional parity must be scoped explicitly against licensed reference software.",
@@ -11,9 +11,11 @@
       "scope": "upstream-configuration",
       "description": "run_as",
       "implemented": false,
-      "progress": "Named Unix account fallback, worker UID, supplementary groups and private state passed in a root-to-unprivileged live test. Windows uses the service account.",
+      "progress": "Unix UID/GID/groups, private state and Bash login profiles are tested. A root gateway starts the supervisor with the R account credentials. Windows uses its service account; PAM sessions remain open.",
       "candidate_tests_or_sources": [
-        "tests/unix_identity.py"
+        "tests/unix_identity.py",
+        "tests/worker_environment.py",
+        "src/identity.rs"
       ]
     },
     {
@@ -390,10 +392,11 @@
       "scope": "behavior",
       "description": "Shiny Server reconnect, worker affinity and expired-session behavior",
       "implemented": false,
-      "progress": "Numbered replay, 15-second grace, multiplex channels and browser recovery implemented. Six wire cases also passed against upstream; exhaustive failure equivalence remains open.",
+      "progress": "Nine candidate recovery checks pass; six wire cases also pass on upstream. Large-message input/output and 3 MiB replay pass. Configurable limits and UTF-8 client buffer accounting replace previous hard limits. Exhaustive failure equivalence remains open.",
       "candidate_tests_or_sources": [
-        "src/sockjs/reconnect.rs",
-        "tests/reconnect.py"
+        "tests/reconnect.py",
+        "tests/large_messages.py",
+        "src/sockjs/reconnect.rs"
       ]
     },
     {
@@ -517,7 +520,7 @@
       "scope": "behavior",
       "description": "Real application integration with the moving latest stable CRAN Shiny",
       "implemented": false,
-      "progress": "Local R launcher tested with installed Shiny 1.14.0. Full latest-CRAN Rust browser tests remain pending CI.",
+      "progress": "Real Shiny 1.14.0 runs the browser/transport suites. Hosted runtime metadata identifies ShinyHarbor before application evaluation. Continuously testing later package releases and full conformance remain open.",
       "candidate_tests_or_sources": [
         "tests/launcher.py",
         ".github/workflows/ci.yml"

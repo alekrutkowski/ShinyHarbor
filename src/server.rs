@@ -193,6 +193,7 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
         )
         .collect();
     pools.sort_by_key(|p| std::cmp::Reverse(p.mount().len()));
+    let sockjs = Arc::new(crate::sockjs::Hub::new(config.sockjs.memory_budget_bytes));
     let state = Arc::new(AppState {
         private_paths: Arc::new(crate::site::private_paths(&config, path.as_deref())),
         access_log,
@@ -214,7 +215,7 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
         admin_token: token,
         force_stop: CancellationToken::new(),
         tunnels: TaskTracker::new(),
-        sockjs: Arc::new(crate::sockjs::Hub::default()),
+        sockjs,
         control: std::sync::OnceLock::new(),
     });
     let control = crate::reload::Control::new(state.clone(), path);

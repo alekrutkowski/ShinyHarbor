@@ -18,8 +18,10 @@ passed against Posit Shiny Server 1.5.23.1030. Local Pebble tests exercise actua
 ACME issuance, restart persistence, automatic renewal and live PEM replacement
 with TLS verification. Gzip/deflate negotiation is covered by live HTTP checks.
 Custom templates, worker log retention, access logs and connection inactivity
-deadlines also have executable tests.
-See `VALIDATION.md` for exact scope; the other release platforms still require CI.
+deadlines also have executable tests. Independent TLS listeners, larger Shiny
+messages, Unix login profiles and worker supervisors have live checks too.
+Five native CI build/package jobs passed on the initial commit; the complete
+current-source matrix remains unverified. See [VALIDATION](VALIDATION.md) for scope.
 
 ## Start locally
 

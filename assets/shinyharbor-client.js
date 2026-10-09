@@ -4,6 +4,22 @@
   const script = document.currentScript;
   const base = new URL("../__sockjs__" + (script.dataset.worker ? "/w=" + script.dataset.worker : ""), script.src).href;
   const disabled = JSON.parse(script.dataset.disabled || "[]");
+  const bufferBytes = Number(script.dataset.bufferBytes || 134217728);
+  const bufferMessages = Number(script.dataset.bufferMessages || 2048);
+  // Count UTF-8 bytes without allocating another large encoded message.
+  const utf8Bytes = value => {
+    let bytes = 0;
+    for (let i = 0; i < value.length; i++) {
+      const code = value.charCodeAt(i);
+      if (code < 0x80) bytes++;
+      else if (code < 0x800) bytes += 2;
+      else if (code >= 0xD800 && code <= 0xDBFF && i + 1 < value.length &&
+               value.charCodeAt(i + 1) >= 0xDC00 && value.charCodeAt(i + 1) <= 0xDFFF) {
+        bytes += 4; i++;
+      } else bytes += 3;
+    }
+    return bytes;
+  };
   const protocols = ["websocket", "xhr-streaming", "xdr-streaming", "eventsource",
     "iframe-eventsource", "htmlfile", "iframe-htmlfile", "xhr-polling",
     "xdr-polling", "iframe-xhr-polling", "jsonp-polling"];
@@ -90,7 +106,7 @@
       for (const [id, message] of this.pending) {
         if (id >= next) break;
         this.pending.delete(id);
-        this.bufferedAmount -= message.length;
+        this.bufferedAmount -= message.bytes;
       }
     }
     receive(message) {
@@ -99,7 +115,7 @@
         if (match[1] === "CONTINUE" && !this.replaying) throw new Error("Unexpected CONTINUE");
         this.discard(parseInt(match[2], 16));
         if (match[1] === "CONTINUE") {
-          for (const value of this.pending.values()) this.transport.send(value);
+          for (const value of this.pending.values()) this.transport.send(value.text);
           this.replaying = false;
           this.deadline = 0;
           this.notice(false);
@@ -124,11 +140,12 @@
     }
     sendPacket(data) {
       const value = this.sent.toString(16).toUpperCase() + "#" + data;
-      if (this.bufferedAmount + value.length > 2 * 1024 * 1024 || this.pending.size >= 2048) {
+      const bytes = utf8Bytes(value);
+      if (this.bufferedAmount + bytes > bufferBytes || this.pending.size >= bufferMessages) {
         this.finish(4704, "Session send buffer is full", false); return;
       }
-      this.pending.set(this.sent++, value);
-      this.bufferedAmount += value.length;
+      this.pending.set(this.sent++, {text: value, bytes});
+      this.bufferedAmount += bytes;
       if (this.transport.readyState === 1 && !this.replaying) this.transport.send(value);
     }
     send(data) {

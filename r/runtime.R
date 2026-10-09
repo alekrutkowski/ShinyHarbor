@@ -56,10 +56,14 @@ harbor_configure <- function(app, bookmarks, secret, sanitize = TRUE) {
     previous_filter <- getOption("shiny.http.response.filter")
     disabled <- jsonlite::fromJSON(Sys.getenv("HARBOR_DISABLE_PROTOCOLS", "[]"))
     disabled <- htmltools::htmlEscape(jsonlite::toJSON(disabled, auto_unbox = FALSE), attribute = TRUE)
+    buffer_bytes <- Sys.getenv("HARBOR_SEND_BUFFER_BYTES", "134217728")
+    buffer_messages <- Sys.getenv("HARBOR_SEND_BUFFER_MESSAGES", "2048")
+    if (!grepl("^[0-9]{1,10}$", buffer_bytes) || !grepl("^[0-9]{1,10}$", buffer_messages)) stop("Invalid transport limits")
     scripts <- paste0('<script src="__assets__/sockjs.min.js"></script>',
       '<script src="__assets__/shinyharbor-client.js" data-worker="',
       htmltools::htmlEscape(Sys.getenv("HARBOR_WORKER_TICKET"), attribute = TRUE),
       '" data-reconnect="', Sys.getenv("HARBOR_RECONNECT", "true"),
+      '" data-buffer-bytes="', buffer_bytes, '" data-buffer-messages="', buffer_messages,
       '" data-disabled="', disabled, '"></script>')
     analytics <- Sys.getenv("HARBOR_GOOGLE_ANALYTICS_ID")
     if (nzchar(analytics)) {

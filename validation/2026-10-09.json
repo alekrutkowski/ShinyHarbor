@@ -1,0 +1,297 @@
+{
+  "date": "2026-10-09",
+  "certifies_full_compatibility": false,
+  "base_commit": "b3fbfcaeafd6fceea84c0808a28063f9da4394d1",
+  "source_state": "Working tree hashes at record creation; individual suite scope is described in VALIDATION.md.",
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "reference_shiny_server": "1.5.23.1030",
+  "shiny_package": "1.14.0",
+  "rust_tests": {
+    "windows_x64": 30,
+    "linux_x64_gnu": 32,
+    "linux_x64_musl": 32
+  },
+  "clippy": "Windows and Linux all-targets -D warnings passed; Linux lint run preceded the final R bootstrap metadata addition.",
+  "python_tests": 18,
+  "r_assertions": 35,
+  "reports": {
+    "large-messages": {
+      "report": {
+        "suite": "large-Shiny-messages",
+        "passed": true,
+        "checks": [
+          "app-3MiB-input",
+          "app-3MiB-output",
+          "polling-3MiB-input",
+          "polling-3MiB-output",
+          "3MiB-message-replayed-after-reconnect",
+          "configured-HTTP-message-limit-enforced"
+        ]
+      },
+      "sha256": "492bd6dbde496a3e5016a4a494328ae0fe66d3d8dfce0fc2a3c3726920906589"
+    },
+    "reconnect": {
+      "report": {
+        "suite": "reconnect",
+        "passed": true,
+        "checks": [
+          "same-R-session-after-network-loss",
+          "offline-input-delivered",
+          "existing-dynamic-state-preserved",
+          "numbered-messages",
+          "replay-unacknowledged-output",
+          "multiplex-independent-sessions",
+          "duplicate-open-not-repeated",
+          "unknown-session-rejected",
+          "expired-session-rejected"
+        ],
+        "reference": "http://127.0.0.1:48381/fixture",
+        "certifies_full_compatibility": false
+      },
+      "sha256": "d50e3409b25a099eef516ca221ccf07e48a75a80715bfa5f54cbc5f53666a2a4"
+    },
+    "listener-tls": {
+      "report": {
+        "suite": "listener-TLS",
+        "passed": true,
+        "checks": [
+          "legacy-listeners-present-independent-trusted-certificates",
+          "legacy-HTTP-and-HTTPS-coexist",
+          "every-listener-private-key-blocked-on-static-routes",
+          "certificate-reload-is-isolated-to-own-listener",
+          "TOML-inheritance-and-plaintext-override",
+          "forwarded-scheme-matches-listener",
+          "affinity-cookie-security-matches-listener",
+          "conflicting-TLS-on-shared-address-rejected"
+        ],
+        "certificate_verification_disabled": false
+      },
+      "sha256": "3481c91540834aba7fbebb0b6f5dfa801616c6e4ad012df6feba4d462a01255a"
+    },
+    "worker-environment-win32": {
+      "report": {
+        "suite": "worker-environment",
+        "passed": true,
+        "platform": "win32",
+        "checks": [
+          "portable-supervisor-argv",
+          "literal-metacharacters",
+          "TOML-direct-startup",
+          "hosted-runtime-metadata-before-app-evaluation",
+          "legacy-supervisor-inheritance",
+          "empty-supervisor-clears-inheritance"
+        ]
+      },
+      "sha256": "6faa9a257c86b75b195ea660a3f76ebae04adcf4e1acce1cea2b9be8b28505ea"
+    },
+    "worker-environment-linux": {
+      "report": {
+        "suite": "worker-environment",
+        "passed": true,
+        "platform": "linux",
+        "checks": [
+          "portable-supervisor-argv",
+          "literal-metacharacters",
+          "TOML-direct-startup",
+          "hosted-runtime-metadata-before-app-evaluation",
+          "legacy-supervisor-inheritance",
+          "empty-supervisor-clears-inheritance",
+          "legacy-Bash-login-profile",
+          "working-directory-restored-after-profile",
+          "Bash-profile-precedence-and-fallback"
+        ]
+      },
+      "sha256": "2708024da29d6ffb891f140a494f24711c668a755998cd3e368d932103809075"
+    },
+    "unix-identity": {
+      "report": {
+        "suite": "unix-identity",
+        "passed": true,
+        "checks": [
+          "named-user-fallback",
+          "worker-uid",
+          "supplementary-groups",
+          "private-gateway-state",
+          "user-owned-bookmarks",
+          "login-shell-supervisor-drops-privileges"
+        ],
+        "unix_domain_sockets": true
+      },
+      "sha256": "1854a17a189d71bd46eeb591fe1f0d4c098a91e4f05a8268382658dcb9246f8f"
+    },
+    "native-compat": {
+      "report": {
+        "suite": "native-compatibility-cases",
+        "passed": true,
+        "checks": [
+          "legacy-configuration",
+          "static-range",
+          "static-head",
+          "static-cache-validator",
+          "source-and-hidden-files-denied",
+          "redirect-query",
+          "dynamic-nested-discovery",
+          "frame-options",
+          "anonymous-identity",
+          "server-bookmark-save",
+          "new-worker-after-restart",
+          "bookmark-restored-across-workers",
+          "existing-session-survives-restart"
+        ],
+        "certifies_full_compatibility": false
+      },
+      "sha256": "d6c69f3999b8325c7599aadde40b8777c4c2f6c3bb9b943baa90a704130d3f2e"
+    },
+    "launcher": {
+      "report": {
+        "suite": "real-r-launcher",
+        "checks": [
+          "http-page",
+          "missing-secret-rejected",
+          "forged-secret-rejected",
+          "session-user",
+          "reactivity",
+          "persistent-server-bookmark",
+          "bookmark-restored-after-r-restart"
+        ],
+        "passed": true,
+        "certifies_rust_proxy": false,
+        "certifies_full_compatibility": false
+      },
+      "sha256": "ae93ab675fd3880b1ea0e75d77b0df7396d1862d5fd36f0d40c4f6009b6c1b24"
+    },
+    "gateway": {
+      "report": {
+        "suite": "gateway-integration",
+        "checks": [
+          "raw-path-query",
+          "forwarded-ip-trust",
+          "identity-spoofing",
+          "connection-headers",
+          "multiple-set-cookie",
+          "signed-session-affinity",
+          "chunked-upload-integrity",
+          "streamed-response-integrity",
+          "websocket-text",
+          "websocket-binary",
+          "backend-status-preserved",
+          "admin-token-required",
+          "real-analytics",
+          "dashboard-security-headers"
+        ],
+        "count": 14,
+        "passed": true
+      },
+      "sha256": "ed90df135ad4ae06274b97bf8ee2d1a199e72daccc2c5d2f41567a8fbb991780"
+    }
+  },
+  "ci": {
+    "initial_run": 37801819021,
+    "initial_commit": "906f55169f05bcf4577ab781be20e395e09f04bc",
+    "passed_native_targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl",
+      "x86_64-pc-windows-msvc",
+      "aarch64-pc-windows-msvc"
+    ],
+    "blocked_run": 37889526817,
+    "blocker": "Failed before runner assignment; no steps or logs. Checks diagnostic requires unavailable token permission. Cause not confirmed."
+  },
+  "source_sha256": {
+    "src/access_log.rs": "d8532d7ee6e4780e52cbf11581b5cee04fb09da24133691b119bd2a38bd2f897",
+    "src/activity.rs": "15030639c4e5968d78d797c41787a3b75121453a797de8ee4d438a494f60f45c",
+    "src/analytics.rs": "e8a5ca14546de639d5c535f56ce622fed6b157b88edf089efe7c499719718a15",
+    "src/auth.rs": "8c8877f5ebabf9fdee5970996ac6605f5d53fb5bd2ec36c81684f10daba12118",
+    "src/backend.rs": "21eb5cbdad12b98025af051c6a9f8b3d80077b3f123ead52b88aa40c6a098017",
+    "src/config.rs": "d44b7d39f9c5f67d5301d6788737b828a10f9ada4a0322b76398568ab0fd9322",
+    "src/connection.rs": "e917385b3a69c62691ea8cfa58d2a45211c3bf5ff42b497b88605ed74abb668d",
+    "src/identity.rs": "809dd04386ea17598b954d3813b25a3e179dca1f0c93ccf3fc68c4328b8a68e9",
+    "src/legacy.rs": "324f77dd029f2b78cbfdb2b735249814dc51ac42b2b54f64eb01bd5ae07d275c",
+    "src/lib.rs": "d4363a8af5c7b069d3ff1f556b675f53b1c1c13c57788108d77549f54e5148bf",
+    "src/main.rs": "e9d6ffa17e8af4ab74c36aab8afd3ce2d40923408284af237ca706a85a3af080",
+    "src/pool.rs": "79cc778d4607b26b784da4ba664125cc2bcff061e12c2b5228cd2c26dae71ed9",
+    "src/proxy.rs": "15f2607a79458369d999e344ac5bc0f9284a5b159b1ca70fb5c6cb2eec626e36",
+    "src/reload.rs": "4ff6b8e4dae48c9f57815f50910ef55623ea2a34ab6eb32de9b06243da208ebe",
+    "src/security.rs": "b95878538d8c65b2dc1ca9ee0f23a4ad0ad8aa707785ab080b4aa92bb222e5f8",
+    "src/server.rs": "4cce402aa40da21481465b81361a40dd1506de366061671662bf9acfaa1cd894",
+    "src/site.rs": "ab88e03ea4e3cc03bdaec0fb7e8a8ce8fc12174909e0d8f09dc3d2517ae89257",
+    "src/sockjs.rs": "f144575bd79ab6ba4c03897b0d821c707445a1d0782cdc0e0a127e311cf81365",
+    "src/templates.rs": "312505f25542bf15d490da591d80f0f22c00d8d01dfbb2a485562d99a09f19b5",
+    "src/tls.rs": "f1c9b72f80b01d13c2f5a9b592e930aedcd102aa9a82ad60b920f5d6776aaf1c",
+    "src/user_log.rs": "b23165a8678ef6c01d77d6b18646eb16b40370f451121eefad8d2094ba4fab19",
+    "src/sockjs/reconnect.rs": "f56080d9b0b4044443e7e1bca102a9b6d7fd794f321c9bcd33a1c3423b2f36ac",
+    "r/bootstrap.R": "2c35e03fa57b0916c827ee104bf99f9dcf2798956b4b2f69d24071d183cabb20",
+    "r/runtime.R": "83c51dee03ecbb4ceb1d3ca0107d7169024114ddc95f4d999c936bd5d2d97002",
+    "assets/app.js": "e76f09c845758226325a370f440eae89475e50fb7c37f6dae5112600c251b8d8",
+    "assets/index.html": "03dc6f33647ee059004f1ca8f0b87926af74cdf5f113b1fdbb3a2a9f7f24ac9a",
+    "assets/shinyharbor-client.js": "66f46a67254e30767b25e4f632e8a67dc08a1d2a8a79d5f59044f3b1da92a043",
+    "assets/style.css": "356436895259f7d562fc66bc488639ad3def4a42822baa9bcde1036f4cd9246f",
+    "assets/licenses/Apache-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "assets/licenses/asn1-rs-impl-0.2.0-LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "assets/licenses/asn1-rs-impl-0.2.0-LICENSE-MIT": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513",
+    "assets/licenses/manifest.json": "0c42221331ee1dd0c1504d100d84d52304b13cbbbcdb15e6c20edc684eaec1e8",
+    "assets/licenses/valuable-0.1.1-LICENSE": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+    "assets/licenses/winapi-i686-pc-windows-gnu-0.4.0-LICENSE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "assets/licenses/winapi-i686-pc-windows-gnu-0.4.0-LICENSE-MIT": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "assets/licenses/winapi-x86_64-pc-windows-gnu-0.4.0-LICENSE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "assets/licenses/winapi-x86_64-pc-windows-gnu-0.4.0-LICENSE-MIT": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "assets/licenses/yasna-0.5.2-LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "assets/licenses/yasna-0.5.2-LICENSE-MIT": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16",
+    "assets/vendor/sockjs-1.6.1.min.js": "1e0f37d073666196b0848fd7d80d525268d5adf47ea1ec459632f05bbf8e1f54",
+    "assets/vendor/sockjs-LICENSE": "8ed26c0901535830e357f6ab802d0e6c4ff889d79c00dcebd4251eceecacd57e",
+    "tests/access_logs.py": "114df3f3e1de388a9880c9ade087ac5b7999fcf30bfa301b6b7d09e2fb8ae0ad",
+    "tests/auth_proxy.py": "ec6a55e44bc6c599a0fa90816ff04034c5e8d3ae5771ed5cf9c2ffcc842f896f",
+    "tests/configuration.py": "a2115accdcd0b2568c5b5d0d7bae990fb135ade38c57f1d224fe82ecf2247809",
+    "tests/dashboard.py": "aedd0a62426ffa59d53847213ec6a2871cfbccc2eb886d6fd8c0be8c1a486101",
+    "tests/gateway.py": "1b1befb3846bf19b8cfddb16b1cf029ea43b180710421e8d852f20b1715c0143",
+    "tests/http_compression.py": "851db76520ac4391385b7d716dd90ac84e6f47a399c0b966aa97b1d91e7cc66c",
+    "tests/keepalive.py": "7c16e6eeda26bdf083eed960dfd5b3986b2087b460f0574c82cb6adf890fdb31",
+    "tests/large_messages.py": "2f3ce3c15a5e9aa628ee2f27878fafad2b127ccc5af0d4bd3512e4b9b28b5993",
+    "tests/launcher.py": "4aced1d2c2b1d0a8d11fece1219ea3fe18d55eed4415393855a801d5569e0e90",
+    "tests/listener_tls.py": "ce134b2ded00bf417f92ee1528e9e1e9a71d56865cb82184dee85d899c49a27a",
+    "tests/live_dashboard.py": "88c8ec0f00e63e00e00f3eb387269aa810ba353c5dec5dec1dcda7a819387e59",
+    "tests/load.py": "032c8ab771bc1d38d99ee8adf06a5cc7f0c46a08b05b864b07da27e2f11b0921",
+    "tests/multiworker.py": "c60545daf5b84181969083e2919a022cd3edb083c03ffc0de3e6139efca1f9e2",
+    "tests/native_compat.py": "f575e8853e4ec87eaff58d6ec1d584c397c5c9d05cb8153ef3e3ffd30846dcf1",
+    "tests/page_settings.py": "4d104d22ddfff77c5e499a22c985ef7bfaa47ce966ebdcda80a3a6c4506f9eb9",
+    "tests/reconnect.py": "f310faa8a9eaf9507d634a9602e0d12e4b358c14635d2478e1f143850b5f713f",
+    "tests/reload.py": "3bb4cdbb24420a7336f1d3b9aadf57ffb420a55d47a105a78005fdb8948e6b86",
+    "tests/reload_signal.py": "8e852c878378851574e11c60ef0b308b00e12f56156b76f078fe6dd849dcc4cf",
+    "tests/requirements-gateway.txt": "4e52c115e2a271feaecc8b79147555f471c07ebdda3d677e49c0e51a24af483f",
+    "tests/requirements.txt": "f25a55a2eb8b0e494b3c37d629a5044a9ed9ea69ee79efc3132f5ed8d7dd203e",
+    "tests/resource_limits.py": "37eb288cb37f93229f72da22fd5fe08c0aa61e1e3e3f0e3d70dd833ad2250d7a",
+    "tests/rmarkdown.py": "5ee3b50feb86eb8de40cb5a637dea984700e4b8838e8d4291848288f2910daac",
+    "tests/runtime.R": "38d4704df38ddaa7aed54668645ca3e832d7ff1416dde7e402d11391ba8237e2",
+    "tests/shiny_browser.py": "5ef135e84f3bf0d4edf60339b4c854294ba9713fea521b42808717e274f1676b",
+    "tests/templates.py": "bf2927311f61648cc3501f7a951fb01edb68d156777ebd0a774bddbf8d29f303",
+    "tests/test_sql.py": "be921a54b450f9c94cbf7b9ee62561c9707496c4ad1bc293295296de40c04f11",
+    "tests/test_structure.py": "790c357d5a09f5e8999690b3ac3e8254d473bde5c4a762dfa06072d8b4989dea",
+    "tests/test_support.py": "574b2dac21fe02a46094603e246ff8b8382942dc2b0ade2acae7646de03cc475",
+    "tests/tls.py": "a1148028b62ffe3957aee9dc2f5b266153545c4cacf821afe42d1c18c155252a",
+    "tests/transports.py": "3cab09160936b74d8ba391898a450a4879bc33831ecf934dd2216a647956e2a1",
+    "tests/unicode_paths.py": "27216c6e64c24eb764164ba8d2f78c8fe763529ce3089e521aa3e0777489031f",
+    "tests/unix_identity.py": "803f996548a755f5e47449fb4c096916f1f403292bf90d2d8ce605950bafb24f",
+    "tests/unix_socket.py": "7a8107e905f2128ae860f0d8e065b7bdb7519c82ffda679e2f319bc9c03c093a",
+    "tests/worker_environment.py": "332e015de1698faa8ad993b5a711030271499feda19addfe018b80f4d25aeb58",
+    "tests/worker_logs.py": "d38adb8c1f3f096e7d07d446f77cd7b20de3dede6855d21ac73395c664a805d8",
+    "tools/differential_smoke.py": "382eb829001a4126f343bc97f6c753141ef78a78f342daee01fdc85c9b2d144f",
+    "tools/fetch_pebble.py": "e4948911a51b9f99d0c84a0cef5608eb25cc66e70d2a4763c4c4c13b8fce25b6",
+    "tools/package.py": "2de5c083787990517307cdd20c13477eebaf8fb8568565673607812f21faa261",
+    "tools/pebble-assets.json": "32e48c2109c6518b700c70646617ba8ba03260ede977311879acf04286f1e293",
+    "tools/release_files.py": "465efc2eb1c3c5b262ff9a4c2d23016a38277c7e4501a4bc38872f913b1352a7",
+    "tools/release_gate.py": "fd94ed684d9a13d4ed7b03b78316b26f96784784aa87048decab7765f311b172",
+    "tools/targets.json": "981f5ba2c11798911fc9adb5af4d84fb4bcedc4c844aebe04ac0f06b5892b6e9",
+    ".github/dependabot.yml": "ad6f76310bfc547212e334905f7f7aa5f2ec3b981061798797eb32e51eb0140a",
+    ".github/workflows/ci.yml": "b2f6b99412126e5c811f1684ffcd34a3711f1a28b6da5f46c6ca7f953fe3ef0c",
+    ".github/workflows/latest-shiny.yml": "0c695606e5aca45ea96694a162e51048c5ffabd1ecf5de3bd80e580a47da776f",
+    ".github/workflows/release.yml": "9d8b670f4409d5900bda67f45e955a6a4417e96c0f2b3947439571868c2f5232",
+    "packaging/Dockerfile": "e42f7f49bcd99fc97eff77bdc00d2f0c9fe01bdbc7b392ff3887469fb8aadb07",
+    "packaging/install-service.ps1": "96e6453da30ce6f381bde082787f8825c38e42349e1603c924fe52b440cd50fd",
+    "packaging/install.ps1": "e4d4b546d807b01d142b58d6865c19150fe8d0ce15c9a7dde13e964ffd2e016a",
+    "packaging/install.sh": "e03f78c3931bb27e79761081410cde3eaa600d1c06fff01facf9bf28c871c1b0",
+    "packaging/shinyharbor.service": "c72d0f7c321af51e77cc11fb8149c83216172d194cf54221d3b704cd5add0831",
+    "Cargo.toml": "c6091af3e643e607699f85d5377b4b7346c39942e70e3763b9666ad8fa4f919d",
+    "Cargo.lock": "47801c7de217d73abee538455388a8b62752f4550f8b32a2807be48f423f9d61"
+  }
+}
