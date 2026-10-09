@@ -54,9 +54,10 @@ def payload(archive, destination):
 
 def documentation(source, target):
     target.mkdir(parents=True, exist_ok=True)
-    for name in ['LICENSE', 'THIRD_PARTY.md', 'sbom.cdx.json', 'README.md']:
+    for name in ['LICENSE', 'THIRD_PARTY.md', 'sbom.cdx.json', 'README.md',
+                 'VALIDATION.md', 'SECURITY.md', 'ATTRIBUTIONS.md']:
         shutil.copy2(source / name, target / name)
-    for name in ['licenses', 'docs']:
+    for name in ['licenses', 'docs', 'packaging', 'validation', 'conformance', 'examples']:
         shutil.copytree(source / name, target / name)
 
 

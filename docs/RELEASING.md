@@ -73,6 +73,27 @@ The release manifest rejects a missing installer as well as a missing archive.
 This repository does not yet publish APT/DNF repositories, Homebrew taps or AUR
 entries, and code-signing identities are not provisioned.
 
+## Manually published evaluation prerelease
+
+At the repository owner's explicit request, `v0.1.0-alpha.1` is being published
+with the locally validated Windows x64 and Linux x64 artifacts while hosted CI
+is blocked by account billing. This is a partial-platform **prerelease**, not a
+successful execution of the full release workflow described above.
+
+The manual process checks the version/prerelease policy, binds the release to the
+published source commit, verifies every local SHA-256 sidecar and records the
+actual files and binary provenance in `RELEASE_MANIFEST.json`. It uploads to a
+draft release, checks GitHub's stored asset digests and downloads each asset to
+verify it before publishing. `SHA256SUMS` lists only the uploaded payloads; the
+full-matrix requirement in `tools/release_files.py` remains unchanged.
+
+Missing macOS/ARM installers, untested package-manager/service lifecycles and
+unsigned installers are stated in the release notes. The source tag includes the
+beginner README; the executables were built from the same Rust sources before the
+documentation update. No stable-release gate or CI requirement has been weakened.
+An existing published release must not be silently overwritten by a later matrix
+run; use a new version for subsequent releases.
+
 ## Stable release
 
 `tools/release_gate.py` blocks a stable tag while mandatory compatibility work is

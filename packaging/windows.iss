@@ -29,12 +29,18 @@ AllowNetworkDrive=yes
 [Files]
 Source: "{#Payload}\shinyharbor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Payload}\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Payload}\VALIDATION.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Payload}\SECURITY.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Payload}\ATTRIBUTIONS.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\THIRD_PARTY.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\sbom.cdx.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#Payload}\docs\*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#Payload}\packaging\install-service.ps1"; DestDir: "{app}\packaging"; Flags: ignoreversion
-Source: "{#Payload}\packaging\windows-service.ps1"; DestDir: "{app}\packaging"; Flags: ignoreversion
+Source: "{#Payload}\packaging\*"; DestDir: "{app}\packaging"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#Payload}\validation\*"; DestDir: "{app}\validation"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#Payload}\conformance\*"; DestDir: "{app}\conformance"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#Payload}\examples\*"; DestDir: "{app}\examples"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Tasks]
 Name: desktopicon; Description: "Create a desktop shortcut"; Flags: unchecked
@@ -48,6 +54,7 @@ Name: "{group}\Open applications"; Filename: "http://127.0.0.1:3838/"
 Name: "{group}\Usage dashboard"; Filename: "http://127.0.0.1:3839/"
 Name: "{group}\Edit configuration"; Filename: "{sys}\notepad.exe"; Parameters: """{code:DataDirectory}\harbor.toml"""
 Name: "{group}\Application folders"; Filename: "{code:DataDirectory}\apps"
+Name: "{group}\Installation guide"; Filename: "{sys}\notepad.exe"; Parameters: """{app}\README.md"""
 Name: "{group}\Uninstall ShinyHarbor"; Filename: "{uninstallexe}"
 
 [Run]
