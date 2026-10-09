@@ -12,7 +12,7 @@ import os
 import re
 import ssl
 import struct
-import tempfile
+from test_support import TemporaryDirectory
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from aiohttp import ClientSession, ClientTimeout
@@ -96,7 +96,7 @@ async def main(binary, pebble, certificates):
     results = ROOT / 'test-results'
     results.mkdir(exist_ok=True)
     checks = []
-    with tempfile.TemporaryDirectory(prefix='harbor-tls-') as temp:
+    with TemporaryDirectory(prefix='harbor-tls-') as temp:
         root = Path(temp)
         (root / 'site').mkdir()
         (root / 'site/index.html').write_text('<h1>TLS test</h1>')

@@ -45,8 +45,10 @@ Additional accepted directives include `http_keepalive_timeout`, `access_log`,
 runtime checks, with detailed scope in CONFIGURATION.md and VALIDATION.md.
 Unix `socket_dir`, inherited `log_as_user`, `google_analytics_id` and
 `frame_options allow-from` also have live candidate checks. Remaining configuration
-gaps include mixed TLS settings across listeners and complete listener/global-setting
-reload semantics. Unix socket mode is unavailable on Windows, which uses private
+gaps include complete listener/global-setting reload semantics. Independent TLS
+certificates and mixed HTTP/HTTPS listeners now pass eight live checks; virtual
+hosts sharing an address still require identical TLS settings. Unix socket mode
+is unavailable on Windows, which uses private
 loopback TCP workers. Exact log naming, login-shell behavior, directive edge cases
 and the upstream default environment remain under comparison.
 

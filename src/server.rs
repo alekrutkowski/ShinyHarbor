@@ -127,13 +127,23 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
     std::fs::write(runtime, include_str!("../r/runtime.R"))?;
     let secret = Secret::load_or_create(&config.state_dir.join("secret.key"))?;
     let token = admin_token(&config.state_dir)?;
+    let _ = rustls::crypto::ring::default_provider().install_default();
     // Bind both sockets before starting any application. Do not leave half a server running.
     let mut public_listeners = Vec::new();
     for address in config.listeners() {
         let listener =
             TcpListener::bind(address).with_context(|| format!("Cannot bind {address}"))?;
         listener.set_nonblocking(true)?;
-        public_listeners.push((address, listener));
+        let tls = config.listener_tls(address).clone();
+        let pem = match &tls {
+            Tls::Pem { cert, key } => Some(
+                axum_server::tls_rustls::RustlsConfig::from_pem_file(cert, key)
+                    .await
+                    .with_context(|| format!("Cannot load TLS certificate/key for {address}"))?,
+            ),
+            _ => None,
+        };
+        public_listeners.push((address, listener, tls, pem));
     }
     let admin_listener = TcpListener::bind(config.admin_listen)
         .with_context(|| format!("Cannot bind admin {}", config.admin_listen))?;
@@ -147,15 +157,6 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
             Ok(listener)
         })
         .transpose()?;
-    let _ = rustls::crypto::ring::default_provider().install_default();
-    let pem = match &config.tls {
-        Tls::Pem { cert, key } => Some(
-            axum_server::tls_rustls::RustlsConfig::from_pem_file(cert, key)
-                .await
-                .context("Cannot load TLS certificate/key")?,
-        ),
-        _ => None,
-    };
     let analytics = Analytics::start(
         &config.analytics,
         &config.state_dir.join("analytics.sqlite"),
@@ -249,19 +250,20 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
         .collect();
     let admin_handle = axum_server::Handle::new();
     let public_handles2 = public_handles.clone();
-    let tls = state.config.tls.clone();
     let idle_timeout = Duration::from_secs_f64(state.config.http_keepalive_timeout_seconds);
     let cache = state.config.state_dir.join("acme");
     let background_stop = CancellationToken::new();
-    let pem_reload = match (&state.config.tls, pem.clone()) {
-        (Tls::Pem { cert, key }, Some(pem)) => Some(tokio::spawn(crate::tls::reload_pem(
-            pem,
-            cert.clone(),
-            key.clone(),
-            background_stop.clone(),
-        ))),
-        _ => None,
-    };
+    let mut pem_reloads = Vec::new();
+    for (_, _, tls, pem) in &public_listeners {
+        if let (Tls::Pem { cert, key }, Some(pem)) = (tls, pem) {
+            pem_reloads.push(tokio::spawn(crate::tls::reload_pem(
+                pem.clone(),
+                cert.clone(),
+                key.clone(),
+                background_stop.clone(),
+            )));
+        }
+    }
     let redirect_handle = axum_server::Handle::new();
     let redirect_handle2 = redirect_handle.clone();
     let redirect_config = state.config.clone();
@@ -280,12 +282,10 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
                 Ok::<_, anyhow::Error>(())
             });
         }
-        for ((address, public_listener), public_handle2) in
+        for ((address, public_listener, tls, pem), public_handle2) in
             public_listeners.into_iter().zip(public_handles2)
         {
             let app = app.clone().layer(axum::Extension(address));
-            let tls = tls.clone();
-            let pem = pem.clone();
             let cache = cache.clone();
             let acme_stop = acme_stop.clone();
             listeners.spawn(async move {
@@ -395,7 +395,7 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
     {
         let _ = reload_signal.await;
     }
-    if let Some(task) = pem_reload {
+    for task in pem_reloads {
         let _ = task.await;
     }
     // Upgraded connections are no longer owned by hyper; drain them explicitly.

@@ -4,7 +4,7 @@ import asyncio
 import json
 import re
 import shutil
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from urllib.parse import quote
 from aiohttp import ClientSession
@@ -19,7 +19,7 @@ async def main(binary):
     results = ROOT / 'test-results'
     results.mkdir(exist_ok=True)
     checks = []
-    with tempfile.TemporaryDirectory(prefix='harbor-paths-') as temp:
+    with TemporaryDirectory(prefix='harbor-paths-') as temp:
         root = Path(temp)
         site = root / 'site'
         site.mkdir()

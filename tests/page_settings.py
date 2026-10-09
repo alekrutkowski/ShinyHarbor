@@ -2,7 +2,7 @@
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession
 from gateway import free_port, wait_ready
@@ -14,7 +14,7 @@ async def main(binary):
     results = ROOT / 'test-results'
     results.mkdir(exist_ok=True)
     checks = []
-    with tempfile.TemporaryDirectory(prefix='harbor-pages-') as temp:
+    with TemporaryDirectory(prefix='harbor-pages-') as temp:
         root = Path(temp)
         port = free_port()
         config = root / 'server.conf'

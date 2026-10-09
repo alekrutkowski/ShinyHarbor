@@ -2,7 +2,7 @@
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from playwright.async_api import async_playwright, expect
 from gateway import free_port, wait_ready
@@ -10,7 +10,7 @@ from gateway import free_port, wait_ready
 ROOT = Path(__file__).resolve().parents[1]
 
 async def main(binary):
-    with tempfile.TemporaryDirectory(prefix="harbor-tabs-") as temp:
+    with TemporaryDirectory(prefix="harbor-tabs-") as temp:
         root = Path(temp)
         public, admin = free_port(), free_port()
         conf = root / "harbor.toml"

@@ -19,7 +19,7 @@ pub fn resolve(app: &App) -> Result<Option<Identity>> {
         }
         #[cfg(unix)]
         {
-            use nix::unistd::{Uid, User, geteuid, getgrouplist};
+            use nix::unistd::{Uid, User, geteuid};
             let user = if name == ":HOME_USER:" {
                 use std::os::unix::fs::MetadataExt;
                 User::from_uid(Uid::from_raw(std::fs::metadata(&app.path)?.uid()))?
@@ -35,7 +35,7 @@ pub fn resolve(app: &App) -> Result<Option<Identity>> {
                     "run_as {} requires a privileged service or running the service as that account",
                     user.name
                 );
-                let groups = getgrouplist(&std::ffi::CString::new(user.name.as_str())?, user.gid)?;
+                let groups = account_groups(&user)?;
                 return Ok(Some(Identity { user, groups }));
             }
         }
@@ -79,9 +79,9 @@ pub fn home_if_member(name: &str, required: &[String]) -> Result<PathBuf> {
     }
     #[cfg(unix)]
     {
-        use nix::unistd::{Group, User, getgrouplist};
+        use nix::unistd::{Group, User};
         let user = User::from_name(name)?.ok_or_else(|| anyhow::anyhow!("Unknown OS account"))?;
-        let actual = getgrouplist(&std::ffi::CString::new(user.name.as_str())?, user.gid)?;
+        let actual = account_groups(&user)?;
         for group in required {
             if let Some(group) = Group::from_name(group)?
                 && actual.contains(&group.gid)
@@ -93,6 +93,48 @@ pub fn home_if_member(name: &str, required: &[String]) -> Result<PathBuf> {
     }
     #[cfg(not(unix))]
     bail!("members_of requires Unix OS group lookup")
+}
+
+#[cfg(all(unix, not(target_vendor = "apple")))]
+fn account_groups(user: &nix::unistd::User) -> Result<Vec<nix::unistd::Gid>> {
+    Ok(nix::unistd::getgrouplist(
+        &std::ffi::CString::new(user.name.as_str())?,
+        user.gid,
+    )?)
+}
+
+// Darwin's getgrouplist ABI uses signed integers, so nix does not expose it.
+// Perform the directory lookup in the parent, never in the post-fork hook.
+#[cfg(target_vendor = "apple")]
+#[allow(unsafe_code)]
+fn account_groups(user: &nix::unistd::User) -> Result<Vec<nix::unistd::Gid>> {
+    let name = std::ffi::CString::new(user.name.as_str())?;
+    let mut groups = vec![0_i32; 16];
+    loop {
+        let mut count = groups.len() as nix::libc::c_int;
+        // SAFETY: name is NUL-terminated; groups contains count writable c_ints,
+        // and count points to a live c_int. No pointers escape the call.
+        let result = unsafe {
+            nix::libc::getgrouplist(
+                name.as_ptr(),
+                user.gid.as_raw() as nix::libc::c_int,
+                groups.as_mut_ptr(),
+                &mut count,
+            )
+        };
+        let count = usize::try_from(count)?;
+        anyhow::ensure!(count <= 65536, "OS account has too many groups");
+        if result >= 0 {
+            anyhow::ensure!(count <= groups.len(), "Invalid OS group lookup result");
+            groups.truncate(count);
+            return Ok(groups
+                .into_iter()
+                .map(|g| nix::unistd::Gid::from_raw(g as u32))
+                .collect());
+        }
+        anyhow::ensure!(count > groups.len(), "Cannot resolve OS account groups");
+        groups.resize(count, 0);
+    }
 }
 
 #[cfg(all(test, unix))]
@@ -178,6 +220,8 @@ impl Identity {
         let uid = self.user.uid;
         let gid = self.user.gid;
         let groups = self.groups.clone();
+        #[cfg(target_vendor = "apple")]
+        let groups: Vec<nix::libc::gid_t> = groups.iter().map(|g| g.as_raw()).collect();
         command
             .env("HOME", &self.user.dir)
             .env("USER", &self.user.name)
@@ -187,7 +231,18 @@ impl Identity {
         // no locks, logging, allocation, or runtime operations occur here.
         unsafe {
             command.pre_exec(move || {
+                #[cfg(not(target_vendor = "apple"))]
                 nix::unistd::setgroups(&groups).map_err(std::io::Error::from)?;
+                #[cfg(target_vendor = "apple")]
+                {
+                    // SAFETY: group storage was allocated before fork, is alive
+                    // for the call and contains at most 65536 valid gid_t values.
+                    // setgroups is a syscall; it performs no directory lookup.
+                    if nix::libc::setgroups(groups.len() as nix::libc::c_int, groups.as_ptr()) != 0
+                    {
+                        return Err(std::io::Error::last_os_error());
+                    }
+                }
                 nix::unistd::setgid(gid).map_err(std::io::Error::from)?;
                 nix::unistd::setuid(uid).map_err(std::io::Error::from)?;
                 Ok(())

@@ -149,8 +149,12 @@ in README drives its own automatic renewal and persists its account and certific
 under `state_dir/acme`.
 
 Legacy configuration accepts `ssl key_path cert_path;` inside a `server` block.
-All servers in one instance must currently use identical TLS settings; differing
-certificates or mixed HTTP/HTTPS listeners require separate instances.
+Different listening addresses can use different certificates or mix HTTP and HTTPS
+in the same instance. TOML `[[servers]]` entries inherit root `[tls]` by default;
+set `tls = { mode = "off" }` or a nested `[servers.tls]` PEM configuration to override
+that listener. Certificate files reload independently. Virtual servers sharing
+the same IP and port must use identical TLS settings; separate SNI certificates
+on a shared listener are not implemented.
 
 ACME enables a port-80 redirect listener by default. Top-level `redirect_http = false`
 disables it; `http_redirect_listen = "127.0.0.1:8080"` overrides its binding. For PEM
@@ -162,8 +166,9 @@ For private ACME authorities, `[tls]` accepts `directory_url` (HTTPS) and an opt
 validation is never disabled. Custom authorities may use a different local HTTPS
 port; public Let's Encrypt TLS-ALPN validation still requires reachable port 443.
 
-`mode = "off"` is the default. Multiple listeners and virtual hosts share one TLS
-configuration; ACME currently requires one HTTPS listener.
+`mode = "off"` is the default. ACME currently supports one listener per instance;
+other listeners can use PEM certificates or HTTP. Virtual hosts may share the
+ACME listener and its multi-domain certificate.
 
 ## Transport recovery
 

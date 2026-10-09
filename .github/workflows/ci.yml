@@ -58,8 +58,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-          echo "CC=musl-gcc" >> "$GITHUB_ENV"
-          echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr '[:lower:]-' '[:upper:]_')_LINKER=musl-gcc" >> "$GITHUB_ENV"
+          echo "CC_$(echo '${{ matrix.target }}' | tr '-' '_')=musl-gcc" >> "$GITHUB_ENV"
+          # Rust supplies the static musl CRT. musl-gcc's linker specs break
+          # static PIE startup on x86_64 (rust-lang/rust#95926).
+          echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr '[:lower:]-' '[:upper:]_')_LINKER=cc" >> "$GITHUB_ENV"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -117,10 +119,16 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2
         with:
           pandoc-version: '3.12.1'
+      - name: Linux R build prerequisites
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libuv1-dev
       - name: Install current CRAN Shiny
         shell: Rscript {0}
         run: |
-          install.packages(c('shiny', 'rmarkdown', 'testthat'), repos = 'https://cloud.r-project.org')
+          install.packages(c('shiny', 'rmarkdown', 'testthat'), repos = 'https://cloud.r-project.org', Ncpus = 2)
+          stopifnot(all(vapply(c('shiny', 'rmarkdown', 'testthat'), requireNamespace, logical(1), quietly = TRUE)))
           cat('Reference package:', as.character(packageVersion('shiny')), '\n')
       - uses: actions/setup-python@v5
         with:
@@ -146,6 +154,7 @@ jobs:
           python tests/worker_logs.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/templates.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/page_settings.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/listener_tls.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/live_dashboard.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
       - name: Unix reload signals
         if: runner.os != 'Windows'

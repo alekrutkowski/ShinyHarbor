@@ -5,7 +5,7 @@ import asyncio
 import json
 import os
 import signal
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession
 from playwright.async_api import async_playwright, expect
@@ -19,7 +19,7 @@ async def exercise(binary):
     results = ROOT / 'test-results'
     results.mkdir(exist_ok=True)
     checks = []
-    with tempfile.TemporaryDirectory(prefix='harbor-reload-') as temp:
+    with TemporaryDirectory(prefix='harbor-reload-') as temp:
         root = Path(temp)
         public, admin = free_port(), free_port()
         config = root / 'harbor.toml'

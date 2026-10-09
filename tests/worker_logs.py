@@ -3,7 +3,7 @@ import argparse
 import asyncio
 import json
 import os
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession, ClientError
 from gateway import free_port, wait_ready
@@ -13,7 +13,7 @@ async def main(binary, account=None):
     results = Path('test-results')
     results.mkdir(exist_ok=True)
     checks = []
-    with tempfile.TemporaryDirectory(prefix='harbor-logs-') as temp:
+    with TemporaryDirectory(prefix='harbor-logs-') as temp:
         root = Path(temp)
         app = root / 'app'
         app.mkdir()

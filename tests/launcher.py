@@ -13,7 +13,7 @@ from pathlib import Path
 import socket
 import struct
 import subprocess
-import tempfile
+from test_support import TemporaryDirectory
 import time
 from urllib.parse import urlsplit
 
@@ -78,7 +78,7 @@ def connect_ws(port, headers):
 def main():
     results = ROOT / "test-results"
     results.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="harbor-launcher-") as temp:
+    with TemporaryDirectory(prefix="harbor-launcher-") as temp:
         state = Path(temp)
         secret = "test-worker-secret-" + os.urandom(24).hex()
         ready = state / "ready"

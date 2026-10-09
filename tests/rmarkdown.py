@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from playwright.async_api import async_playwright, expect
 from gateway import free_port, wait_ready
@@ -28,7 +28,7 @@ async def main(binary):
     results = ROOT / 'test-results'
     results.mkdir(exist_ok=True)
     checks = []
-    with tempfile.TemporaryDirectory(prefix='harbor-rmarkdown-') as temp:
+    with TemporaryDirectory(prefix='harbor-rmarkdown-') as temp:
         root = Path(temp)
         site = root / 'site'
         index = site / 'index'

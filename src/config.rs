@@ -102,7 +102,7 @@ impl Default for ProxyAuth {
         }
     }
 }
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Tls {
     Off {},
@@ -267,12 +267,28 @@ pub struct Upstream {
 #[serde(deny_unknown_fields)]
 pub struct VirtualServer {
     pub listen: SocketAddr,
+    /// Inherit the root TLS settings unless this listener overrides them.
+    #[serde(default)]
+    pub tls: Option<Tls>,
     #[serde(default)]
     pub template_dir: Option<PathBuf>,
     #[serde(default)]
     pub server_names: Vec<String>,
 }
 impl Config {
+    pub fn listener_tls(&self, address: SocketAddr) -> &Tls {
+        self.servers
+            .iter()
+            .find(|s| s.listen == address)
+            .and_then(|s| s.tls.as_ref())
+            .unwrap_or(&self.tls)
+    }
+    pub fn acme_listener(&self) -> Option<(SocketAddr, &Tls)> {
+        self.listeners().into_iter().find_map(|address| {
+            let tls = self.listener_tls(address);
+            matches!(tls, Tls::Acme { .. }).then_some((address, tls))
+        })
+    }
     pub fn uses_templates(&self) -> bool {
         self.template_dir.is_some()
             || self.servers.iter().any(|s| s.template_dir.is_some())
@@ -287,7 +303,8 @@ impl Config {
             return None;
         }
         self.http_redirect_listen.or_else(|| {
-            matches!(self.tls, Tls::Acme { .. }).then(|| SocketAddr::new(self.listen.ip(), 80))
+            self.acme_listener()
+                .map(|(address, _)| SocketAddr::new(address.ip(), 80))
         })
     }
     pub fn listeners(&self) -> Vec<SocketAddr> {
@@ -398,16 +415,20 @@ impl Config {
                 *r = relative(base, r);
             }
         }
-        match &mut cfg.tls {
-            Tls::Pem { cert, key } => {
-                *cert = relative(base, cert);
-                *key = relative(base, key);
+        for tls in std::iter::once(&mut cfg.tls)
+            .chain(cfg.servers.iter_mut().filter_map(|s| s.tls.as_mut()))
+        {
+            match tls {
+                Tls::Pem { cert, key } => {
+                    *cert = relative(base, cert);
+                    *key = relative(base, key);
+                }
+                Tls::Acme {
+                    ca_bundle: Some(path),
+                    ..
+                } => *path = relative(base, path),
+                Tls::Off {} | Tls::Acme { .. } => {}
             }
-            Tls::Acme {
-                ca_bundle: Some(path),
-                ..
-            } => *path = relative(base, path),
-            Tls::Off {} | Tls::Acme { .. } => {}
         }
         if let Some(p) = &mut cfg.analytics.country_database {
             *p = relative(base, p);
@@ -495,7 +516,9 @@ impl Config {
         }
         if let Some(address) = self.redirect_listener() {
             ensure!(
-                !matches!(self.tls, Tls::Off {}),
+                self.listeners()
+                    .iter()
+                    .any(|address| !matches!(self.listener_tls(*address), Tls::Off {})),
                 "HTTP redirect requires TLS"
             );
             ensure!(
@@ -505,7 +528,7 @@ impl Config {
                 "HTTP redirect listener must use a separate port"
             );
             ensure!(
-                matches!(self.tls, Tls::Acme { .. }) || self.public_origin.is_some(),
+                self.acme_listener().is_some() || self.public_origin.is_some(),
                 "PEM redirects require public_origin"
             );
         }
@@ -524,12 +547,17 @@ impl Config {
             );
             ensure!(
                 listen.ip().is_loopback()
-                    || !matches!(self.tls, Tls::Off {})
+                    || !matches!(self.listener_tls(listen), Tls::Off {})
                     || self.allow_plaintext_public,
                 "Public plaintext is disabled on {listen}"
             );
         }
         for server in &self.servers {
+            ensure!(
+                server.tls.as_ref().unwrap_or(&self.tls) == self.listener_tls(server.listen),
+                "Virtual servers sharing {} must use the same TLS settings",
+                server.listen
+            );
             for name in &server.server_names {
                 ensure!(
                     !name.is_empty() && name.parse::<http::uri::Authority>().is_ok(),
@@ -563,12 +591,6 @@ impl Config {
             self.analytics.queue_capacity > 0,
             "queue_capacity must be positive"
         );
-        if matches!(self.tls, Tls::Off {}) && !self.listen.ip().is_loopback() {
-            ensure!(
-                self.allow_plaintext_public,
-                "Public plaintext is disabled. Configure TLS, or explicitly set allow_plaintext_public behind a TLS proxy."
-            );
-        }
         if let Some(origin) = &self.public_origin {
             let u = url::Url::parse(origin)?;
             ensure!(
@@ -582,56 +604,63 @@ impl Config {
                 "public_origin must be an HTTPS origin without credentials, a path, query or fragment"
             );
         }
-        match &self.tls {
-            Tls::Acme {
-                domains,
-                email,
-                directory_url,
-                ca_bundle,
-                ..
-            } => {
-                if let Some(directory) = directory_url {
-                    let url = url::Url::parse(directory)?;
+        let listeners = self.listeners();
+        ensure!(
+            listeners
+                .iter()
+                .filter(|address| matches!(self.listener_tls(**address), Tls::Acme { .. }))
+                .count()
+                <= 1,
+            "ACME currently supports one HTTPS listener; other listeners may use PEM or HTTP"
+        );
+        for address in listeners {
+            match self.listener_tls(address) {
+                Tls::Acme {
+                    domains,
+                    email,
+                    directory_url,
+                    ca_bundle,
+                    ..
+                } => {
+                    if let Some(directory) = directory_url {
+                        let url = url::Url::parse(directory)?;
+                        ensure!(
+                            url.scheme() == "https"
+                                && url.host_str().is_some()
+                                && url.username().is_empty()
+                                && url.password().is_none()
+                                && url.fragment().is_none(),
+                            "ACME directory_url must be an HTTPS URL without credentials or fragment"
+                        );
+                    }
+                    if let Some(ca) = ca_bundle {
+                        ensure!(
+                            directory_url.is_some() && ca.is_file(),
+                            "ACME ca_bundle requires a custom directory_url and an existing PEM file"
+                        );
+                    }
+                    ensure!(!domains.is_empty(), "ACME needs at least one domain");
                     ensure!(
-                        url.scheme() == "https"
-                            && url.host_str().is_some()
-                            && url.username().is_empty()
-                            && url.password().is_none()
-                            && url.fragment().is_none(),
-                        "ACME directory_url must be an HTTPS URL without credentials or fragment"
+                        email.contains('@') && !email.chars().any(char::is_whitespace),
+                        "Invalid ACME contact email"
                     );
-                }
-                if let Some(ca) = ca_bundle {
                     ensure!(
-                        directory_url.is_some() && ca.is_file(),
-                        "ACME ca_bundle requires a custom directory_url and an existing PEM file"
+                        address.port() == 443 || directory_url.is_some(),
+                        "TLS-ALPN-01 requires public port 443; listen on 443 (a port-forwarded deployment needs explicit review)"
                     );
+                    for d in domains {
+                        ensure!(
+                            valid_domain(d) || (directory_url.is_some() && d == "localhost"),
+                            "Invalid ACME DNS name {d:?}; wildcards and IP addresses are not supported"
+                        );
+                    }
                 }
-                ensure!(
-                    self.listeners().len() == 1,
-                    "ACME requires one HTTPS listener; virtual hosts may share it"
-                );
-                ensure!(!domains.is_empty(), "ACME needs at least one domain");
-                ensure!(
-                    email.contains('@') && !email.chars().any(char::is_whitespace),
-                    "Invalid ACME contact email"
-                );
-                ensure!(
-                    self.listen.port() == 443 || directory_url.is_some(),
-                    "TLS-ALPN-01 requires public port 443; listen on 443 (a port-forwarded deployment needs explicit review)"
-                );
-                for d in domains {
-                    ensure!(
-                        valid_domain(d) || (directory_url.is_some() && d == "localhost"),
-                        "Invalid ACME DNS name {d:?}; wildcards and IP addresses are not supported"
-                    );
-                }
+                Tls::Pem { cert, key } => ensure!(
+                    cert.is_file() && key.is_file(),
+                    "Certificate and key files must exist"
+                ),
+                Tls::Off {} => {}
             }
-            Tls::Pem { cert, key } => ensure!(
-                cert.is_file() && key.is_file(),
-                "Certificate and key files must exist"
-            ),
-            Tls::Off {} => {}
         }
         let mut names = HashSet::new();
         let mut mounts = HashSet::new();

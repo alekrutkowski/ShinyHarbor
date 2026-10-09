@@ -47,7 +47,7 @@ pub fn acme(config: &Tls, cache: &Path) -> Result<rustls_acme::AcmeConfig<std::i
 pub async fn redirect(State(config): State<Arc<Config>>, request: Request<Body>) -> Response {
     let origin = if let Some(origin) = &config.public_origin {
         origin.trim_end_matches('/').to_owned()
-    } else if let Tls::Acme { domains, .. } = &config.tls {
+    } else if let Some((address, Tls::Acme { domains, .. })) = config.acme_listener() {
         let host = request
             .headers()
             .get(header::HOST)
@@ -59,7 +59,7 @@ pub async fn redirect(State(config): State<Arc<Config>>, request: Request<Body>)
         else {
             return StatusCode::MISDIRECTED_REQUEST.into_response();
         };
-        let port = config.listen.port();
+        let port = address.port();
         if port == 443 {
             format!("https://{domain}")
         } else {

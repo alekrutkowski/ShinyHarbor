@@ -8,7 +8,7 @@ import argparse
 import asyncio
 import json
 import shutil
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession
 from playwright.async_api import async_playwright, expect
@@ -21,7 +21,7 @@ async def exercise(binary: Path):
     checks = []
     results = ROOT / "test-results"
     results.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="harbor-native-") as temp:
+    with TemporaryDirectory(prefix="harbor-native-") as temp:
         root = Path(temp)
         public = free_port()
         # Legacy config uses the default private admin port, so derive public

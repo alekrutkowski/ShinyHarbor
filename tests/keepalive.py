@@ -2,7 +2,7 @@
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from gateway import free_port, wait_ready
 
@@ -19,7 +19,7 @@ async def main(binary):
     checks = []
     results = Path('test-results')
     results.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='harbor-idle-') as temp:
+    with TemporaryDirectory(prefix='harbor-idle-') as temp:
         root = Path(temp)
         (root / 'site').mkdir()
         (root / 'site/file.txt').write_text('hello')

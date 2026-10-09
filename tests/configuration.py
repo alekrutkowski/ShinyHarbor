@@ -2,13 +2,13 @@
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession
 from gateway import free_port, wait_ready
 
 async def main(binary):
-    with tempfile.TemporaryDirectory(prefix="harbor-config-") as temp:
+    with TemporaryDirectory(prefix="harbor-config-") as temp:
         root = Path(temp)
         ports = {free_port() for _ in range(3)}
         while len(ports) < 3 or 3839 in ports:

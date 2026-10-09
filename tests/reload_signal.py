@@ -3,14 +3,14 @@ import argparse
 import asyncio
 import json
 import signal
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession
 from gateway import free_port, wait_ready
 
 
 async def main(binary):
-    with tempfile.TemporaryDirectory(prefix='harbor-signal-') as temp:
+    with TemporaryDirectory(prefix='harbor-signal-') as temp:
         root = Path(temp)
         site = root / 'site'
         site.mkdir()

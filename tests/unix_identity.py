@@ -5,7 +5,7 @@ import grp
 import json
 import os
 import pwd
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession
 from gateway import free_port, wait_ready
@@ -14,7 +14,7 @@ async def main(binary, account, sockets=False):
     assert os.geteuid() == 0, "This test needs root to exercise dropping privileges"
     user = pwd.getpwnam(account)
     assert user.pw_uid != 0, "Choose an unprivileged test account"
-    with tempfile.TemporaryDirectory(prefix="harbor-unix-identity-") as temp:
+    with TemporaryDirectory(prefix="harbor-unix-identity-") as temp:
         root = Path(temp)
         root.chmod(0o755)
         app = root / "app"

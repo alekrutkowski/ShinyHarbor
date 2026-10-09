@@ -34,6 +34,7 @@ An independently installed Posit Shiny Server 1.5.23.1030 provided the reference
 | Worker-owned logging | Six checks passed | Root service delegates creation, permissions, bounded rotation and exit-code retention to the R account; NFS itself not tested |
 | Page settings | Four checks passed | Inherited allow-from, Google tag markup, disabling inherited settings and script-injection rejection; no external analytics requests |
 | Local ACME/TLS | Twelve checks passed | Actual ALPN challenge, trusted issuance, TLS 1.2/1.3, redirect security, cache restart, automatic renewal, valid/invalid PEM replacement and legacy ssl directive |
+| Per-listener TLS | Eight Windows checks passed | Independent trusted certificates, mixed HTTP/HTTPS, isolated certificate reload, hidden private keys, TOML inheritance, forwarded scheme, secure cookies and conflicting shared-address settings |
 | Optimized gateway load probe | 10,000 requests, 32 concurrent, zero errors | 2,790 requests/s, p50 11.33 ms, p95 11.84 ms, peak sampled RSS 16.3 MiB; 1 KiB loopback responses, Python client/backend, compression negotiation and analytics enabled |
 
 The load probe is an environment-specific measurement, not isolated gateway

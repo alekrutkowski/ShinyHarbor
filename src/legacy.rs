@@ -493,11 +493,6 @@ pub fn parse(input: &str) -> Result<Config> {
             .find(|d| d.name == "server_name")
             .map(|d| d.args.clone())
             .unwrap_or_default();
-        cfg.servers.push(VirtualServer {
-            listen,
-            server_names,
-            template_dir: inherited.app.template_dir.clone(),
-        });
         let tls = match children.iter().find(|d| d.name == "ssl") {
             Some(d) => crate::config::Tls::Pem {
                 key: d.args[0].clone().into(),
@@ -506,13 +501,14 @@ pub fn parse(input: &str) -> Result<Config> {
             None => crate::config::Tls::default(),
         };
         if index == 0 {
-            cfg.tls = tls;
-        } else {
-            ensure!(
-                serde_json::to_value(&tls)? == serde_json::to_value(&cfg.tls)?,
-                "Different TLS settings per server require separate instances"
-            );
+            cfg.tls = tls.clone();
         }
+        cfg.servers.push(VirtualServer {
+            listen,
+            tls: Some(tls),
+            server_names,
+            template_dir: inherited.app.template_dir.clone(),
+        });
         // A legacy listen directive explicitly selects the public HTTP binding.
         cfg.allow_plaintext_public = true;
         for d in children.iter().filter(|d| d.name == "location") {

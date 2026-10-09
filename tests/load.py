@@ -6,7 +6,7 @@ import json
 import os
 import platform
 import statistics
-import tempfile
+from test_support import TemporaryDirectory
 import time
 from pathlib import Path
 from aiohttp import ClientSession, TCPConnector, web
@@ -55,7 +55,7 @@ async def main(binary, requests, concurrency):
     results.mkdir(exist_ok=True)
     samples = []
     latencies = []
-    with tempfile.TemporaryDirectory(prefix='harbor-load-') as temp:
+    with TemporaryDirectory(prefix='harbor-load-') as temp:
         config = Path(temp) / 'harbor.toml'
         public, admin = free_port(), free_port()
         config.write_text(f"listen='127.0.0.1:{public}'\nadmin_listen='127.0.0.1:{admin}'\nshutdown_grace_seconds=1\n"

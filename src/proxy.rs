@@ -236,8 +236,8 @@ async fn handle_request(
         pool.as_ref()
             .is_none_or(|p| s.mount.len() > p.mount().len())
     }) {
-        let public_tls =
-            !matches!(state.config.tls, Tls::Off {}) || state.config.public_origin.is_some();
+        let public_tls = !matches!(state.config.listener_tls(listener), Tls::Off {})
+            || state.config.public_origin.is_some();
         if (!site.app_defaults.allowed_users.is_empty()
             || !site.app_defaults.allowed_groups.is_empty())
             && !public_tls
@@ -305,8 +305,8 @@ async fn handle_request(
             "No application is configured at this address",
         );
     };
-    let public_tls =
-        !matches!(state.config.tls, Tls::Off {}) || state.config.public_origin.is_some();
+    let public_tls = !matches!(state.config.listener_tls(listener), Tls::Off {})
+        || state.config.public_origin.is_some();
     let (allowed_users, allowed_groups) = match pool.access_policy() {
         Ok(policy) => policy,
         Err(error) => {

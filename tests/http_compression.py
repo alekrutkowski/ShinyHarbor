@@ -3,7 +3,7 @@ import argparse
 import asyncio
 import gzip
 import json
-import tempfile
+from test_support import TemporaryDirectory
 import zlib
 from pathlib import Path
 from aiohttp import ClientSession
@@ -14,7 +14,7 @@ async def main(binary):
     checks = []
     results = Path('test-results')
     results.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='harbor-compression-') as temp:
+    with TemporaryDirectory(prefix='harbor-compression-') as temp:
         root = Path(temp)
         (root / 'site').mkdir()
         data = ('A representative static document.\n' * 2048).encode()

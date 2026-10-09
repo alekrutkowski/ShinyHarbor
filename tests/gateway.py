@@ -9,7 +9,7 @@ import hashlib
 import json
 import os
 import socket
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession, ClientTimeout, CookieJar, WSMsgType, web
 from yarl import URL
@@ -82,7 +82,7 @@ async def check(binary: Path) -> dict:
         runners.append((runner, site._server.sockets[0].getsockname()[1]))
     checks = []
     try:
-        with tempfile.TemporaryDirectory(prefix="harbor-integration-") as temp:
+        with TemporaryDirectory(prefix="harbor-integration-") as temp:
             root = Path(temp)
             public, admin = free_port(), free_port()
             while admin == public:

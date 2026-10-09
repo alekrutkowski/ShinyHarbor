@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 import uuid
 from pathlib import Path
 from aiohttp import ClientSession
@@ -18,7 +18,7 @@ async def exercise(binary):
     checks = []
     results = ROOT / 'test-results'
     results.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='harbor-auth-') as temp:
+    with TemporaryDirectory(prefix='harbor-auth-') as temp:
         root = Path(temp)
         app = root / 'app'
         app.mkdir()

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession
 from gateway import free_port, wait_ready
@@ -25,7 +25,7 @@ async def exercise(binary):
     results = ROOT / 'test-results'
     results.mkdir(exist_ok=True)
     checks = []
-    with tempfile.TemporaryDirectory(prefix='harbor-limits-') as temp:
+    with TemporaryDirectory(prefix='harbor-limits-') as temp:
         root = Path(temp)
         public = free_port()
         config = root / 'server.conf'

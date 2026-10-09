@@ -22,8 +22,12 @@ pub fn private_paths(config: &crate::config::Config, file: Option<&Path>) -> Vec
     paths.push(config.state_dir.with_extension("users"));
     paths.extend(file.map(Path::to_owned));
     paths.extend(config.access_log.iter().map(|log| log.path.clone()));
-    if let crate::config::Tls::Pem { key, .. } = &config.tls {
-        paths.push(key.clone());
+    for tls in
+        std::iter::once(&config.tls).chain(config.servers.iter().filter_map(|s| s.tls.as_ref()))
+    {
+        if let crate::config::Tls::Pem { key, .. } = tls {
+            paths.push(key.clone());
+        }
     }
     for app in config
         .apps

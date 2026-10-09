@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 from pathlib import Path
 from aiohttp import ClientSession
 from playwright.async_api import async_playwright
@@ -22,7 +22,7 @@ async def main(binary: Path):
     results = ROOT / "test-results"
     results.mkdir(exist_ok=True)
     checks = {}
-    with tempfile.TemporaryDirectory(prefix="harbor-transports-") as temp:
+    with TemporaryDirectory(prefix="harbor-transports-") as temp:
         root = Path(temp)
         public, admin = free_port(), free_port()
         while admin == public:

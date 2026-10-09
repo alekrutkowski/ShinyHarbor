@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import tempfile
+from test_support import TemporaryDirectory
 import uuid
 from pathlib import Path
 from aiohttp import ClientSession, WSMsgType
@@ -127,7 +127,7 @@ async def browser_checks(url):
 async def main(binary, reference):
     results = ROOT / 'test-results'
     results.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='harbor-reconnect-') as temp:
+    with TemporaryDirectory(prefix='harbor-reconnect-') as temp:
         config = Path(temp) / 'harbor.toml'
         public, admin = free_port(), free_port()
         config.write_text(f"listen='127.0.0.1:{public}'\nadmin_listen='127.0.0.1:{admin}'\nshutdown_grace_seconds=1\n"
