@@ -88,6 +88,7 @@ jobs:
           python tests/gateway.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/configuration.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/response_headers.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/server_logging.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/legacy_cli.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/access_logs.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/keepalive.py --binary target/${{ matrix.target }}/release/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}

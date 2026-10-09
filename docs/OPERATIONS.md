@@ -51,7 +51,15 @@ Windows files inherit their directory ACLs. A nonempty `SHINY_LOG_STDERR` enviro
 variable also relays worker stdout/stderr to the server's stderr. Configured worker
 log directories and log artifacts cannot be served as static site files. The legacy
 `preserve_logs` and `log_file_mode` directives and their opt-in app overrides are
-supported; upstream log naming/merged-output and `log_as_user` are still outstanding.
+supported. `log_as_user` delegates log creation and rotation to the R account;
+upstream log naming and merged stdout/stderr remain different.
+
+The original `SHINY_LOG_LEVEL` environment variable controls server diagnostics:
+`TRACE`, `DEBUG`, `INFO` (default), `WARN` or `ERROR`. A valid `RUST_LOG` filter
+takes precedence when set. These controls apply to console logging and Windows
+service logging; they do not filter application output or HTTP access logs.
+An invalid `SHINY_LOG_LEVEL` produces a startup diagnostic. Changing an environment
+setting requires restarting the service.
 
 `GET /healthz` on the admin listener means “admin listener is responding”, not
 “every app is already initialized”. Lazy apps start on demand. Protected

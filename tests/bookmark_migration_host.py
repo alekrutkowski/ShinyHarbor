@@ -23,7 +23,7 @@ async def main(binary, reference_binary, serve_only):
     with tempfile.TemporaryDirectory(prefix='harbor-bookmark-migration-') as temporary:
         root = Path(temporary)
         app = root / 'session'
-        shutil.copytree('examples/session', app)
+        shutil.copytree('examples/bookmark-state', app)
         for name in ['bookmarks', 'sockets', 'logs']:
             (root / name).mkdir(mode=0o700)
         first, second, admin = port(), port(), port()
@@ -80,6 +80,7 @@ bookmark_state_dir='{root / 'bookmarks'}'
                 client = await asyncio.create_subprocess_exec(sys.executable,
                     'tests/bookmark_migration.py', '--reference', ready['reference'],
                     '--candidate', ready['candidate'])
+                processes.append(client)
                 assert await asyncio.wait_for(client.wait(), 180) == 0, 'Bookmark migration failed'
         finally:
             for process in processes:

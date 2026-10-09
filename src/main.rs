@@ -88,10 +88,7 @@ fn main() -> Result<()> {
         return windows::dispatch(config);
     }
     tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "shinyharbor=info".into()),
-        )
+        .with_env_filter(logging_filter()?)
         .with_writer(std::io::stderr)
         .init();
     match cli.command.unwrap_or(Command::Serve {
@@ -139,6 +136,23 @@ fn main() -> Result<()> {
             unreachable!("Service dispatch is handled before console logging")
         }
     }
+}
+fn logging_filter() -> Result<tracing_subscriber::EnvFilter> {
+    if let Ok(filter) = tracing_subscriber::EnvFilter::try_from_default_env() {
+        return Ok(filter);
+    }
+    let level = std::env::var("SHINY_LOG_LEVEL").unwrap_or_else(|_| "INFO".into());
+    let level = level.to_ascii_lowercase();
+    ensure!(
+        matches!(
+            level.as_str(),
+            "trace" | "debug" | "info" | "warn" | "error"
+        ),
+        "SHINY_LOG_LEVEL must be TRACE, DEBUG, INFO, WARN or ERROR"
+    );
+    Ok(tracing_subscriber::EnvFilter::new(format!(
+        "shinyharbor={level}"
+    )))
 }
 fn runtime() -> Result<tokio::runtime::Runtime> {
     Ok(tokio::runtime::Builder::new_multi_thread()
@@ -323,6 +337,7 @@ mod windows {
             .append(true)
             .open(config.state_dir.join("service.log"))?;
         let _ = tracing_subscriber::fmt()
+            .with_env_filter(logging_filter()?)
             .with_ansi(false)
             .with_writer(std::sync::Mutex::new(log))
             .try_init();

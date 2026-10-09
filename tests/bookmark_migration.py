@@ -1,6 +1,6 @@
 """Read real server-side bookmarks in both directions between two R hosts.
 
-Both URLs must host examples/session with the same app path, OS account and
+Both URLs must host examples/bookmark-state with the same app path, OS account and
 bookmark_state_dir. Use an isolated test store, not production bookmarks.
 """
 import argparse
@@ -28,12 +28,18 @@ async def main(reference, candidate):
                 await page.locator('#n').fill(str(value))
                 await page.locator('#n').dispatch_event('change')
                 await expect(page.locator('#double')).to_have_text(str(value * 2))
+                filename = 'saved upload.txt'
+                content = f'Preserved upload {value}: Zażółć 日本語\nsecond line'
+                await page.locator('#upload').set_input_files({
+                    'name': filename, 'mimeType': 'text/plain', 'buffer': content.encode('utf-8')})
+                await expect(page.locator('#uploaded')).to_have_text(content)
                 await page.locator('#save').click()
                 await expect(page.locator('#bookmark_url')).to_contain_text('_state_id_=')
                 saved = urlsplit(await page.locator('#bookmark_url').inner_text())
                 destination = urlsplit(target)
                 restored_url = urlunsplit((destination.scheme, destination.netloc,
                                           destination.path, saved.query, saved.fragment))
+                await context.close()
                 # No affinity cookies or source-session state cross into the target.
                 other = await browser.new_context()
                 restored = await other.new_page()
@@ -41,8 +47,15 @@ async def main(reference, candidate):
                 await expect(restored.locator('#double')).to_have_text(str(value * 2), timeout=60000)
                 await expect(restored.locator('#n')).to_have_value(str(value))
                 checks.append(label)
+                await expect(restored.locator('#uploaded')).to_have_text(content)
+                await expect(restored.locator('#upload_name')).to_have_text(filename)
+                checks.append(label + '-uploaded-file')
+                await expect(restored.locator('#custom_state')).to_have_text(str(value * 13))
+                await expect(restored.locator('#sidecar')).to_have_text(f'sidecar {value}')
+                checks.append(label + '-custom-values-and-sidecar')
+                await expect(restored.locator('#after_restore')).to_have_value(f'restored {value * 13}')
+                checks.append(label + '-onRestored-client-update')
                 await other.close()
-                await context.close()
         finally:
             await browser.close()
     report = {'suite': 'bookmark-migration', 'passed': True,

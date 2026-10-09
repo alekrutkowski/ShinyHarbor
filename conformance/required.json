@@ -404,11 +404,12 @@
       "scope": "behavior",
       "description": "URL and server bookmark storage, restoration and isolation",
       "implemented": false,
-      "progress": "Server-side bookmarks survive R worker replacement. Posit Shiny Server 1.5.23.1030 and ShinyHarbor restore each other's numeric-input bookmarks using the same Unix app path/account/store. Custom callbacks, uploaded-file state and arbitrary existing stores remain under review.",
+      "progress": "Server-side bookmarks survive R worker replacement. Eight bidirectional browser checks against Posit Shiny Server 1.5.23.1030 pass: numeric input, uploaded file, custom saved values/sidecar and onRestored UI updates, using the same Unix app path/account/store. Arbitrary existing stores and module-specific edge cases remain unverified.",
       "candidate_tests_or_sources": [
         "tests/native_compat.py",
         "tests/bookmark_migration.py",
-        "tests/bookmark_migration_host.py"
+        "tests/bookmark_migration_host.py",
+        "examples/bookmark-state/app.R"
       ]
     },
     {

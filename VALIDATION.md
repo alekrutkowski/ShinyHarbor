@@ -17,10 +17,11 @@ runtime metadata. R remains 4.6.1 with Shiny 1.14.0.
 | Independent listener TLS | Eight checks passed on Windows and Linux | Different trusted certificates, mixed HTTP/HTTPS, isolated reload, protected keys, inherited settings and routing headers |
 | Worker environment | Six Windows / eleven Linux checks passed | Literal supervisor arguments, inheritance/clearing, runtime metadata; Linux additionally verifies Bash profiles, app working directory, `R` environment selection and `r_path` precedence |
 | Original CLI startup | Six checks passed on Windows and Linux | Positional config paths with spaces, root `--config`, default file search, native precedence and ambiguous-argument rejection |
-| Upstream bookmark migration | Two real-browser cases passed | Posit-written bookmarks restored by ShinyHarbor and the reverse, with fresh browser contexts and the same Unix app path/account/store |
+| Upstream bookmark migration | Eight real-browser checks passed | Bidirectional numeric input, uploaded file, custom saved object/sidecar and post-restore UI update, with fresh browser contexts and the same Unix app path/account/store |
 | Public response headers | Eight checks each on Windows and Linux | Legacy/TOML configuration, static/proxy/error/redirect responses, precedence, WebSocket handshake, live reload and invalid-change rollback |
 | Header reload with real Shiny | Eight reload checks passed on Windows | Includes response-header changes preserving the existing R process and reactive session |
 | ACME/TLS regression | 13 checks passed on Windows | Includes configured public headers on HTTPS and redirect listeners, with certificate verification enabled |
+| Server diagnostic levels | Nine checks each on Windows and Linux | Original `SHINY_LOG_LEVEL` values, default INFO, Rust-filter precedence and invalid-level diagnostics; real startup and failed-reload events |
 | Unix worker credentials | Six checks passed | Root gateway starts Bash and supervisor under the unprivileged R account, with UID/groups, private state and Unix worker sockets |
 | Native regression | 13 Windows checks passed | Real R, legacy config, static HTTP, bookmarks, worker restart and surviving sessions |
 | R runtime and launcher | 35 R assertions and seven launcher checks passed | Per-worker authentication, real R reactivity and bookmark restoration after an R restart |
@@ -49,6 +50,8 @@ Subsequent CLI, interpreter selection and bookmark migration evidence is retaine
 in `validation/2026-10-09-migration.json`.
 Public-header and updated reload/TLS evidence is retained in
 `validation/2026-10-09-headers.json`.
+Expanded bookmark migration and logging evidence is retained in
+`validation/2026-10-09-state-logging.json`.
 
 ## 2026-10-08 executable validation
 
