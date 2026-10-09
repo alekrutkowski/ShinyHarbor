@@ -25,6 +25,7 @@ pub struct Config {
     pub http_allow_compression: bool,
     pub http_keepalive_timeout_seconds: f64,
     pub access_log: Option<AccessLog>,
+    pub response_headers: BTreeMap<String, String>,
     pub shutdown_grace_seconds: u64,
     pub response_header_timeout_seconds: u64,
     pub max_inflight: usize,
@@ -59,6 +60,7 @@ impl Default for Config {
             http_allow_compression: true,
             http_keepalive_timeout_seconds: 45.0,
             access_log: None,
+            response_headers: BTreeMap::new(),
             shutdown_grace_seconds: 30,
             response_header_timeout_seconds: 120,
             max_inflight: 8192,
@@ -300,6 +302,43 @@ pub struct VirtualServer {
     pub server_names: Vec<String>,
 }
 impl Config {
+    pub fn validated_response_headers(&self) -> Result<http::HeaderMap> {
+        ensure!(
+            self.response_headers.len() <= 64,
+            "At most 64 response headers can be configured"
+        );
+        let mut headers = http::HeaderMap::new();
+        let mut bytes = 0;
+        for (name, value) in &self.response_headers {
+            let name = http::HeaderName::from_bytes(name.as_bytes())
+                .context("Invalid configured response header name")?;
+            ensure!(
+                !matches!(
+                    name.as_str(),
+                    "connection"
+                        | "content-length"
+                        | "transfer-encoding"
+                        | "upgrade"
+                        | "trailer"
+                        | "te"
+                        | "keep-alive"
+                        | "proxy-authenticate"
+                        | "proxy-authorization"
+                ),
+                "Response framing and hop-by-hop header {name} is managed by the server"
+            );
+            let value = http::HeaderValue::from_str(value)
+                .context("Invalid configured response header value")?;
+            bytes += name.as_str().len() + value.as_bytes().len();
+            ensure!(bytes <= 16384, "Configured response headers exceed 16 KiB");
+            ensure!(
+                !headers.contains_key(&name),
+                "Duplicate response header {name}"
+            );
+            headers.insert(name, value);
+        }
+        Ok(headers)
+    }
     pub fn listener_tls(&self, address: SocketAddr) -> &Tls {
         self.servers
             .iter()
@@ -594,6 +633,7 @@ impl Config {
             "Admin must bind to loopback; publish it through an authenticated TLS proxy or an SSH tunnel"
         );
         ensure!(self.max_inflight > 0, "max_inflight must be positive");
+        self.validated_response_headers()?;
         ensure!(
             (1024..=1024 * 1024 * 1024).contains(&self.sockjs.max_message_bytes),
             "SockJS max_message_bytes must be between 1 KiB and 1 GiB"

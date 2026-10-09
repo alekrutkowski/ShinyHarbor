@@ -200,6 +200,7 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
         templates_enabled: config.uses_templates(),
         auth: Auth::new(config.users.clone(), secret.clone()).with_proxy(config.auth_proxy.clone()),
         slots: Arc::new(Semaphore::new(config.max_inflight)),
+        response_headers: config.validated_response_headers()?,
         config: Arc::new(config),
         pools: std::sync::RwLock::new(pools),
         startup,
@@ -221,7 +222,11 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
     let control = crate::reload::Control::new(state.clone(), path);
     let app = Router::new()
         .fallback(proxy::handle)
-        .with_state(control.clone());
+        .with_state(control.clone())
+        .layer(axum::middleware::from_fn_with_state(
+            control.clone(),
+            configured_headers,
+        ));
     let app = if state.config.http_allow_compression {
         app.layer(CompressionLayer::new().compress_when(DefaultPredicate::new().and(compressible)))
     } else {
@@ -268,6 +273,7 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
     let redirect_handle = axum_server::Handle::new();
     let redirect_handle2 = redirect_handle.clone();
     let redirect_config = state.config.clone();
+    let redirect_control = control.clone();
     let acme_stop = background_stop.clone();
     let mut public_task = tokio::spawn(async move {
         let mut listeners = tokio::task::JoinSet::new();
@@ -275,7 +281,11 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
             listeners.spawn(async move {
                 let router = Router::new()
                     .fallback(crate::tls::redirect)
-                    .with_state(redirect_config);
+                    .with_state(redirect_config)
+                    .layer(axum::middleware::from_fn_with_state(
+                        redirect_control,
+                        configured_headers,
+                    ));
                 axum_server::from_tcp(listener)?
                     .handle(redirect_handle2)
                     .serve(router.into_make_service())
@@ -429,6 +439,21 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
     }
     drop(lock);
     outcome
+}
+async fn configured_headers(
+    State(control): State<Arc<crate::reload::Control>>,
+    request: http::Request<Body>,
+    next: axum::middleware::Next,
+) -> Response {
+    let state = control.snapshot();
+    let mut response = next.run(request).await;
+    for (name, value) in &state.response_headers {
+        response
+            .headers_mut()
+            .entry(name.clone())
+            .or_insert_with(|| value.clone());
+    }
+    response
 }
 fn prune_old_logs(path: &Path, days: u32) {
     let Ok(entries) = std::fs::read_dir(path) else {

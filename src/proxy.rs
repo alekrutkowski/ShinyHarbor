@@ -33,6 +33,7 @@ use tokio_util::{sync::CancellationToken, task::TaskTracker};
 
 pub struct AppState {
     pub config: Arc<Config>,
+    pub response_headers: http::HeaderMap,
     pub templates_enabled: bool,
     pub access_log: Option<Arc<crate::access_log::AccessLog>>,
     pub private_paths: Arc<Vec<std::path::PathBuf>>,

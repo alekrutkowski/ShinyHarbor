@@ -38,7 +38,7 @@ The list is not claimed exhaustive. `conformance/required.json` is a machine-rea
 required-work inventory, not a completed specification or a list of passing tests.
 There are intentionally no fake success records.
 
-Additional accepted directives include `http_keepalive_timeout`, `access_log`,
+Additional accepted directives include `http_keepalive_timeout`, `access_log`, `set_header`,
 `http_allow_compression`, `template_dir`, `log_file_mode`, `preserve_logs`,
 `members_of`, `auth_proxy`, `required_user`, `required_group`,
 `utilization_scheduler`, `app_session_timeout` and server `ssl`. They have candidate
@@ -54,6 +54,13 @@ upstream default environment remain under comparison. Inherited `exec_supervisor
 supports quoted executable/argument prefixes; shell expansion requires a wrapper
 script. Unix legacy configurations now use Bash login profiles, with precedence,
 working-directory restoration and dropped worker privileges tested.
+
+Top-level `set_header` supplies default public response headers, preserving values
+already set by applications or the server. TOML uses `response_headers`. Changes
+reload without replacing R workers. Private administration headers remain separate;
+framing/hop-by-hop overrides and oversized header configurations are rejected.
+This Professional-style directive has candidate tests, not a licensed Professional
+differential result.
 
 Large Shiny inputs, outputs and replay have real R/browser checks at 3 MiB over
 WebSocket and XHR polling. The default encoded message limit is 64 MiB, with

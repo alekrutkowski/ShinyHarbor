@@ -137,6 +137,7 @@ impl Control {
             }
         }
         let state = Arc::new(AppState {
+            response_headers: config.validated_response_headers()?,
             private_paths: Arc::new(crate::site::private_paths(&config, self.path.as_deref())),
             access_log: previous.access_log.clone(),
             templates_enabled: config.uses_templates(),
@@ -192,6 +193,7 @@ fn fixed_settings(config: &Config) -> Result<serde_json::Value> {
         "auth_proxy",
         "apps_dir",
         "rscript",
+        "response_headers",
     ] {
         value
             .as_object_mut()

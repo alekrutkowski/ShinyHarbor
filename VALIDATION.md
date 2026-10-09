@@ -18,6 +18,9 @@ runtime metadata. R remains 4.6.1 with Shiny 1.14.0.
 | Worker environment | Six Windows / eleven Linux checks passed | Literal supervisor arguments, inheritance/clearing, runtime metadata; Linux additionally verifies Bash profiles, app working directory, `R` environment selection and `r_path` precedence |
 | Original CLI startup | Six checks passed on Windows and Linux | Positional config paths with spaces, root `--config`, default file search, native precedence and ambiguous-argument rejection |
 | Upstream bookmark migration | Two real-browser cases passed | Posit-written bookmarks restored by ShinyHarbor and the reverse, with fresh browser contexts and the same Unix app path/account/store |
+| Public response headers | Eight checks each on Windows and Linux | Legacy/TOML configuration, static/proxy/error/redirect responses, precedence, WebSocket handshake, live reload and invalid-change rollback |
+| Header reload with real Shiny | Eight reload checks passed on Windows | Includes response-header changes preserving the existing R process and reactive session |
+| ACME/TLS regression | 13 checks passed on Windows | Includes configured public headers on HTTPS and redirect listeners, with certificate verification enabled |
 | Unix worker credentials | Six checks passed | Root gateway starts Bash and supervisor under the unprivileged R account, with UID/groups, private state and Unix worker sockets |
 | Native regression | 13 Windows checks passed | Real R, legacy config, static HTTP, bookmarks, worker restart and surviving sessions |
 | R runtime and launcher | 35 R assertions and seven launcher checks passed | Per-worker authentication, real R reactivity and bookmark restoration after an R restart |
@@ -44,6 +47,8 @@ Machine-readable reports and source hashes for this continuation are retained in
 `validation/2026-10-09.json`.
 Subsequent CLI, interpreter selection and bookmark migration evidence is retained
 in `validation/2026-10-09-migration.json`.
+Public-header and updated reload/TLS evidence is retained in
+`validation/2026-10-09-headers.json`.
 
 ## 2026-10-08 executable validation
 

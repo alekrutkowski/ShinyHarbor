@@ -234,7 +234,7 @@ fn settings(nodes: &[Directive], parent: &Settings, scope: &str) -> Result<Setti
             continue;
         }
         ensure!(
-            seen.insert(&d.name),
+            seen.insert(&d.name) || d.name == "set_header",
             "{}:{}: duplicate {} directive",
             d.line,
             d.column,
@@ -251,6 +251,7 @@ fn settings(nodes: &[Directive], parent: &Settings, scope: &str) -> Result<Setti
             "auth_proxy" if scope == "root" => { d.arity(0, 2)?; }
             "http_allow_compression" if scope == "root" => { d.boolean(Some(true))?; }
             "access_log" if scope == "root" => { d.arity(1, 2)?; }
+            "set_header" if scope == "root" => { d.arity(2, 2)?; }
             "socket_dir" if scope == "root" => { d.arity(1, 1)?; }
             "http_keepalive_timeout" if scope == "root" => { d.arity(1, 1)?; }
             "required_user" => { d.arity(0, 256)?; result.app.allowed_users = d.args.clone(); }
@@ -439,6 +440,10 @@ pub fn parse(input: &str) -> Result<Config> {
     };
     for d in &nodes {
         match d.name.as_str() {
+            "set_header" => {
+                cfg.response_headers
+                    .insert(d.args[0].to_ascii_lowercase(), d.args[1].clone());
+            }
             "http_allow_compression" => cfg.http_allow_compression = d.boolean(Some(true))?,
             "socket_dir" => cfg.socket_dir = Some(d.one()?.into()),
             "http_keepalive_timeout" => cfg.http_keepalive_timeout_seconds = d.one()?.parse()?,

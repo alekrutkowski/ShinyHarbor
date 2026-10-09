@@ -3,7 +3,7 @@
 All paths are relative to the configuration file unless absolute. Bare `Rscript`
 is searched through the service account's PATH; a path containing components is
 resolved from the config directory. Unknown TOML fields are errors. Application
-routes and access policies support live reload; listeners and global settings
+routes, access policies and response headers support live reload; listeners and other global settings
 currently require a restart. See the reload section below.
 
 Files with a `.conf` extension select the native Shiny Server syntax parser.
@@ -32,11 +32,37 @@ takes precedence. TOML continues to use its `rscript` setting.
 | `shutdown_grace_seconds` | `30` | Maximum WebSocket drain interval, with additional HTTP/process cleanup |
 | `response_header_timeout_seconds` | `120` | Positive deadline for an upstream to return response headers; includes upload time |
 | `max_inflight` | `8192` | Active proxied requests/tunnels, not all accepted TCP sockets |
+| `response_headers` | `{}` | Default headers for public HTTP responses; application/server values take precedence |
 
 Keep a TLS-terminated backend private even when setting `public_origin`. This is an
 operator assertion about deployment, not cryptographic proof that every incoming
 connection used HTTPS. TLS off is appropriate for local development; public
 plaintext requires an explicit choice and still does not safely transport credentials.
+
+## Public response headers
+
+```toml
+[response_headers]
+X-Deployment = "analytics"
+Referrer-Policy = "same-origin"
+```
+
+The original syntax is top-level `set_header X-Deployment "analytics";`.
+Repeat the directive for additional headers. Legacy header names are case
+insensitive and the last value for a name wins. TOML rejects duplicate names,
+including differently capitalized names.
+
+Headers apply to public static and app responses, errors, WebSocket handshakes
+and the HTTP-to-HTTPS redirect listener. Existing headers from the application or
+server take precedence. The separate private administration listener keeps its own
+policy. A live reload updates these defaults without replacing R workers or closing
+existing sessions. Already-started responses retain their original policy.
+
+Names and values must be valid HTTP headers. The configuration permits up to 64
+headers and 16 KiB of combined name/value bytes. Framing and hop-by-hop headers
+such as `Content-Length`, `Transfer-Encoding`, `Connection` and `Upgrade` are
+managed by the server and rejected here. These limits are intentional differences
+from an unrestricted `set_header` implementation.
 
 ## Native app
 
@@ -218,7 +244,7 @@ API offers `POST /api/reload`, authenticated with the existing admin Bearer toke
 The server reads and validates the complete file before publishing the new routing
 and access policy snapshot. Invalid changes leave the working configuration intact.
 
-App, site, redirect, upstream, R executable and authentication changes can be
+App, site, redirect, upstream, R executable, authentication and response-header changes can be
 reloaded. Unchanged apps keep their workers. Changed app workers drain existing
 sessions; new sessions use the new settings. Signed worker tickets and session
 paths keep existing uploads/downloads routable. Removed routes reject new requests,

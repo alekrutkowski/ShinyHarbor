@@ -49,6 +49,16 @@ async def exercise(binary):
                         async with client.post(f'http://127.0.0.1:{admin}/api/reload') as response:
                             assert response.status == 401
                         checks.append('reload-requires-admin-token')
+                        config.write_text(base_config + "[response_headers]\nX-Deployment='reloaded'\n" + app, encoding='utf-8')
+                        await reload()
+                        async with client.get(base + '/fixture/') as response:
+                            assert response.headers['X-Deployment'] == 'reloaded'
+                        await page.locator('#n').fill('17')
+                        await page.locator('#n').dispatch_event('change')
+                        await expect(page.locator('#double')).to_have_text('34')
+                        assert await page.locator('#pid').inner_text() == pid
+                        assert await page.evaluate('Shiny.shinyapp.config.sessionId') == session
+                        checks.append('response-header-reload-preserves-R-worker-and-live-session')
                         config.write_text(original + extra, encoding='utf-8')
                         await reload()
                         async with client.get(base + '/added/') as response:

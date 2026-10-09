@@ -120,6 +120,7 @@ async def main(binary, pebble, certificates):
         config = root / 'harbor.toml'
         config.write_text(f"listen='127.0.0.1:{public}'\nadmin_listen='127.0.0.1:{admin}'\n"
             f"http_redirect_listen='127.0.0.1:{redirect}'\nstate_dir='state'\nshutdown_grace_seconds=1\n"
+            "[response_headers]\nX-Deployment='TLS fixture'\n"
             "[tls]\nmode='acme'\ndomains=['localhost']\nemail='test@example.org'\n"
             f"directory_url='https://127.0.0.1:{ca_port}/dir'\nca_bundle={json.dumps(str(ca_file.resolve()))}\n" + route,
             encoding='utf-8')
@@ -155,9 +156,15 @@ async def main(binary, pebble, certificates):
                     async with client.get(f'http://127.0.0.1:{redirect}/a%20b?q=x%26y', headers={'Host': 'localhost'}, allow_redirects=False) as response:
                         assert response.status == 308
                         assert response.headers['Location'] == f'https://localhost:{public}/a%20b?q=x%26y'
+                        assert response.headers['X-Deployment'] == 'TLS fixture'
                     async with client.get(f'http://127.0.0.1:{redirect}/', headers={'Host': 'evil.example'}, allow_redirects=False) as response:
                         assert response.status == 421
+                        assert response.headers['X-Deployment'] == 'TLS fixture'
                     checks += ['redirect-preserves-path-query', 'redirect-rejects-unconfigured-host']
+                    async with client.get(f'https://localhost:{public}/', ssl=trust) as response:
+                        assert response.status == 200
+                        assert response.headers['X-Deployment'] == 'TLS fixture'
+                    checks.append('configured-headers-on-HTTPS-and-redirect-listeners')
                     await asyncio.sleep(0.5)
                     await stop(server)
                     server = await asyncio.create_subprocess_exec(str(binary.resolve()), 'serve', '--config', str(config), stdout=server_log, stderr=server_log)
