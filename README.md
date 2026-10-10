@@ -25,6 +25,7 @@ builds are pending. See [what has actually been tested](VALIDATION.md).
 
 Also: [other Linux distributions](#other-linux-distributions) ·
 [portable ZIP/tar downloads](#portable-downloads) ·
+[customize the start page](#customize-the-start-page) ·
 [CLI command guide](#cli-command-guide) · [updates and removal](#updates-backups-and-removal) ·
 [troubleshooting](#troubleshooting) · [developer information](#for-developers).
 
@@ -505,6 +506,135 @@ an account with access to that project; copying a library from another OS is not
 To apply edits to an existing app, create or update an empty `restart.txt` inside
 its app folder. New visits start the updated app while existing sessions finish.
 Restarting the whole server also applies edits, but interrupts active sessions.
+
+## Customize the start page
+
+The page headed **“Good questions. Interactive answers.”** is the server's
+application catalog. Its HTML, styling and icon are built into the ShinyHarbor
+executable; there is no installed HTML file containing that wording to edit.
+The application cards are generated from the folders in your configured apps
+directory. In the source repository, the page is defined in
+[`src/site.rs`](src/site.rs), with styling in [`assets/catalog.css`](assets/catalog.css).
+You do **not** need Rust or a rebuild to replace it using either method below.
+
+### Option 1: Write your own page with fixed app links
+
+Create a file named **`index.html` directly inside the apps folder**, alongside
+`hello`, rather than inside it:
+
+```text
+apps/
+  index.html       ← Your server's start page
+  hello/
+    app.R
+  my-app/
+    app.R
+```
+
+Use **Start menu → ShinyHarbor → Application folders** on Windows to find the
+correct folder. The usual locations are:
+
+| Installation | Where to create the page |
+| --- | --- |
+| Windows, default all-users service | `C:\ProgramData\ShinyHarbor\apps\index.html` |
+| Windows, default per-user install | `%LOCALAPPDATA%\ShinyHarbor\apps\index.html` |
+| Linux packages, including Alpine | `/srv/shinyharbor/apps/index.html` |
+| macOS system package, when available | `/Library/Application Support/ShinyHarbor/apps/index.html` |
+| Portable or custom data directory | `index.html` in the folder selected by your `[[sites]]` `path` setting |
+
+An upgrade keeps the data directory you previously selected. For example, a
+Windows installation can continue using
+`C:\Users\YOUR-NAME\AppData\Local\ShinyHarbor\apps` after becoming a service.
+Use an account allowed to edit the apps folder, and keep the file readable by the
+service. In Notepad, choose **Save as type: All files** and **UTF-8** so the name
+is `index.html`, not `index.html.txt`.
+
+Here is a complete starting example. Save it as `index.html`, then edit the
+heading and links to suit your apps:
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Our Shiny applications</title>
+</head>
+<body>
+  <h1>Explore our data</h1>
+  <p>Choose an application:</p>
+  <ul>
+    <li><a href="hello/">Sampling Lab</a></li>
+    <li><a href="my-app/">My application</a></li>
+  </ul>
+</body>
+</html>
+```
+
+Remove the `my-app/` link unless that app exists. Relative links such as `hello/`
+work with your server's current HTTP or HTTPS address and port.
+
+Refresh the server's root address, such as `http://127.0.0.1:3838/` or your
+configured `https://localhost:3131/`. **No server restart is needed.** You maintain
+these links yourself; this static page does not automatically list new apps.
+Removing `index.html` restores the generated catalog when `directory_index = true`
+(the installer default). Move any backup outside the apps folder, since files in
+that folder can be publicly accessible.
+
+### Option 2: Customize the page and keep automatic app links
+
+Use a **directory template**: an HTML file with placeholders that ShinyHarbor
+fills with the current folder listing. This applies to sites configured with
+`[[sites]]`, as in the installer defaults.
+
+1. Create a folder named `templates` beside your `harbor.toml` file, outside the
+   public apps directory.
+2. Inside it, create **`directoryIndex.html`** with the following contents:
+
+   ```html
+   <!doctype html>
+   <html lang="en">
+   <head>
+     <meta charset="utf-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+     <title>Our Shiny applications</title>
+   </head>
+   <body>
+     <h1>Explore our data</h1>
+     <p>Applications and folders:</p>
+     <ul>
+       {{#each dirs}}
+       <li><a href="{{url}}">{{name}}</a></li>
+       {{/each}}
+     </ul>
+   </body>
+   </html>
+   ```
+
+   Keep the text in double braces: it generates a link for each app or subfolder.
+   You can edit the surrounding HTML and add your own CSS styling.
+3. Add this setting **at the top of `harbor.toml`, before any `[section]` or
+   `[[section]]` headings**. If `template_dir` already exists there, edit that
+   setting instead of adding a duplicate:
+
+   ```toml
+   template_dir = "templates"
+   ```
+
+4. Keep `directory_index = true` in the relevant `[[sites]]` section. Move any
+   `index.html` out of its apps folder: a static index takes priority over the
+   template. Make the templates folder and file readable by the service account.
+5. Check the configuration with `shinyharbor check --config /path/to/harbor.toml`
+   (on Windows, use `& $Harbor check --config "C:\path\to\harbor.toml"` as in the
+   [CLI guide](#cli-command-guide)). Then restart the service once to apply the
+   new configuration, using the service controls in your OS's installation section.
+
+After that first restart, edits to `directoryIndex.html` appear on refresh without
+another restart. New app folders are listed automatically. This global template
+also applies to other directory listings; the [template reference](docs/CONFIGURATION.md#page-templates)
+explains more specific settings and the available `title`, `dirs` and `files` data.
+If the template file is absent and there is no static `index.html`, the built-in
+catalog is used instead. This customization does not change the dashboard or admin page.
 
 ## Open the usage dashboard
 
