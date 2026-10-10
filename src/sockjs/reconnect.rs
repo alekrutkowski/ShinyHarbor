@@ -436,12 +436,12 @@ async fn channel_task(
         if let Pool::Native { app, .. } = pool.as_ref() {
             ensure!(!robust || crate::legacy::app_settings(app)?.reconnect, "Session reconnect is disabled for this application");
         }
-        let (allowed_users, allowed_groups) = pool.access_policy()?;
+        let (allowed_users, allowed_groups, ignore_case) = pool.access_policy()?;
         if !allowed_users.is_empty() || !allowed_groups.is_empty() {
             let tls = state.config.servers.get(parent.server()).map_or(&state.config.tls, |s| state.config.listener_tls(s.listen));
             ensure!(peer.ip().is_loopback() || !matches!(tls, crate::config::Tls::Off {}) || state.config.public_origin.is_some(), "Authentication requires TLS");
         }
-        let user = state.auth.authorize_request(&headers, peer.ip(), &allowed_users, &allowed_groups).await.map_err(|_| anyhow::anyhow!("Access denied"))?;
+        let user = state.auth.authorize_request(&headers, peer.ip(), &allowed_users, &allowed_groups, ignore_case).await.map_err(|_| anyhow::anyhow!("Access denied"))?;
         let worker = if pool.name() == parent.name() { worker.as_deref() } else { None };
         let connection = connect_backend(&state, &pool, user.as_ref(), peer, &headers, worker);
         let (lease, mut backend) = tokio::select! { _ = stop.cancelled() => return Ok(()), result = connection => result? };

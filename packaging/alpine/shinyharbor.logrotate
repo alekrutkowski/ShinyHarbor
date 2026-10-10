@@ -1,0 +1,9 @@
+/var/log/shinyharbor/service.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+    copytruncate
+    su shinyharbor shinyharbor
+}

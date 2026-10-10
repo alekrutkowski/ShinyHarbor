@@ -1,0 +1,22 @@
+#!/sbin/openrc-run
+description="ShinyHarbor R Shiny application server"
+command="/usr/bin/shinyharbor"
+command_args="serve --config /etc/shinyharbor/harbor.toml"
+command_user="shinyharbor:shinyharbor"
+directory="/var/lib/shinyharbor"
+supervisor="supervise-daemon"
+respawn_delay=5
+respawn_max=0
+stopsig="TERM"
+retry="TERM/75/KILL/5"
+umask="0077"
+output_log="/var/log/shinyharbor/service.log"
+error_log="/var/log/shinyharbor/service.log"
+depend() {
+    need net
+    after firewall
+}
+start_pre() {
+    checkpath --directory --owner shinyharbor:shinyharbor --mode 0750 /var/log/shinyharbor
+    /usr/bin/shinyharbor check --config /etc/shinyharbor/harbor.toml
+}

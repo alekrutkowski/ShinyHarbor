@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+getent group shinyharbor >/dev/null || addgroup -S shinyharbor
+id -u shinyharbor >/dev/null 2>&1 || adduser -S -D -H -G shinyharbor -h /var/lib/shinyharbor -s /sbin/nologin shinyharbor

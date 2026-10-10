@@ -112,8 +112,8 @@ class Structure(unittest.TestCase):
                 digest = hashlib.sha256(path.read_bytes()).hexdigest()
                 path.with_name(path.name + '.sha256').write_text(f'{digest}  {path.name}\n')
                 files.append(path)
-            self.assertEqual(len(tool.verify(directory)), 18)
-            self.assertEqual(len((directory / 'SHA256SUMS').read_text(encoding="utf-8").splitlines()), 18)
+            self.assertEqual(len(tool.verify(directory)), 20)
+            self.assertEqual(len((directory / 'SHA256SUMS').read_text(encoding="utf-8").splitlines()), 20)
             files[0].write_bytes(b'tampered')
             with self.assertRaises(ValueError):
                 tool.verify(directory)

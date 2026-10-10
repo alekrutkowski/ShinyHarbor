@@ -558,3 +558,29 @@ HTTP, HTTPS and upgraded connections. The default is 45 seconds; `0` disables it
 Fractional seconds are accepted. Set it above the SockJS heartbeat interval to
 keep otherwise idle Shiny connections alive. Changing this setting requires a
 service restart.
+
+## Additional Professional-style access and session-header settings
+
+Legacy `auth_ignore_case;` enables case-insensitive matching of inherited
+`required_user` and `required_group` policies. `auth_ignore_case off;` restores
+exact matching in a child location. TOML uses `auth_ignore_case = true` in an app
+or a site's `app_defaults`. Authentication still uses the original username:
+this setting never makes a different-case password login valid. Do not enable it
+when an identity provider permits distinct users/groups differing only by case.
+Local username collisions are rejected during configuration validation.
+
+Legacy `whitelist_headers X-Department X-Role;` passes the listed additional
+headers into new Shiny sessions, including SockJS/reconnect channels. In R read
+`session$request$HTTP_X_DEPARTMENT`. TOML uses
+`whitelist_headers = ["X-Department", "X-Role"]` in the app or `app_defaults`.
+Names are case-insensitive, inherited lists are replaced by child lists, and an
+empty list clears inheritance. Opt-in `.shiny_app.conf` may override this list.
+Transport framing, credentials, worker secrets and forwarding identity headers
+are managed by ShinyHarbor and cannot be whitelisted. Proxy identity headers are
+also stripped. These additional headers are client input unless a trusted proxy
+removes/replaces them; listing one does not authenticate its value. HTTP resource
+requests retain ordinary proxy behavior; the list controls extra session headers.
+
+These settings follow the [published Posit directive documentation](https://docs.posit.co/shiny-server/).
+They have local candidate tests; they have not been compared with a licensed
+Professional installation.

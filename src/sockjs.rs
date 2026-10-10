@@ -624,6 +624,14 @@ async fn connect_backend(
     );
     let mut request = url.into_client_request()?;
     let ip = security::client_ip(peer.ip(), headers, &state.config.trusted_proxies);
+    let mut original = headers.clone();
+    security::strip_hop_headers(&mut original, false);
+    security::copy_whitelisted_headers(
+        &original,
+        request.headers_mut(),
+        &pool.whitelist_headers()?,
+    );
+    state.auth.strip_identity_headers(request.headers_mut());
     for name in [
         header::HOST,
         header::ORIGIN,

@@ -1,12 +1,14 @@
 # ShinyHarbor
 
+<img src="assets/brand/shinyharbor.svg" width="96" alt="ShinyHarbor lighthouse icon">
+
 **Run your R Shiny apps on a computer that other people can visit in their web browser.**
 
 ShinyHarbor starts your R apps, serves their pages, and provides a private usage
 dashboard. It can also obtain and renew HTTPS certificates. You keep writing
 ordinary Shiny code; your visitors only need a browser.
 
-**Current version: 0.1.0-alpha.2, for evaluation.** This is **not a certified drop-in replacement**
+**Current version: 0.1.0-alpha.3, for evaluation.** This is **not a certified drop-in replacement**
 for Posit's Shiny Server, and full Shiny Server Professional compatibility is not
 complete. Windows x64 and Linux x64 have local validation; macOS and ARM installer
 builds are pending. See [what has actually been tested](VALIDATION.md).
@@ -15,7 +17,7 @@ builds are pending. See [what has actually been tested](VALIDATION.md).
 
 1. [Choose your download](#choose-your-download).
 2. Install on [Windows](#windows), [Debian or Ubuntu](#debian-and-ubuntu),
-   [Fedora](#fedora), [Arch Linux](#arch-linux), or [macOS](#macos).
+   [Fedora](#fedora), [Arch Linux](#arch-linux), [Alpine](#alpine-linux), or [macOS](#macos).
 3. [Try the example, then add your own app](#add-your-own-shiny-app).
 4. [Open the usage dashboard](#open-the-usage-dashboard).
 5. [Manage server settings](#manage-server-settings) or try the [terminal monitor](#use-the-terminal-monitor).
@@ -23,7 +25,7 @@ builds are pending. See [what has actually been tested](VALIDATION.md).
 
 Also: [other Linux distributions](#other-linux-distributions) ·
 [portable ZIP/tar downloads](#portable-downloads) ·
-[updates and removal](#updates-backups-and-removal) ·
+[CLI command guide](#cli-command-guide) · [updates and removal](#updates-backups-and-removal) ·
 [troubleshooting](#troubleshooting) · [developer information](#for-developers).
 
 ## What you need
@@ -48,7 +50,7 @@ local HTTPS, follow [HTTPS on your own computer](#https-on-your-own-computer).
 
 ## Choose your download
 
-Open [**GitHub Releases**](https://github.com/alekrutkowski/ShinyHarbor/releases/tag/v0.1.0-alpha.2)
+Open [**GitHub Releases**](https://github.com/alekrutkowski/ShinyHarbor/releases/tag/v0.1.0-alpha.3)
 and expand **Assets**. Choose an installer from this table. GitHub's automatically
 generated **Source code** downloads contain source files, not an installer.
 
@@ -58,6 +60,7 @@ generated **Source code** downloads contain source files, not an installer.
 | Debian or Ubuntu, Intel/AMD 64-bit | [Debian/Ubuntu `.deb`][linux-deb] | Available; package and executable checked |
 | Fedora, Intel/AMD 64-bit | [Fedora `.rpm`][linux-rpm] | Available; package and executable checked |
 | Arch Linux, Intel/AMD 64-bit | [Arch `.pkg.tar.zst`][linux-arch] | Available; package and executable checked |
+| Alpine 3.23 or newer, Intel/AMD 64-bit | [Alpine `.apk`][linux-apk] | Available; see Alpine validation below |
 | macOS, Intel | `*-x86_64-apple-darwin.pkg` | Download pending |
 | macOS, Apple Silicon (M-series) | `*-aarch64-apple-darwin.pkg` | Download pending |
 | Windows ARM64 | `*-aarch64-pc-windows-msvc-setup.exe` | Download pending |
@@ -75,7 +78,7 @@ distribution has not yet been tested. The pending platforms have installer recip
 and release jobs prepared, not validated downloads.
 
 The repository is currently private: sign in to a GitHub account with repository
-access to download the files. Installing a local DEB/RPM/Arch file does not add a
+access to download the files. Installing a local DEB/RPM/Arch/APK file does not add a
 ShinyHarbor software repository or enable automatic updates.
 
 ## Windows
@@ -86,17 +89,22 @@ ShinyHarbor software repository or enable automatic updates.
    if it is not already installed. ShinyHarbor finds standard R installations
    without requiring you to edit PATH.
 2. Download and double-click the [Windows setup installer][windows-setup].
-3. Choose installation **for your account** for a first test. Keep the suggested
-   program folder, or select another one.
-4. On the **Application data** page, choose where to keep your apps, settings,
-   R packages and usage data. You can choose another drive, for example
-   `Z:\ShinyHarborData`, if C: is short of space. Keep this folder for future upgrades.
-5. Select **Install or update the Shiny R package**. This needs an Internet connection
-   and installs Shiny into the selected data folder. Leave the background service
-   option off for your first test.
-6. Finish setup and open **Start menu → ShinyHarbor → Start ShinyHarbor**.
-   Keep its console window open.
-7. Open <http://127.0.0.1:3838/hello/> in your browser. You should see the example app.
+3. Keep the default **all-users** installation and accept the Windows administrator
+   prompt. This installs a persistent background service, enabled after reboot.
+4. On **Application data**, choose a **local** folder for apps, settings, R packages
+   and statistics. The default is `C:\ProgramData\ShinyHarbor`. Another local drive
+   is fine; mapped network drives such as a network-backed Z: cannot be used by
+   the LocalService account. Keep the same folder when upgrading.
+5. Leave **Start automatically after reboot as a Windows service** selected.
+   Setup installs Shiny into the server's private R library; this needs Internet access.
+6. Finish setup. Open **Start menu → ShinyHarbor → Open applications**. The service
+   is already running; no console window needs to stay open.
+7. The start page shows an application card for **Sampling Lab**. Click it, then
+   change an input: the plots and statistics update automatically.
+
+For a temporary desktop test without administrator rights, choose **for your account**
+instead. This explicit alternative has no background service: open **Start ShinyHarbor**
+and keep its window open. Its default data directory is `%LOCALAPPDATA%\ShinyHarbor`.
 
 The alpha installer is unsigned, so Windows may identify an unknown publisher.
 Use the release checksums and your organisation's software-installation policy.
@@ -107,15 +115,16 @@ where you will copy your own apps.
 
 ### Keep it running in the background
 
-For a machine that should serve apps without an open console, run setup in
-**all-users** mode and select **Run in the background as a Windows service**.
+The default **all-users** installation selects **Start automatically after reboot
+as a Windows service**. Keep that selection for an unattended server.
 This requires administrator rights. A *service* is a program Windows starts and
 keeps running in the background, including after a restart.
 
 The service option installs its own Shiny library. Use local disks for the program
 and data folders: a mapped/network Z: drive is available to your login session,
 but generally not to the service. Use the ordinary Start shortcut for a network
-drive. Service installation is implemented but has not yet passed local acceptance testing.
+drive. In **Services**, verify that its **Startup type** is **Automatic**. Installation does
+not reboot your computer; checking boot registration is separate from a reboot test.
 
 To stop or restart the service, open the Windows **Services** application, find
 **ShinyHarbor**, and choose **Stop** or **Restart**. Stop a foreground copy before
@@ -123,17 +132,19 @@ starting the service so that they do not compete for the same port.
 
 ### Run diagnostic commands
 
-Open **PowerShell**, not the R console. For the default installation for your account:
+Open **PowerShell**, not the R console. For the default all-users installation:
 
 ```powershell
-$Harbor = "$env:LOCALAPPDATA\Programs\ShinyHarbor\shinyharbor.exe"
+$Harbor = "$env:ProgramFiles\ShinyHarbor\shinyharbor.exe"
+& $Harbor --version
 & $Harbor paths
 & $Harbor doctor
 ```
 
 If you chose another program folder, replace the first line with its full path,
 for example `$Harbor = 'Z:\ShinyHarbor\shinyharbor.exe'`. An all-users installation
-normally uses `C:\Program Files\ShinyHarbor\shinyharbor.exe`.
+normally uses `C:\Program Files\ShinyHarbor\shinyharbor.exe`. A per-user installation
+uses `$env:LOCALAPPDATA\Programs\ShinyHarbor\shinyharbor.exe`.
 `paths` shows where your settings and R library are; `doctor` checks R and Shiny.
 The installer does not add the program to PATH, so use its full path as above.
 
@@ -144,7 +155,7 @@ the downloaded file**. For the current Intel/AMD 64-bit package, run:
 
 ```sh
 sudo apt update
-sudo apt install ./shinyharbor_0.1.0-alpha.2-1_amd64.deb
+sudo apt install ./shinyharbor_0.1.0-alpha.3-1_amd64.deb
 ```
 
 `sudo` asks for your Linux account password to allow system installation. The
@@ -169,7 +180,7 @@ validated. Continue with [Linux folders and service controls](#linux-folders-and
 Download the [`.rpm` package][linux-rpm]. Open a **Terminal in its download folder**:
 
 ```sh
-sudo dnf install ./shinyharbor-0.1.0-alpha.2-1.x86_64.rpm
+sudo dnf install ./shinyharbor-0.1.0-alpha.3-1.x86_64.rpm
 systemctl status shinyharbor --no-pager
 sudo -u shinyharbor shinyharbor doctor --config /etc/shinyharbor/harbor.toml
 ```
@@ -189,7 +200,7 @@ Download the [Arch package][linux-arch]. Open a **Terminal in its download folde
 
 ```sh
 sudo pacman -Syu --needed r base-devel
-sudo pacman -U ./shinyharbor-0.1.0_alpha.2-1-x86_64.pkg.tar.zst
+sudo pacman -U ./shinyharbor-0.1.0_alpha.3-1-x86_64.pkg.tar.zst
 ```
 
 The first command also updates the system's packages, following
@@ -207,9 +218,74 @@ from source. Open <http://127.0.0.1:3838/hello/> on the server computer.
 There is currently no ShinyHarbor AUR entry. Arch Linux ARM needs a separate
 `aarch64` build; do not install the `x86_64` package on it.
 
+## Alpine Linux
+
+Use **Alpine 3.23 or newer** (apk-tools 3); this alpha is tested in Alpine 3.24.2.
+Download the [x86_64 APK][linux-apk]. ARM64 uses an `aarch64` APK when available.
+Unlike Debian/Fedora/Arch, Alpine uses **OpenRC**, not systemd.
+
+Run these commands in a **root shell** (`su -`, or `doas` if you already configured
+it). First enable the **community** repository for your Alpine release in
+`/etc/apk/repositories`, because that is where R is provided. Keep the same release
+branch as `main`; do not mix stable and edge repositories. Then:
+
+```sh
+apk update
+apk add --allow-untrusted ./shinyharbor-0.1.0_alpha3-r0-x86_64.apk
+apk add R-dev build-base libuv-dev
+su -s /bin/sh shinyharbor -c 'shinyharbor setup --directory /etc/shinyharbor --install-shiny'
+rc-service shinyharbor status
+rc-update show default
+```
+
+The local APK is unsigned; **verify its SHA-256 checksum from the release first**.
+`--allow-untrusted` applies to this installation command and does not disable
+signature checking globally. The APK installs R, OpenRC, log rotation and fonts for R plots, creates
+the `shinyharbor` account and enables the service in the `default` boot runlevel.
+It starts immediately when OpenRC is already running. The CRAN command above
+installs Shiny once; R packages containing native code require the build tools.
+
+Open <http://127.0.0.1:3838/> on the server computer. Configuration, apps, R library
+and state use the [same locations as other Linux packages](#linux-folders-and-service-controls).
+The service log is `/var/log/shinyharbor/service.log` and has a logrotate rule.
+
+```sh
+rc-service shinyharbor restart             # Apply ports/TLS changes
+rc-service shinyharbor stop                # Stop until next start or reboot
+rc-update del shinyharbor default          # Disable future automatic starts
+rc-update add shinyharbor default          # Enable automatic starts again
+shinyharbor admin-token --config /etc/shinyharbor/harbor.toml
+shinyharbor tui --config /etc/shinyharbor/harbor.toml
+```
+
+The service runs as an unprivileged account. For public HTTPS on port 443, grant
+only permission to bind low-numbered ports, then restart:
+
+```sh
+apk add libcap-utils
+setcap cap_net_bind_service=+ep /usr/bin/shinyharbor
+rc-service shinyharbor restart
+```
+
+Repeat `setcap` after replacing/upgrading the executable. Follow the common
+[public HTTPS setup](#publish-at-your-own-https-address) for DNS, certificates
+and firewall requirements. For local certificates, install `mkcert` and `nss-tools`
+with `apk add` on the computer running your browser, then follow the Linux
+certificate-copy instructions below. Do not put the local CA's signing key on a server.
+
+In a container with no OpenRC boot process, installation still registers the service,
+but run `shinyharbor serve --config /etc/shinyharbor/harbor.toml` as the container's
+foreground process under the `shinyharbor` account. Boot autostart requires OpenRC
+to be the operating system's service manager.
+
+These instructions assume a normal installation on a persistent disk. Alpine's
+diskless mode needs a persistent APK cache, saved system configuration and mounted
+storage for your apps and state; follow Alpine's [diskless setup guide](https://wiki.alpinelinux.org/wiki/Diskless_Mode)
+before relying on reboot persistence.
+
 ## Linux folders and service controls
 
-These paths apply to the DEB, RPM and Arch installers:
+These paths apply to the DEB, RPM, Arch and Alpine installers:
 
 | What you want to find | Where it is |
 | --- | --- |
@@ -227,8 +303,9 @@ sudo systemctl start shinyharbor       # Start again
 sudo journalctl -u shinyharbor -n 50 --no-pager  # Recent service messages
 ```
 
-The packages use **systemd**, Linux's background-service manager. A container or
-minimal distribution without systemd should use [portable deployment](#portable-downloads)
+Debian/Ubuntu, Fedora and Arch packages use **systemd**, Linux's background-service manager.
+Alpine uses the OpenRC commands above. A container without a service manager
+should use [portable deployment](#portable-downloads)
 or the [container instructions](docs/DEPLOYMENT.md#containers).
 
 The packages install the distribution's R/Shiny versions, which can be older than
@@ -239,38 +316,43 @@ for Arch. This changes the private ShinyHarbor library; it does not upgrade R it
 
 ## macOS
 
-**The macOS installers are not attached to this alpha yet.** The following steps
-describe the prepared installer; use them when a matching PKG appears in Releases.
+**The macOS installers are not attached to this alpha yet.** These instructions
+describe the prepared PKG; native macOS execution and signing remain pending.
 
-1. In **Apple menu → About This Mac**, check whether you have Apple Silicon or Intel.
-2. Install the matching [R for macOS](https://cran.r-project.org/bin/macosx/) from CRAN.
-   Check CRAN's macOS version requirements for the R download you select.
-3. Download the corresponding ShinyHarbor `.pkg` and double-click it.
+1. In **Apple menu → About This Mac**, check Intel versus Apple Silicon.
+2. Install the matching [R for macOS](https://cran.r-project.org/bin/macosx/).
+3. Open the matching ShinyHarbor `.pkg` and approve installation. It registers a
+   **system LaunchDaemon**, running as the dedicated `_shinyharbor` account.
+   It starts at boot, before any desktop login, and restarts after a crash.
 4. Open **Applications → ShinyHarbor → Install Shiny R package** and let it finish.
-5. Open **Start ShinyHarbor**, then visit <http://127.0.0.1:3838/hello/>.
-   Keep the Terminal window open while using the foreground server.
+5. Open **ShinyHarbor.app** in that folder. It opens your configured application
+   address. An administrator prompt is needed to read the protected configuration.
 
-Your data folder is `~/Library/Application Support/ShinyHarbor`. In Finder, use
-**Go → Go to Folder** and paste that path. `~` means your home folder.
-Put apps inside its `apps` subfolder.
+Configuration is `/etc/shinyharbor/harbor.toml`. Apps are in
+`/Library/Application Support/ShinyHarbor/apps`; private state and R packages are
+in the neighbouring `state` and `R/library` folders. These are system folders,
+without `~` at the start. Use **Finder → Go → Go to Folder** to visit them.
 
-**Run at login** sets up a background process for your account. Close the foreground
-server first. **Stop background server** stops it and removes the login startup
-entry. This is a login service, so it starts when you log in, not before.
-
-The program is installed at `/usr/local/bin/shinyharbor`. In a new Terminal:
+The folder also includes dashboard, administration and terminal-monitor shortcuts.
+Use **Restart server** after changing ports or TLS. **Stop background server**
+stops and disables autostart; **Start ShinyHarbor** enables it again.
 
 ```sh
-/usr/local/bin/shinyharbor paths
-/usr/local/bin/shinyharbor doctor
+sudo /usr/local/bin/shinyharbor doctor --config /etc/shinyharbor/harbor.toml
+sudo /usr/local/libexec/shinyharbor/daemon.sh status
+sudo /usr/local/libexec/shinyharbor/daemon.sh restart
 ```
 
-The prepared PKG is unsigned and unnotarized; follow your Mac's software-installation
-policy. Signing, notarization and native macOS installer testing are still pending.
+Existing per-user LaunchAgent installations must be stopped with
+`/usr/local/libexec/shinyharbor/service.sh stop` before installing the system service.
+Move your chosen apps and settings deliberately; the installer preserves the old
+home-directory data and does not silently change its ownership or move it.
+
+The PKG is unsigned and unnotarized. Follow your Mac's software-installation policy.
 
 ## Other Linux distributions
 
-For openSUSE, RHEL-family systems, Alpine, and systems without systemd, the portable
+For openSUSE, RHEL-family systems, and other distributions, the portable
 Linux archive is the evaluation route. These distributions are **not separately
 validated**, and there are no native ShinyHarbor packages for them in this release.
 
@@ -301,8 +383,8 @@ On Windows, right-click the ZIP and select **Extract All**. On Linux, you can
 extract from a Terminal in your download folder:
 
 ```sh
-tar -xzf shinyharbor-0.1.0-alpha.2-x86_64-unknown-linux-musl.tar.gz
-cd shinyharbor-0.1.0-alpha.2-x86_64-unknown-linux-musl
+tar -xzf shinyharbor-0.1.0-alpha.3-x86_64-unknown-linux-musl.tar.gz
+cd shinyharbor-0.1.0-alpha.3-x86_64-unknown-linux-musl
 ```
 
 On Windows, open PowerShell in the extracted folder:
@@ -333,23 +415,22 @@ using Shiny and base R. No plotting or statistics packages need to be installed.
 
 ![Sampling Lab running through ShinyHarbor: controls, statistical summaries and a base-R plot](docs/sampling-lab.png)
 
-1. Keep the initial bell-shaped population and click **Run experiment**. The
-   histogram is one random sample; the curve is its known population.
-2. Open **Sampling distribution** to see estimates from 2,000 independent
-   samples. Open **Interval coverage** to see which confidence intervals contain
-   the true mean.
-3. Choose a right-skewed population and a small sample size, then run again.
-   Compare observed coverage with the nominal confidence level. Increase the
-   sample size and explore what changes.
-4. Download the sample, all simulated intervals, or a PDF plot report. A fixed
-   seed makes the experiment reproducible. Each browser session has its own
-   experiment; changes take effect only when you click **Run experiment**.
+1. The initial experiment runs when the app opens. The histogram is one random
+   sample; the curve is its known population.
+2. Change the population, sample size, mean, spread, confidence level, number of
+   repetitions or seed. Results update automatically; there is no **Run experiment** button.
+3. Open **Sampling distribution** to see estimates from repeated samples, or
+   **Interval coverage** to see which confidence intervals contain the true mean.
+   Try a skewed population with a small sample, then increase the sample size.
+4. **Draw a new experiment** changes the random seed. It is optional: a fixed seed
+   keeps comparisons reproducible. Each browser session has its own experiment.
+5. Download the current sample, simulated intervals or a PDF plot report.
 
 The lesson explains its assumptions and Monte Carlo uncertainty. Its live
 updates and downloads also demonstrate ordinary Shiny functionality through
 ShinyHarbor. Open the usage dashboard in another tab to observe the traffic.
 
-Upgrading updates the original alpha.1 example only when its `app.R` is still
+Upgrading updates the bundled alpha.1 or alpha.2 example only when its `app.R` is still
 unmodified, keeping a hidden backup. Your own edits are preserved. To install a
 fresh copy elsewhere, use `shinyharbor example --directory /path/to/new-app`;
 on Windows use `& $Harbor example --directory "C:\path\to\new-app"`.
@@ -437,7 +518,8 @@ Get it in a second terminal while the server is running:
 | --- | --- |
 | Windows | `& $Harbor admin-token` after setting `$Harbor` as in the Windows section; use administrator PowerShell for an all-users service |
 | Linux DEB/RPM/Arch | `sudo shinyharbor admin-token --config /etc/shinyharbor/harbor.toml` |
-| macOS | `/usr/local/bin/shinyharbor admin-token` |
+| macOS package | `sudo /usr/local/bin/shinyharbor admin-token --config /etc/shinyharbor/harbor.toml` |
+| Alpine | As root: `shinyharbor admin-token --config /etc/shinyharbor/harbor.toml` |
 | Portable | `./shinyharbor admin-token --config ./harbor.toml`; on Windows use `.\shinyharbor.exe` instead |
 
 Paste the token into the dashboard's unlock field. Keep it private; it is not
@@ -511,10 +593,11 @@ Start ShinyHarbor as usual, then open a **second terminal** and run:
 shinyharbor tui --config /path/to/harbor.toml
 ```
 
-On Windows, use the **Terminal monitor** shortcut, or:
+On Windows, use **Terminal monitor** (it asks for elevation for a service installation),
+or open administrator PowerShell for the all-users service:
 
 ```powershell
-& $Harbor tui --config "$env:LOCALAPPDATA\ShinyHarbor\harbor.toml"
+& $Harbor tui --config "$env:ProgramData\ShinyHarbor\harbor.toml"
 ```
 
 On packaged Linux, the service's private token belongs to its service account:
@@ -541,6 +624,76 @@ The first command prints a readable status snapshot. The second prints the
 configured administration URL. `open apps` and `open dashboard` work similarly;
 omit `--print` to open the browser. Installer shortcuts on Windows and macOS use
 these commands so they follow your configured ports and HTTPS mode.
+
+## CLI command guide
+
+The **CLI** is the program you run in PowerShell or Terminal, not inside R/RStudio.
+A *subcommand* selects an action; an *option* starts with `--` and modifies it.
+For example, `shinyharbor tui --once` prints one status screen. Text such as `FILE`
+below is a placeholder: replace it with your actual path, quoting paths with spaces.
+
+On Windows replace `shinyharbor` with `& $Harbor`, after setting `$Harbor` to the
+installed executable as shown in the Windows section. Installation does not add
+it to PATH. On packaged Linux/macOS use an account with permission to read the
+configuration; administration also needs access to the private state directory.
+Use `sudo` on systemd Linux/macOS, or a root shell on Alpine, for those commands.
+
+| Command and all its options | What it does and when to use it |
+| --- | --- |
+| `shinyharbor` | Starts with the discovered configuration. If none exists, creates a per-user example/config first. It does not install R or download Shiny automatically. |
+| `shinyharbor FILE` | Starts with a named TOML or `shiny-server.conf` file; supports the original Shiny Server CLI style. |
+| `shinyharbor --config FILE` or `-c FILE` | Another way to start with a specific file. Use either this or positional `FILE`. |
+| `serve [-c FILE]` / `serve [--config FILE]` | Runs the server in the foreground. Ctrl+C stops it and drains sessions up to the configured shutdown timeout. A native service installer uses this automatically (Windows uses `service`). |
+| `setup [--directory DIR] [--install-shiny]` | Creates first-run config, an example and a private R library in your chosen directory. Preserves existing configuration and custom apps. `--install-shiny` downloads Shiny from CRAN using already installed R; omit it to avoid downloads. Defaults to the per-user data directory. **Does not register a service**; use the native installer for that. |
+| `init [DIR]` | Creates a portable workspace, defaulting to the current directory. Refuses to overwrite an existing `harbor.toml`. |
+| `example [--directory DIR]` | Installs Sampling Lab in this app directory. Default: `apps/hello` under the per-user data directory. Updates only known unmodified old examples, with a backup; preserves customized apps. |
+| `paths [-c FILE]` | Prints JSON showing the resolved config, R executable, R library, state and TLS file paths. Useful when you cannot find your installation. It prints paths, not credentials or key contents. |
+| `check [-c FILE]` | Validates configuration without starting R or opening listening ports. Use before applying edits. Successful validation does not prove R packages or network ports are available. |
+| `doctor [-c FILE]` | Validates settings and checks R/Shiny/package availability. Use first when an app does not start. |
+| `reload [-c FILE]` | Asks the already running server to reload supported app routes/settings/access rules. Existing sessions continue. Changes to listeners, TLS and other fixed settings require a service restart instead. |
+| `admin-token [-c FILE]` | Prints the secret that unlocks the dashboard and administration page. Keep it private; paste it into the page, not a URL. This does not start the server. |
+| `hash-password` | Prompts twice for a password (at least 12 bytes), hides typing and prints an Argon2 hash for a local `[users]` entry. No password argument or plaintext file is required. |
+| `open [PAGE] [-c FILE] [--print]` | Opens `apps`, `dashboard` or `admin` in your browser; defaults to `apps`. `--print` shows it without opening a browser, useful over SSH. This does not start the server. |
+| `tui [-c FILE] [--once] [--width COLUMNS]` | Monitors an already running server. `--once` prints one snapshot. `--width` sets snapshot width from 40–240 columns, default 100. Interactive controls are explained above. Exiting the TUI leaves the server running. |
+| `service --config FILE` | **Windows only:** entry point for Service Control Manager. The installer registers it; do not launch it manually in a console. It has no default config path. |
+| `help [COMMAND]` or `COMMAND --help` | Explains a command. `-h` is the short help option. Top-level `--help` lists available public subcommands. |
+| `--version` or `-V` | Prints the installed version. |
+
+Every `[-c FILE]` in the table also accepts `--config FILE`. Place the option
+**after** its subcommand: `shinyharbor tui --config FILE`. The top-level
+`shinyharbor --config FILE tui` form is not supported. The hidden
+`internal-log-writer --prefix PATH --mode MODE [--preserve]` command is solely an
+internal worker logging helper; it is not an installation or administration command.
+
+Typical sequence for an existing installation:
+
+```sh
+shinyharbor --version
+shinyharbor check --config /path/to/harbor.toml
+shinyharbor doctor --config /path/to/harbor.toml
+shinyharbor serve --config /path/to/harbor.toml
+# In a second terminal, while serve is running:
+shinyharbor tui --once --config /path/to/harbor.toml
+shinyharbor open apps --print --config /path/to/harbor.toml
+```
+
+For a service installation, use the OS service controls instead of starting a
+second `serve` process on the same ports.
+
+**Configuration discovery:** an explicit file wins. Otherwise ShinyHarbor checks
+`SHINYHARBOR_CONFIG`, the current folder, the installer data pointer, files beside
+the executable, the per-user data folder, and finally system configuration.
+On Unix the final fallback includes `/etc/shiny-server/shiny-server.conf`.
+Use an explicit `--config` for predictable service administration.
+`RUST_LOG` controls diagnostic logging; `SHINY_LOG_LEVEL` is the simpler fallback
+(`TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`). `R` is the legacy default interpreter
+override; config `rscript`/legacy `r_path` takes precedence. These environment
+settings are optional; the config file is usually easier to manage.
+
+If `tui` is missing from help or is treated as a filename, the executable is old.
+Check the exact file with `--version`, close the old server, then install the
+current release. For multiple copies, PowerShell's `Get-Command shinyharbor -All`
+shows commands on PATH; installer shortcuts use an explicit executable path.
 
 ## HTTPS on your own computer
 
@@ -610,22 +763,27 @@ computer**, not the certificate setup to use for a public server.
    make your laptop trust its certificates. For a remote server, use the
    [public-domain HTTPS steps](#publish-at-your-own-https-address) or an SSH tunnel.
 
-3. Open a terminal in your ShinyHarbor **data folder**: the folder containing
-   `harbor.toml`, not the `apps` subfolder. For the default Windows installation:
+3. Generate the leaf certificate in the directory shown for your installation.
+   For the Windows all-users service, open administrator PowerShell after trusting
+   mkcert under the same Windows account:
 
    ```powershell
-   Set-Location "$env:LOCALAPPDATA\ShinyHarbor"
+   Set-Location "$env:ProgramData\ShinyHarbor"
    New-Item -ItemType Directory -Path certs -Force
    mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
    ```
 
-   **macOS default data folder**:
+   **macOS system service**: generate the leaf certificate as your desktop user,
+   then copy only the certificate and leaf key into the protected configuration folder:
 
    ```sh
-   cd "$HOME/Library/Application Support/ShinyHarbor"
-   mkdir -p certs
-   mkcert -cert-file certs/localhost.pem -key-file certs/localhost-key.pem localhost 127.0.0.1 ::1
-   chmod 600 certs/localhost-key.pem
+   certwork=$(mktemp -d)
+   mkcert -cert-file "$certwork/localhost.pem" -key-file "$certwork/localhost-key.pem" localhost 127.0.0.1 ::1
+   sudo install -d -o root -g _shinyharbor -m 0750 /etc/shinyharbor/certs
+   sudo install -o root -g _shinyharbor -m 0640 "$certwork/localhost.pem" /etc/shinyharbor/certs/localhost.pem
+   sudo install -o root -g _shinyharbor -m 0640 "$certwork/localhost-key.pem" /etc/shinyharbor/certs/localhost-key.pem
+   rm "$certwork/localhost.pem" "$certwork/localhost-key.pem"
+   rmdir "$certwork"
    ```
 
    **Portable Linux**, after opening your chosen data folder (the default is
@@ -637,8 +795,8 @@ computer**, not the certificate setup to use for a public server.
    chmod 600 certs/localhost-key.pem
    ```
 
-   **Packaged Debian / Ubuntu / Fedora / Arch service**, on the same computer as
-   your test browser: generate files in your own private temporary folder, then
+   **Packaged Debian / Ubuntu / Fedora / Arch / Alpine service**, on the same computer as
+   your test browser (on Alpine, use `doas` instead of `sudo` after configuring it): generate files in your own private temporary folder, then
    install them where the service can read them. This does not copy the CA's
    signing key into the server directory.
 
@@ -654,10 +812,20 @@ computer**, not the certificate setup to use for a public server.
 
    On a **Windows background service**, LocalService also needs read access to
    the certificate and private key. The service installer grants read access
-   under the selected data directory. If you applied a more restrictive ACL or
+   to configured leaf files at service installation. If you add HTTPS later, applied a more restrictive ACL, or
    keep certificates elsewhere, grant that account read access to those files
    and their containing directory. Keep certificates and private keys outside
-   every folder served as an app or static website.
+   every folder served as an app or static website. In administrator PowerShell,
+   for the default certificate folder:
+
+   ```powershell
+   icacls "$env:ProgramData\ShinyHarbor\certs" /grant '*S-1-5-19:RX'
+   icacls "$env:ProgramData\ShinyHarbor\certs\localhost.pem" /grant '*S-1-5-19:R'
+   icacls "$env:ProgramData\ShinyHarbor\certs\localhost-key.pem" /grant '*S-1-5-19:R'
+   ```
+
+   `S-1-5-19` identifies LocalService on every Windows language edition. For a
+   per-user installation, use its chosen data folder and skip those service ACL commands.
 4. Back up `harbor.toml`. Replace its existing `[tls]` block with the following;
    do not add a second `[tls]` block:
 
@@ -680,15 +848,15 @@ computer**, not the certificate setup to use for a public server.
    start ShinyHarbor. For the default Windows installation:
 
    ```powershell
-   $Harbor = "$env:LOCALAPPDATA\Programs\ShinyHarbor\shinyharbor.exe"
-   & $Harbor check --config "$env:LOCALAPPDATA\ShinyHarbor\harbor.toml"
+   $Harbor = "$env:ProgramFiles\ShinyHarbor\shinyharbor.exe"
+   & $Harbor check --config "$env:ProgramData\ShinyHarbor\harbor.toml"
    ```
 
    If validation succeeds, press **Ctrl+C** in the running server's window and
    open **Start ShinyHarbor** again. For a background service, use the restart
    instructions for your platform above. Restarting disconnects active apps.
 
-   On **packaged Linux**:
+   On **packaged systemd Linux**:
 
    ```sh
    sudo -u shinyharbor shinyharbor check --config /etc/shinyharbor/harbor.toml
@@ -696,13 +864,19 @@ computer**, not the certificate setup to use for a public server.
    sudo systemctl status shinyharbor --no-pager
    ```
 
-   On **macOS**, stop a foreground server with Ctrl+C and start it again. For
-   the packaged background service, use **Stop background server**, then **Run
-   at login**, or run:
+   On **macOS**:
 
    ```sh
-   /usr/local/libexec/shinyharbor/service.sh stop
-   /usr/local/libexec/shinyharbor/service.sh start
+   sudo /usr/local/bin/shinyharbor check --config /etc/shinyharbor/harbor.toml
+   sudo /usr/local/libexec/shinyharbor/daemon.sh restart
+   ```
+
+   On **Alpine**, as root:
+
+   ```sh
+   shinyharbor check --config /etc/shinyharbor/harbor.toml
+   rc-service shinyharbor restart
+   rc-service shinyharbor status
    ```
 
    For **any portable installation**, Ctrl+C stops the foreground process;
@@ -765,7 +939,7 @@ organisation manages domains or firewalls, give these steps to its IT administra
    for HTTPS and **TCP 80** for the HTTP-to-HTTPS redirect. Forward those ports
    through a router if one sits in front of the server.
 2. Open `harbor.toml`: use **Edit configuration** on Windows, the data folder on
-   macOS/portable installs, or `/etc/shinyharbor/harbor.toml` on packaged Linux.
+   portable installs, or `/etc/shinyharbor/harbor.toml` on packaged Linux/macOS.
 3. Change the existing top-level listener lines, near the beginning of the file:
 
    ```toml
@@ -793,7 +967,7 @@ organisation manages domains or firewalls, give these steps to its IT administra
    change it to `production = true` and restart to request a trusted certificate.
 7. Visit `https://your-real-domain/my-app/` and share that address.
 
-The Linux package's service can bind the required ports without running R as root.
+The systemd Linux package's service can bind the required ports without running R as root.
 Other Unix foreground installations may need an administrator to configure low-port
 access or an existing reverse proxy; see [deployment](docs/DEPLOYMENT.md).
 Certificate validation requires public port 443 to reach ShinyHarbor directly;
@@ -817,7 +991,8 @@ platforms. The surrounding service and firewall setup differs:
 | Debian / Ubuntu package | `/etc/shinyharbor/harbor.toml`; `sudo systemctl restart shinyharbor` | The supplied systemd unit allows binding ports 443/80. If UFW is enabled, allow `443/tcp` and `80/tcp`. |
 | Fedora package | Same config and restart as above | If firewalld is enabled, allow its `https` and `http` services in the server's active zone, then reload firewalld. |
 | Arch Linux package | Same config and restart as above | Use the rules for whichever firewall you installed; Arch does not mandate one firewall manager. |
-| macOS package / launch agent | `~/Library/Application Support/ShinyHarbor/harbor.toml`; stop/start using the supplied service shortcuts | Allow incoming connections for ShinyHarbor in macOS Firewall settings. The launch agent runs as you, at login. |
+| macOS package / system daemon | `/etc/shinyharbor/harbor.toml`; `sudo /usr/local/libexec/shinyharbor/daemon.sh restart` | Allow incoming connections in macOS Firewall settings. Runs as `_shinyharbor` at boot. Use an HTTPS reverse proxy on 443 if this account cannot bind the port. |
+| Alpine / OpenRC | `/etc/shinyharbor/harbor.toml`; as root: `rc-service shinyharbor restart` | Runs as `shinyharbor`. For native port 443 use the capability setup in the Alpine section; configure your firewall separately. |
 | Portable Linux/macOS | Your chosen file; stop and repeat `serve --config ...` | Configure your service manager, firewall and low-port access. The portable archive does not change them. |
 
 For example, on **Ubuntu with UFW already enabled**, the public-app rules are:
@@ -881,6 +1056,7 @@ while taking the backup. Keep state backups private because they contain keys.
 | Debian/Ubuntu | `sudo apt install ./NEW-PACKAGE.deb` | `sudo apt remove shinyharbor` |
 | Fedora | `sudo dnf upgrade ./NEW-PACKAGE.rpm` | `sudo dnf remove shinyharbor` |
 | Arch | `sudo pacman -U ./NEW-PACKAGE.pkg.tar.zst` | `sudo pacman -R shinyharbor` |
+| Alpine | As root: `apk add --allow-untrusted ./NEW-FILE.apk` | `apk del shinyharbor` (preserves app data) |
 | macOS, when available | Run the newer PKG | Applications → ShinyHarbor → Uninstall ShinyHarbor |
 | Portable | Stop the server; unpack the new release into a separate folder and point it at your existing config | Remove the program folder only after separating/backing up your app data |
 
@@ -921,13 +1097,13 @@ It does not replace a trusted publisher signature.
 Windows PowerShell, using the actual downloaded filename:
 
 ```powershell
-Get-FileHash .\shinyharbor-0.1.0-alpha.2-x86_64-pc-windows-msvc-setup.exe -Algorithm SHA256
+Get-FileHash .\shinyharbor-0.1.0-alpha.3-x86_64-pc-windows-msvc-setup.exe -Algorithm SHA256
 ```
 
 Linux, with the installer and its sidecar in the same directory:
 
 ```sh
-sha256sum -c shinyharbor_0.1.0-alpha.2-1_amd64.deb.sha256
+sha256sum -c shinyharbor_0.1.0-alpha.3-1_amd64.deb.sha256
 ```
 
 On macOS, use `shasum -a 256 FILE` and compare the value. `SHA256SUMS` on the release
@@ -983,9 +1159,11 @@ Further documentation:
 License: MIT, copyright Alek Rutkowski. Bundled dependency notices accompany the
 downloads; external-runtime acknowledgments are in [ATTRIBUTIONS.md](ATTRIBUTIONS.md).
 
-[windows-setup]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0-alpha.2-x86_64-pc-windows-msvc-setup.exe
-[linux-deb]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor_0.1.0-alpha.2-1_amd64.deb
-[linux-rpm]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0-alpha.2-1.x86_64.rpm
-[linux-arch]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0_alpha.2-1-x86_64.pkg.tar.zst
-[windows-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0-alpha.2-x86_64-pc-windows-msvc.zip
-[linux-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.2/shinyharbor-0.1.0-alpha.2-x86_64-unknown-linux-musl.tar.gz
+[windows-setup]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.3/shinyharbor-0.1.0-alpha.3-x86_64-pc-windows-msvc-setup.exe
+[linux-deb]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.3/shinyharbor_0.1.0-alpha.3-1_amd64.deb
+[linux-rpm]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.3/shinyharbor-0.1.0-alpha.3-1.x86_64.rpm
+[linux-arch]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.3/shinyharbor-0.1.0_alpha.3-1-x86_64.pkg.tar.zst
+[windows-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.3/shinyharbor-0.1.0-alpha.3-x86_64-pc-windows-msvc.zip
+[linux-portable]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.3/shinyharbor-0.1.0-alpha.3-x86_64-unknown-linux-musl.tar.gz
+
+[linux-apk]: https://github.com/alekrutkowski/ShinyHarbor/releases/download/v0.1.0-alpha.3/shinyharbor-0.1.0_alpha3-r0-x86_64.apk

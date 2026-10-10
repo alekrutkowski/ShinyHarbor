@@ -154,9 +154,20 @@ fn main() -> Result<()> {
         }
         Command::Paths { config } => {
             let cfg = Config::load(&config)?;
+            let tls_files: Vec<_> = cfg
+                .listeners()
+                .iter()
+                .flat_map(|address| match cfg.listener_tls(*address) {
+                    shinyharbor::config::Tls::Pem { cert, key } => vec![cert.clone(), key.clone()],
+                    shinyharbor::config::Tls::Acme { ca_bundle, .. } => {
+                        ca_bundle.iter().cloned().collect()
+                    }
+                    _ => vec![],
+                })
+                .collect();
             println!(
                 "{}",
-                serde_json::json!({"config": std::fs::canonicalize(config)?, "state_dir": cfg.state_dir, "rscript": cfg.rscript, "r_library": cfg.r_library})
+                serde_json::json!({"config": std::fs::canonicalize(config)?, "state_dir": cfg.state_dir, "rscript": cfg.rscript, "r_library": cfg.r_library, "tls_files": tls_files})
             );
             Ok(())
         }

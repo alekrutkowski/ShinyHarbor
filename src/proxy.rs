@@ -175,6 +175,13 @@ async fn handle_request(
     };
     let path = crate::config::canonical_path(req.uri().path())
         .unwrap_or_else(|| req.uri().path().to_owned());
+    if path == "/__shinyharbor__/icon.svg" && matches!(*req.method(), Method::GET | Method::HEAD) {
+        let mut response = crate::server::icon().await;
+        if req.method() == Method::HEAD {
+            *response.body_mut() = Body::empty();
+        }
+        return response;
+    }
     let host = req
         .headers()
         .get(header::HOST)
@@ -280,6 +287,7 @@ async fn handle_request(
                         peer.ip(),
                         &site.app_defaults.allowed_users,
                         &site.app_defaults.allowed_groups,
+                        site.app_defaults.auth_ignore_case,
                     )
                     .await
                 {
@@ -308,7 +316,7 @@ async fn handle_request(
     };
     let public_tls = !matches!(state.config.listener_tls(listener), Tls::Off {})
         || state.config.public_origin.is_some();
-    let (allowed_users, allowed_groups) = match pool.access_policy() {
+    let (allowed_users, allowed_groups, ignore_case) = match pool.access_policy() {
         Ok(policy) => policy,
         Err(error) => {
             tracing::warn!(%error, "Invalid application access policy");
@@ -329,7 +337,13 @@ async fn handle_request(
     }
     let user = match state
         .auth
-        .authorize_request(req.headers(), peer.ip(), &allowed_users, &allowed_groups)
+        .authorize_request(
+            req.headers(),
+            peer.ip(),
+            &allowed_users,
+            &allowed_groups,
+            ignore_case,
+        )
         .await
     {
         Ok(user) => user,
@@ -439,6 +453,9 @@ async fn handle_request(
     };
     security::strip_hop_headers(req.headers_mut(), websocket);
     state.auth.strip_identity_headers(req.headers_mut());
+    if pool.is_native() {
+        req.headers_mut().remove(header::AUTHORIZATION);
+    }
     for key in [
         "forwarded",
         "x-forwarded-for",
@@ -833,18 +850,14 @@ pub fn problem(code: StatusCode, text: &str) -> Response {
 #[derive(Clone)]
 struct Problem(String);
 fn index(pools: &[Arc<Pool>]) -> Response {
-    let links: String = pools
-        .iter()
-        .map(|p| {
-            format!(
-                "<li><a href=\"{}/\">{}</a></li>",
-                p.mount().trim_end_matches('/'),
-                p.name()
-            )
-        })
-        .collect();
-    axum::response::Html(format!("<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>ShinyHarbor applications</title><body><main><h1>ShinyHarbor</h1><p>Choose an application.</p><ul>{links}</ul></main></body></html>")).into_response()
+    let links: String = pools.iter().map(|p| {
+        let title = p.name().replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;");
+        let href = p.mount().trim_end_matches('/').replace('&', "&amp;").replace('"', "&quot;");
+        format!("<a class=\"app-card\" href=\"{href}/\"><span class=\"tile\" aria-hidden=\"true\">&#9671;</span><h3>{title}</h3><p>An interactive application hosted here.</p><span class=\"go\">Open application &#8599;</span></a>")
+    }).collect();
+    axum::response::Html(crate::site::catalog_html(&links, "", pools.len())).into_response()
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

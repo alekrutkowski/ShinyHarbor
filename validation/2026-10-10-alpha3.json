@@ -1,0 +1,301 @@
+{
+  "date": "2026-10-10",
+  "version": "0.1.0-alpha.3",
+  "certifies_full_compatibility": false,
+  "scope": "Local Windows x64 and WSL Linux x64 musl runtime checks. Installer lifecycle evidence is in the release manifest, separately from these runtime reports.",
+  "rust_tests": {
+    "windows_x64": 35,
+    "linux_x64_musl": 37
+  },
+  "clippy": "Both targets, all-targets, warnings denied",
+  "python_repository_tests": 20,
+  "statistical_checks": "R 4.6.1 / Shiny 1.14.0; t.test agreement, population densities, coverage, RNG isolation, immediate reactivity",
+  "reports": {
+    "management-win32": {
+      "report": {
+        "suite": "management",
+        "passed": true,
+        "browser_tested": true,
+        "checks": [
+          "unauthenticated-read-and-write-denied",
+          "configuration-absent-from-app-listener",
+          "cross-origin-edit-rejected",
+          "invalid-config-and-missing-certificate-do-not-write",
+          "validate-without-write",
+          "atomic-save-and-comment-preservation",
+          "live-application",
+          "private-backup",
+          "stale-save-conflict",
+          "saved-versus-running-and-restart-required",
+          "external-file-edit-conflict",
+          "browser-guided-edit-help-and-preview",
+          "browser-save-and-restart-explanation",
+          "responsive-admin-layout",
+          "lock-clears-token-without-browser-storage",
+          "CLI-links-respect-configured-ports",
+          "TUI-live-status-snapshot",
+          "legacy-conf-source-edit"
+        ]
+      },
+      "sha256": "048bcce2dae816b619faa08bfd13098dc8a13ad760ac637feff2a691f6ceb323"
+    },
+    "sampling-lab": {
+      "report": {
+        "suite": "sampling-lab-browser",
+        "passed": true,
+        "checks": [
+          "sample-and-interval-CSV-match-experiment",
+          "base-R-PDF-report",
+          "live-connection-and-plot",
+          "inputs-react-immediately-and-redraw-changes-seed",
+          "independent-browser-session-results",
+          "all-three-statistical-plots",
+          "responsive-mobile-layout",
+          "no-browser-script-errors"
+        ]
+      },
+      "sha256": "052dd6dbabb8f8ea61ffc586d244b552b3465a71ce44868591fb901a3b1cfae7"
+    },
+    "catalog": {
+      "report": {
+        "suite": "catalog",
+        "passed": true,
+        "checks": [
+          "discovered-app-cards",
+          "encoded-Unicode-and-escaped-labels",
+          "private-state-and-R-source-hidden",
+          "static-files-accessible",
+          "HEAD-and-icon",
+          "desktop-and-mobile-layout"
+        ]
+      },
+      "sha256": "8cb400da299c5b6926d9c7fbc25f46c56931b867f4d40dc55449d76c4bbbaeb3"
+    },
+    "auth-proxy": {
+      "report": {
+        "checks": [
+          "trusted-authorization-and-header-spoofing",
+          "trusted-R-session-identity-and-groups",
+          "trusted-anonymous-public-access",
+          "trusted-case-insensitive-ACL-and-whitelisted-session-header",
+          "multiplex-cannot-bypass-app-authorization",
+          "changed-groups-cannot-resume-existing-privileges",
+          "app-overrides-change-user-and-group-policy",
+          "untrusted-authorization-and-header-spoofing",
+          "legacy-authorization-and-header-spoofing",
+          "legacy-R-session-identity-and-groups",
+          "legacy-anonymous-public-access",
+          "legacy-case-insensitive-ACL-and-whitelisted-session-header"
+        ]
+      },
+      "sha256": "2c09705fbfd515e151435babb3842eb603d967b1013d68d25cc3e9295b851e5b"
+    },
+    "terminal-pty": {
+      "report": {
+        "suite": "terminal-pty",
+        "passed": true,
+        "checks": [
+          "raw-keyboard-navigation",
+          "uppercase-Q-quits",
+          "terminal-settings-restored",
+          "server-remains-running"
+        ]
+      },
+      "sha256": "a6561df21ceecbe57968af1e04c385b69c26040d19805b740ea6e265cb2ca787"
+    },
+    "installation-win32": {
+      "report": {
+        "suite": "installation",
+        "platform": "win32",
+        "passed": true,
+        "checks": [
+          "installed-command-help-and-TUI-config-parser",
+          "setup-creates-config-example-and-R-library-in-selected-directory",
+          "repeat-setup-preserves-user-config-and-app-data",
+          "upgrade-refreshes-unmodified-old-example-with-backup",
+          "upgrade-and-example-command-preserve-customized-app",
+          "missing-explicit-config-reports-path-and-remedy",
+          "bare-launch-follows-installer-data-pointer-with-Unicode-and-spaces",
+          "paths-command-resolves-installation-without-secrets",
+          "R-discovery-without-PATH-and-real-Shiny-startup",
+          "bare-portable-executable-finds-adjacent-config-from-unrelated-directory"
+        ]
+      },
+      "sha256": "c2b60eed25b7693d6ac51230b3e9847794e6ba32a88367c666861a091b7c773a"
+    },
+    "installation-linux": {
+      "report": {
+        "suite": "installation",
+        "platform": "linux",
+        "passed": true,
+        "checks": [
+          "installed-command-help-and-TUI-config-parser",
+          "setup-creates-config-example-and-R-library-in-selected-directory",
+          "repeat-setup-preserves-user-config-and-app-data",
+          "upgrade-refreshes-unmodified-old-example-with-backup",
+          "upgrade-and-example-command-preserve-customized-app",
+          "missing-explicit-config-reports-path-and-remedy",
+          "bare-launch-follows-installer-data-pointer-with-Unicode-and-spaces",
+          "paths-command-resolves-installation-without-secrets",
+          "R-discovery-without-PATH-and-real-Shiny-startup",
+          "bare-portable-executable-finds-adjacent-config-from-unrelated-directory"
+        ]
+      },
+      "sha256": "d89485718142785c1413b313a82b9bf70d807d94d8d802e486bd11ec3c51224f"
+    },
+    "gateway-win32": {
+      "report": {
+        "suite": "gateway-integration",
+        "checks": [
+          "raw-path-query",
+          "forwarded-ip-trust",
+          "identity-spoofing",
+          "connection-headers",
+          "multiple-set-cookie",
+          "signed-session-affinity",
+          "chunked-upload-integrity",
+          "streamed-response-integrity",
+          "websocket-text",
+          "websocket-binary",
+          "backend-status-preserved",
+          "admin-token-required",
+          "real-analytics",
+          "dashboard-security-headers"
+        ],
+        "count": 14,
+        "passed": true
+      },
+      "sha256": "ed90df135ad4ae06274b97bf8ee2d1a199e72daccc2c5d2f41567a8fbb991780"
+    },
+    "gateway-linux": {
+      "report": {
+        "suite": "gateway-integration",
+        "checks": [
+          "raw-path-query",
+          "forwarded-ip-trust",
+          "identity-spoofing",
+          "connection-headers",
+          "multiple-set-cookie",
+          "signed-session-affinity",
+          "chunked-upload-integrity",
+          "streamed-response-integrity",
+          "websocket-text",
+          "websocket-binary",
+          "backend-status-preserved",
+          "admin-token-required",
+          "real-analytics",
+          "dashboard-security-headers"
+        ],
+        "count": 14,
+        "passed": true
+      },
+      "sha256": "c952c2178df742f29e17fd866f341ae0608dbf05d23ceed2b90dd1e63f50d196"
+    },
+    "listener-tls": {
+      "report": {
+        "suite": "listener-TLS",
+        "passed": true,
+        "checks": [
+          "legacy-listeners-present-independent-trusted-certificates",
+          "legacy-HTTP-and-HTTPS-coexist",
+          "every-listener-private-key-blocked-on-static-routes",
+          "certificate-reload-is-isolated-to-own-listener",
+          "TOML-inheritance-and-plaintext-override",
+          "forwarded-scheme-matches-listener",
+          "affinity-cookie-security-matches-listener",
+          "conflicting-TLS-on-shared-address-rejected"
+        ],
+        "certificate_verification_disabled": false
+      },
+      "sha256": "3481c91540834aba7fbebb0b6f5dfa801616c6e4ad012df6feba4d462a01255a"
+    },
+    "templates": {
+      "report": {
+        "checks": [
+          "inherited-directory-template",
+          "app-directory-file-context",
+          "HTML-escaping-and-hidden-logs",
+          "access-log-configuration-and-state-never-served-as-static-files",
+          "error-template-preserves-status-and-HEAD",
+          "specific-error-template-overrides-fallback",
+          "template-file-reloads-without-service-restart",
+          "invalid-template-rejected-by-config-check"
+        ]
+      },
+      "sha256": "8f3af091d30036a0b19596d0819e887cc397a383db0163e5697833a6f602ae43"
+    }
+  },
+  "binary_sha256": {
+    "target/x86_64-pc-windows-msvc/release/shinyharbor.exe": "838d79137375468bfcb05ccd64cad87396cf461f22341baca45d5b6f43fbe068",
+    ".build/linux-target/x86_64-unknown-linux-musl/release/shinyharbor": "dac644610fb7ba8eabea126faa81bf967e0dd7b71f33e189f72320cbd1a06cb5"
+  },
+  "source_sha256": {
+    "src/access_log.rs": "d8532d7ee6e4780e52cbf11581b5cee04fb09da24133691b119bd2a38bd2f897",
+    "src/activity.rs": "15030639c4e5968d78d797c41787a3b75121453a797de8ee4d438a494f60f45c",
+    "src/analytics.rs": "e8a5ca14546de639d5c535f56ce622fed6b157b88edf089efe7c499719718a15",
+    "src/auth.rs": "082d351a11abe2fe84a11a15f89f9eae2e699fa187778ff4a1e11d7d36dca7ab",
+    "src/backend.rs": "21eb5cbdad12b98025af051c6a9f8b3d80077b3f123ead52b88aa40c6a098017",
+    "src/config.rs": "48d0be45c208ab35663ce59ea6921cb0e408ab93c7fb479b28d685efbfc50518",
+    "src/connection.rs": "e917385b3a69c62691ea8cfa58d2a45211c3bf5ff42b497b88605ed74abb668d",
+    "src/identity.rs": "809dd04386ea17598b954d3813b25a3e179dca1f0c93ccf3fc68c4328b8a68e9",
+    "src/installation.rs": "2cc2458ef7892aa5603d9eaca19eed2293a4e5d6e6e97f9239c9e66bcf56d8ed",
+    "src/legacy.rs": "75d67153aa4862a7f480e17a1ed0ec9be38b26d0d06e8109a2a47ae37054763e",
+    "src/lib.rs": "bfc3f9746cc74799536577581649c4d5560753b2a6288e01fa2e48f712e783b9",
+    "src/main.rs": "33b6154fdb11a29bdd3c60dc2b53d9ae542a124facca8b7cfb59ee6605f4a85b",
+    "src/management.rs": "7f53ef47274c1572d2db9026452087d37c2976bec2cea029c917067fc58ae7cf",
+    "src/pool.rs": "ec0dadc0f4115e9cd493aaa2fac4ebb6c4e55796efa1836ff6be0e92b54366ee",
+    "src/proxy.rs": "90caa595084b9e831a0526e0638b55ff41b5dfb01dd630e9f5e6857bd456378f",
+    "src/reload.rs": "8a968d9ca13061f03c9affb5a5c8f0e05c2cf1738db5921ef69b241f6e42ee11",
+    "src/security.rs": "00d9bffec91b2b13f4ed4b21dcf2514ea4cb25093a108d7b4cc99826967b6e17",
+    "src/server.rs": "33aeaa57e95dbf194fe1ee99844ab531af828e3556ba85efd4b083e10408bdfe",
+    "src/site.rs": "87d80c3eab1d19fb58e5bc6f4a1e76801ec6a9d2ee31278f52d4d63db515e9b8",
+    "src/sockjs.rs": "343e0e9c65d9222838b84391a18ea9632adb0781e3afeffd6a9c0a5e87b4cee5",
+    "src/templates.rs": "312505f25542bf15d490da591d80f0f22c00d8d01dfbb2a485562d99a09f19b5",
+    "src/terminal.rs": "d180c918702948ebac4857ab6cc41e97ce5652c8eec37c3d2cb272f227721a1b",
+    "src/tls.rs": "f1c9b72f80b01d13c2f5a9b592e930aedcd102aa9a82ad60b920f5d6776aaf1c",
+    "src/user_log.rs": "b23165a8678ef6c01d77d6b18646eb16b40370f451121eefad8d2094ba4fab19",
+    "src/sockjs/reconnect.rs": "18b3d5fed33cd69d685185442b2173fe44daf131329ddffa7e126ea02cea91d5",
+    "r/bootstrap.R": "2c35e03fa57b0916c827ee104bf99f9dcf2798956b4b2f69d24071d183cabb20",
+    "r/runtime.R": "83c51dee03ecbb4ceb1d3ca0107d7169024114ddc95f4d999c936bd5d2d97002",
+    "assets/admin.css": "0032557b9f42fbc9ae7d747089aa01f2df9d96d0395acf3741e9a983ae2db36c",
+    "assets/admin.html": "97e4c1a2ee61ca2297a0cd4a5dde18d18a9373227e7920c45380a4ed75de8454",
+    "assets/admin.js": "80dcd54e4e4055f0c929a3440910381547b88fa607e83b8b343ed4045992615e",
+    "assets/app.js": "e76f09c845758226325a370f440eae89475e50fb7c37f6dae5112600c251b8d8",
+    "assets/catalog.css": "b15a96e867f15b9787fb368fc55b2ba9dbd638ca169304a03e454cabcc0ac25d",
+    "assets/index.html": "f025a1ed4de26d604db39f573a2c3da7cc77a3dc11241cde04f5fea639c60d00",
+    "assets/shinyharbor-client.js": "66f46a67254e30767b25e4f632e8a67dc08a1d2a8a79d5f59044f3b1da92a043",
+    "assets/style.css": "356436895259f7d562fc66bc488639ad3def4a42822baa9bcde1036f4cd9246f",
+    "assets/brand/shinyharbor.icns": "5974b9610a42111869347bfa21962b8dc7f1d2728ec73932d2fccbf734043c3b",
+    "assets/brand/shinyharbor.ico": "41a6246072ad26b576a1a3a16dc5d0b9510748b76c7b138eabb31b9c367b64dc",
+    "assets/brand/shinyharbor.png": "a4bbdd01d13e459c91ebffd1772e1ce53e746f0959f50c2a35770a87b7a71efc",
+    "assets/brand/shinyharbor.svg": "0cd23a316f3556f3c73327357952cbbe151e398883ca43b2923a6c7fefbdda6b",
+    "assets/licenses/Apache-2.0.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "assets/licenses/asn1-rs-impl-0.2.0-LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "assets/licenses/asn1-rs-impl-0.2.0-LICENSE-MIT": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513",
+    "assets/licenses/manifest.json": "0c42221331ee1dd0c1504d100d84d52304b13cbbbcdb15e6c20edc684eaec1e8",
+    "assets/licenses/valuable-0.1.1-LICENSE": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+    "assets/licenses/winapi-i686-pc-windows-gnu-0.4.0-LICENSE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "assets/licenses/winapi-i686-pc-windows-gnu-0.4.0-LICENSE-MIT": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "assets/licenses/winapi-x86_64-pc-windows-gnu-0.4.0-LICENSE-APACHE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "assets/licenses/winapi-x86_64-pc-windows-gnu-0.4.0-LICENSE-MIT": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+    "assets/licenses/yasna-0.5.2-LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+    "assets/licenses/yasna-0.5.2-LICENSE-MIT": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16",
+    "assets/vendor/sockjs-1.6.1.min.js": "1e0f37d073666196b0848fd7d80d525268d5adf47ea1ec459632f05bbf8e1f54",
+    "assets/vendor/sockjs-LICENSE": "8ed26c0901535830e357f6ab802d0e6c4ff889d79c00dcebd4251eceecacd57e",
+    "examples/https.toml": "764d55f7def3b245388d3add5a5cf5a02a5e7e0890258ec57bddee491a4a6492",
+    "examples/init.toml": "26de7be34d347aac4518ba4b45e523ecfe396a35dec951344085c826a1651a39",
+    "examples/local.toml": "c75a20e51091c6d4dc35d2fccae497f0ebd1d104ee562c119a1adf93b69d4270",
+    "examples/proxy-tls.toml": "c73f52816712cff40b036c21fb430a922efaf25cc3e8480e8346f8c7b32ad08e",
+    "examples/shiny-server.conf": "1cccfba8b1f5d27834b711c4cd0357bb9524ac179b57d2951a115476cd594e47",
+    "examples/site.toml": "3d1e04ce6f9b8665f27c2398dc9a01d9bae054a4b79538c3ff7cebd5644482e8",
+    "examples/upstream.toml": "9b70df943718e082df2603e135833c492fc70013ce78ffa7c5a5b51da80a1245",
+    "examples/bookmark-state/app.R": "fdaf43ac5fba5a878ed7906834349a9d0322b70498090647873cd4479d172ad5",
+    "examples/compatibility/app.R": "889e1a48f049fed23979d772cb9cd98693290861e14893303a5c434e93b32d25",
+    "examples/hello/app.R": "2722df6500eaa30a41251c880e0786247df3683e8529f379738b33c84300c73b",
+    "examples/session/app.R": "f949da34822e0350c1990a3d9063d3f49e76d265951aeb70fa0304b42bfacc70",
+    "Cargo.toml": "b2c78411b85201205a69ee9c7231533e971e5178c86a48c00ebe5508cedf3c4d",
+    "Cargo.lock": "0c0c54c18adeb8981c3c65907926a65178c0c483fc47d60db940d5a0015c6c4a",
+    "build.rs": "57546b67aff411ca7cfa2bf502d34ca4c82aa23e0d65920de1aaec7d7a910e83",
+    "docs/CONFIGURATION.md": "a6b7f5405a6319fe4aa0b5e52dfbf7f3ebb2af8b0a31a8e097cb362ea4f2a2a0"
+  }
+}

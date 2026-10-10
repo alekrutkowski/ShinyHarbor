@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+if [ -f /run/openrc/softlevel ]; then rc-service --ifstarted shinyharbor stop; fi
+rc-update del shinyharbor default || true
+# Preserve app data, R packages, state and account ownership on removal.

@@ -1,0 +1,10 @@
+listen = "127.0.0.1:3838"
+admin_listen = "127.0.0.1:3839"
+state_dir = "/Library/Application Support/ShinyHarbor/state"
+r_library = "/Library/Application Support/ShinyHarbor/R/library"
+
+[[sites]]
+name = "apps"
+mount = "/"
+path = "/Library/Application Support/ShinyHarbor/apps"
+directory_index = true

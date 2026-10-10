@@ -323,9 +323,9 @@ async fn directory(
         }
     }
     names.sort_by_cached_key(|(name, _)| name.to_lowercase());
-    let mut html = String::from(
-        "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>Applications and files</title><h1>Applications and files</h1><ul>",
-    );
+    let mut cards = String::new();
+    let mut other = String::new();
+    let mut app_count = 0;
     let (mut dirs, mut files) = (Vec::new(), Vec::new());
     for (name, dir) in names {
         let slash = if dir { "/" } else { "" };
@@ -341,11 +341,41 @@ async fn directory(
             .replace('<', "&lt;")
             .replace('>', "&gt;")
             .replace('"', "&quot;");
-        html.push_str(&format!(
-            "<li><a href=\"{href}{slash}\">{label}{slash}</a></li>"
-        ));
+        if (dir && is_app(&path.join(&name))) || is_rmarkdown(&path.join(&name)) {
+            app_count += 1;
+            let sample = dir
+                && name == "hello"
+                && std::fs::metadata(path.join(&name).join("app.R"))
+                    .is_ok_and(|m| m.len() <= 128 * 1024)
+                && std::fs::read_to_string(path.join(&name).join("app.R")).is_ok_and(|text| {
+                    text.replace("\r\n", "\n").trim()
+                        == include_str!("../examples/hello/app.R").trim()
+                });
+            let title = if sample { "Sampling Lab" } else { &label };
+            let description = if sample {
+                "Explore uncertainty. Change a population, watch confidence intervals respond, and take your experiment home."
+            } else {
+                "An interactive R application. Open it to explore its data and controls."
+            };
+            let style = if sample { " featured" } else { "" };
+            cards.push_str(&format!("<a class=\"app-card{style}\" href=\"{href}{slash}\"><span class=\"tile\" aria-hidden=\"true\">&#9671;</span><h3>{title}</h3><p>{description}</p><span class=\"go\">Open application &#8599;</span><span class=\"path\">{label}{slash}</span></a>"));
+        } else {
+            other.push_str(&format!(
+                "<li><a href=\"{href}{slash}\">{label}{slash}</a></li>"
+            ));
+        }
     }
-    html.push_str("</ul></html>");
+    let extra = if other.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "<details class=\"files\"><summary>Folders and files</summary><ul>{other}</ul></details>"
+        )
+    };
+    if app_count == 0 {
+        cards.push_str("<div class=\"empty\">No applications in this folder yet. Your server administrator can add an R Shiny app here. Browse any folders below to find more applications.</div>");
+    }
+    let mut html = catalog_html(&cards, &extra, app_count);
     if let Some(template) = template {
         let data = serde_json::json!({"title":format!("Index of {}", percent_decode_str(url).decode_utf8_lossy()), "dirs":dirs,"files":files});
         match crate::templates::render(template, "directoryIndex", data).await {
@@ -377,6 +407,15 @@ async fn directory(
         *response.body_mut() = Body::empty();
     }
     response
+}
+
+pub fn catalog_html(cards: &str, extra: &str, count: usize) -> String {
+    format!(
+        r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ShinyHarbor · Applications</title><link rel="icon" href="/__shinyharbor__/icon.svg" type="image/svg+xml"><style>{}</style></head><body><div class="wrap"><header><a class="brand" href="./">{}<span>ShinyHarbor</span></a><span class="tag top">A home for your R applications</span></header><main><section class="hero"><span class="tag">Discover · Explore · Understand</span><h1>Good questions.<br>Interactive answers.</h1><p>Explore the applications hosted here. Change a control, follow an idea, and let the data tell its story.</p></section><section aria-label="Applications"><div class="section-heading"><h2>Your applications</h2><span class="count">{} available in this folder</span></div><div class="grid">{cards}</div>{extra}</section><aside class="note"><strong>Made for exploration.</strong> Applications run in your browser. Open an application to explore its data and controls.</aside></main><footer><span>Powered by ShinyHarbor · Built for R Shiny</span><span>Applications and files</span></footer></div></body></html>"#,
+        include_str!("../assets/catalog.css"),
+        include_str!("../assets/brand/shinyharbor.svg"),
+        count
+    )
 }
 
 #[cfg(test)]

@@ -41,6 +41,7 @@ There are intentionally no fake success records.
 Additional accepted directives include `http_keepalive_timeout`, `access_log`, `set_header`,
 `http_allow_compression`, `template_dir`, `log_file_mode`, `preserve_logs`,
 `members_of`, `auth_proxy`, `required_user`, `required_group`,
+`auth_ignore_case`, `whitelist_headers`,
 `utilization_scheduler`, `app_session_timeout` and server `ssl`. They have candidate
 runtime checks, with detailed scope in CONFIGURATION.md and VALIDATION.md.
 Unix `socket_dir`, inherited `log_as_user`, `google_analytics_id` and
@@ -177,3 +178,17 @@ git for a stable tag; ignored local files do not reach the release runner.
 - https://raw.githubusercontent.com/rstudio/shiny-server/master/config/shiny-server-rules.config
 - https://cran.r-project.org/web/packages/shiny/index.html
 - https://github.com/rstudio/shiny
+
+## Alpha.3 scope
+
+Inherited case-insensitive user/group authorization and additional Shiny session
+headers are now implemented and tested with live R. Header forwarding applies
+to SockJS and reconnect/multiplexed channels; reserved identity/framing headers
+remain managed by the server. No licensed Professional instance was available.
+Native PAM/LDAP/AD/OIDC/password-file login providers, full configuration/reload
+equivalence and exhaustive transport behavior remain incomplete. This release
+does not claim full Shiny Server or Professional drop-in compatibility.
+
+Alpine packaging adds OpenRC rather than assuming systemd. Its native package
+requires apk-tools 3. macOS now has a prepared system LaunchDaemon, not merely
+a per-user login agent; native macOS/ARM acceptance remains pending.

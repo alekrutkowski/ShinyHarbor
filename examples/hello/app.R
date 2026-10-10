@@ -99,8 +99,8 @@ ui <- fluidPage(title = "Sampling Lab | ShinyHarbor",
       selectInput("level", "Confidence level", c("90%" = .90, "95%" = .95, "99%" = .99), selected = .95),
       selectInput("repetitions", "Repeated samples", c("500 (quick)" = 500, "2,000 (recommended)" = 2000, "5,000 (more precise)" = 5000), selected = 2000),
       numericInput("seed", "Random seed (for reproducibility)", 2026, min = 1, max = 10000000, step = 1),
-      actionButton("run", "Run experiment", class = "btn-primary"), tags$div(class = "pending", textOutput("pending")), actionButton("new_seed", "Try a new random seed"),
-      p(class = "small-note", "The same settings and seed reproduce the same results. Change a setting, then run the experiment.")),
+      actionButton("new_seed", "Draw a new experiment", class = "btn-primary"),
+      p(class = "small-note", "Every control updates the experiment automatically. The same settings and seed reproduce the same results. Draw a new experiment to change the seed.")),
     tags$main(tags$div(class = "scenario", textOutput("scenario")), uiOutput("metrics"),
       tags$section(class = "panel-card", tabsetPanel(id = "view",
         tabPanel("Your sample", plotOutput("sample_plot", height = "330px"), p(class = "plot-copy", "The bars describe one random sample. The dark curve is the population it came from; the dashed orange line marks its true mean. Even a fair sample will not look exactly like its population.")),
@@ -124,9 +124,8 @@ server <- function(input, output, session) {
     list(shape = input$shape, n = as.integer(input$n), mu = input$mu, sigma = input$sigma,
       level = as.numeric(input$level), repetitions = as.integer(input$repetitions), seed = as.integer(input$seed))
   })
-  experiment <- eventReactive(input$run, do.call(simulate_experiment, settings()), ignoreNULL = FALSE)
+  experiment <- reactive(do.call(simulate_experiment, settings()))
   observeEvent(input$new_seed, updateNumericInput(session, "seed", value = (isolate(input$seed) %% 10000000) + 1))
-  output$pending <- renderText({ e <- experiment(); if (!identical(settings(), e[names(settings())])) "Settings changed. Run to apply." else "Experiment is up to date." })
   output$scenario <- renderText({ e <- experiment(); sprintf("%s population  /  n = %d  /  %s repeated samples  /  seed %d", shape_name(e$shape), e$n, format(e$repetitions, big.mark = ","), e$seed) })
   output$metrics <- renderUI({
     e <- experiment()

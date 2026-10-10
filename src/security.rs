@@ -14,6 +14,59 @@ use std::{
 };
 use subtle::ConstantTimeEq;
 
+/// Never allow a client-selected header to replace transport or identity metadata.
+pub fn validate_forwarded_headers(names: &[String]) -> Result<()> {
+    ensure!(
+        names.len() <= 64,
+        "At most 64 whitelist_headers are supported"
+    );
+    for raw in names {
+        let name =
+            HeaderName::from_bytes(raw.as_bytes()).context("Invalid whitelist_headers name")?;
+        ensure!(
+            forwardable_header(&name),
+            "Header {name} is managed by the server and cannot be whitelisted"
+        );
+    }
+    Ok(())
+}
+fn forwardable_header(name: &HeaderName) -> bool {
+    !matches!(
+        name.as_str(),
+        "authorization"
+            | "proxy-authorization"
+            | "connection"
+            | "upgrade"
+            | "host"
+            | "content-length"
+            | "transfer-encoding"
+            | "te"
+            | "trailer"
+            | "keep-alive"
+            | "forwarded"
+            | "x-real-ip"
+            | "x-harbor-user"
+            | "shiny-shared-secret"
+            | "shiny-server-credentials"
+    ) && !name.as_str().starts_with("x-forwarded-")
+        && !name.as_str().starts_with("sec-websocket-")
+}
+pub fn copy_whitelisted_headers(source: &HeaderMap, target: &mut HeaderMap, names: &[String]) {
+    for raw in names {
+        if let Ok(name) = HeaderName::from_bytes(raw.as_bytes())
+            && forwardable_header(&name)
+        {
+            let values = source.get_all(&name);
+            if values.iter().next().is_some() {
+                target.remove(&name);
+                for value in values {
+                    target.append(&name, value.clone());
+                }
+            }
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Secret([u8; 32]);
 impl Secret {

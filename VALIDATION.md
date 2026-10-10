@@ -1,5 +1,33 @@
 # Delivery-time validation
 
+## 2026-10-10 alpha.3 runtime and usability checks
+
+Evidence: [`validation/2026-10-10-alpha3.json`](validation/2026-10-10-alpha3.json).
+Windows x64 and Linux x64 musl were built locally with the committed lockfile.
+Rust tests passed (35 Windows, 37 Linux), as did strict Clippy and formatting.
+Twenty Python repository/recipe checks passed. The macOS recipe test inspects
+generated files only; it is not a native macOS installer test.
+
+The browser runs passed for automatic Sampling Lab reactivity (eight checks,
+including CSV/PDF exports and independent sessions), application catalog (six
+checks, desktop/mobile/Unicode/private files), administration (18 Windows checks)
+and proxy authorization (12 checks, including case-insensitive policies and
+whitelisted R session headers). R tests verify interval math, densities, coverage,
+reproducibility and immediate reactive updates.
+
+Both optimized OS builds passed gateway, TLS and installation behavior checks.
+Linux additionally passed real terminal interaction and custom directory/error
+template regressions. Administration API checks passed on Linux as well.
+TLS tests validate certificates normally, with no verification bypass.
+
+Installer checks and exact downloadable file hashes are recorded separately in
+the release's `RELEASE_MANIFEST.json`. Service registration/start/restart checks
+do not constitute an actual reboot test. DEB/RPM/Arch package inspection does not
+establish a full installation lifecycle on every distribution. macOS/ARM native
+builds and the complete hosted CI matrix remain pending. No licensed Professional
+reference was available, and full drop-in compatibility remains unachieved.
+
+
 ## 2026-10-09 alpha.2 usability release
 
 The optimized Windows x64 and Linux x64 musl executables were rebuilt for

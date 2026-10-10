@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 from test_support import TemporaryDirectory
 import uuid
 from pathlib import Path
@@ -23,9 +24,11 @@ async def exercise(binary):
         app = root / 'app'
         app.mkdir()
         (app / 'app.R').write_text('''library(shiny)
-shinyApp(fluidPage(textOutput("user"), textOutput("groups")), function(input, output, session) {
+shinyApp(fluidPage(textOutput("user"), textOutput("groups"), textOutput("role"), textOutput("hidden")), function(input, output, session) {
   output$user <- renderText(if (is.null(session$user)) "anonymous" else session$user)
   output$groups <- renderText(paste(sort(session$groups), collapse=","))
+  output$role <- renderText(session$request$HTTP_X_DEPARTMENT)
+  output$hidden <- renderText(if (is.null(session$request$HTTP_X_PRIVATE)) "absent" else "leaked")
 })
 ''', encoding='utf-8')
         for mode in ('trusted', 'untrusted', 'legacy'):
@@ -35,6 +38,8 @@ shinyApp(fluidPage(textOutput("user"), textOutput("groups")), function(input, ou
                 config = root / 'server.conf'
                 config.write_text(f'''auth_proxy X-USER X-GROUPS;
 run_as :PROCESS_USER:;
+auth_ignore_case;
+whitelist_headers X-Department;
 server {{ listen {public} 127.0.0.1;
   location /app {{ app_dir "{app.as_posix()}"; required_user *; required_group analysts; }}
   location /public {{ app_dir "{app.as_posix()}"; required_user **; }}
@@ -54,7 +59,9 @@ name='protected'
 mount='/app'
 path={json.dumps(str(app))}
 allowed_users=['*']
-allowed_groups=['analysts']
+allowed_groups=['ANALYSTS']
+auth_ignore_case=true
+whitelist_headers=['X-Department']
 allow_app_override=true
 [[apps]]
 name='public'
@@ -69,7 +76,7 @@ allowed_users=['**']
                     base = f'http://127.0.0.1:{public}'
                     headers = {'x-user': 'alice@example.org', 'x-groups': 'staff, analysts',
                                'shiny-server-credentials': '{"user":"mallory","groups":["admins"]}',
-                               'x-forwarded-for': '127.0.0.1'}
+                               'x-forwarded-for': '127.0.0.1', 'x-department':'Research', 'x-private':'not-forwarded'}
                     async with ClientSession() as client:
                         async with client.get(base + '/app/') as response:
                             assert response.status == 401
@@ -84,19 +91,21 @@ allowed_users=['**']
                     if mode == 'untrusted':
                         continue
                     async with async_playwright() as p:
-                        browser = await p.chromium.launch(headless=True)
+                        browser = await p.chromium.launch(headless=True, channel=os.environ.get('SHINYHARBOR_TEST_BROWSER'))
                         try:
                             context = await browser.new_context(extra_http_headers=headers)
                             page = await context.new_page()
                             await page.goto(base + '/app/')
                             await expect(page.locator('#user')).to_have_text('alice@example.org', timeout=30000)
                             await expect(page.locator('#groups')).to_have_text('analysts,staff')
+                            await expect(page.locator('#role')).to_have_text('Research')
+                            await expect(page.locator('#hidden')).to_have_text('absent')
                             anonymous = await browser.new_page()
                             await anonymous.goto(base + '/public/')
                             await expect(anonymous.locator('#user')).to_have_text('anonymous', timeout=30000)
                         finally:
                             await browser.close()
-                    checks += [f'{mode}-R-session-identity-and-groups', f'{mode}-anonymous-public-access']
+                    checks += [f'{mode}-R-session-identity-and-groups', f'{mode}-anonymous-public-access', f'{mode}-case-insensitive-ACL-and-whitelisted-session-header']
                     if mode == 'trusted':
                         # Open a public transport, then attempt to enter a protected
                         # app through multiplexing: every channel must be checked.

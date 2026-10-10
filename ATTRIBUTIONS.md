@@ -5,6 +5,10 @@ Original ShinyHarbor code is MIT licensed, copyright Alek Rutkowski,
 claimed. No Posit Shiny Server source code or binaries are copied into this project.
 The original R launcher and dashboard are part of ShinyHarbor.
 
+The lighthouse logo in `assets/brand` is original project artwork under the same
+MIT license. Its PNG, Windows ICO and macOS ICNS variants are generated from the
+SVG by `tools/icons.py`; no external icon or font asset is bundled with it.
+
 ## Rust dependencies
 
 Thanks to the authors and contributors of every crate listed below and their

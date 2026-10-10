@@ -117,6 +117,14 @@ jobs:
       - name: Inspect Linux installer payloads
         if: matrix.musl
         run: python tests/linux_packages.py --directory dist
+      - name: Alpine APK, OpenRC service and installation lifecycle
+        if: matrix.musl
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work -e SHINYHARBOR_ISOLATED_TEST=1 alpine:3.24 sh -ec '
+            apk add --no-cache python3
+            python3 tools/installers.py --target ${{ matrix.target }} --format alpine
+            sh tests/alpine_install.sh dist/*.apk
+          '
       - name: Debian installation, service, upgrade and removal
         if: matrix.musl
         run: sh tests/linux_install.sh dist/*.deb
@@ -128,6 +136,11 @@ jobs:
           /usr/local/bin/shinyharbor --version
           test -x '/Applications/ShinyHarbor/Start ShinyHarbor.command'
           sh -n /usr/local/libexec/shinyharbor/service.sh
+          sh -n /usr/local/libexec/shinyharbor/daemon.sh
+          sudo launchctl print system/org.shinyharbor.server
+          test -f /Library/LaunchDaemons/org.shinyharbor.server.plist
+          test -d '/Applications/ShinyHarbor/ShinyHarbor.app'
+          sudo /usr/local/bin/shinyharbor tui --once --config /etc/shinyharbor/harbor.toml
           sudo /usr/local/libexec/shinyharbor/uninstall.sh
           test ! -e /usr/local/bin/shinyharbor
       - uses: actions/upload-artifact@v4
@@ -205,6 +218,7 @@ jobs:
           python tests/live_dashboard.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/management.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           python tests/sampling_lab.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
+          python tests/catalog.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }}
           Rscript --vanilla tests/sampling_lab.R
       - name: Unix reload signals
         if: runner.os != 'Windows'

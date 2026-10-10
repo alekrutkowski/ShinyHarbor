@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+for path in /etc/shinyharbor /etc/shinyharbor/harbor.toml /var/lib/shinyharbor /var/lib/shinyharbor/R /var/lib/shinyharbor/R/library /srv/shinyharbor /srv/shinyharbor/apps /srv/shinyharbor/apps/hello /var/log/shinyharbor; do
+    [ ! -L "$path" ] || { echo "Refusing symbolic link: $path" >&2; exit 1; }
+done
+id -u shinyharbor >/dev/null 2>&1 || { echo 'Service account is missing.' >&2; exit 1; }
+install -d -o root -g shinyharbor -m 0770 /etc/shinyharbor
+chown root:shinyharbor /etc/shinyharbor/harbor.toml
+chmod 0660 /etc/shinyharbor/harbor.toml
+install -d -o shinyharbor -g shinyharbor -m 0700 /var/lib/shinyharbor
+install -d -o shinyharbor -g shinyharbor -m 0750 /var/lib/shinyharbor/R /var/lib/shinyharbor/R/library /var/log/shinyharbor
+install -d -m 0755 /srv/shinyharbor/apps/hello
+/usr/bin/shinyharbor example --directory /srv/shinyharbor/apps/hello
+rc-update add shinyharbor default
+if [ -f /run/openrc/softlevel ]; then rc-service shinyharbor start; fi
+cat <<'HELP'
+ShinyHarbor is enabled at boot. Before opening an R app, install Shiny once:
+  apk add R-dev build-base libuv-dev
+  su -s /bin/sh shinyharbor -c 'shinyharbor setup --directory /etc/shinyharbor --install-shiny'
+Apps: http://127.0.0.1:3838/ | config: /etc/shinyharbor/harbor.toml
+HELP

@@ -35,7 +35,8 @@ $Config = Join-Path $DataDirectory 'harbor.toml'
 if ($LASTEXITCODE -ne 0) { throw 'Configuration validation failed.' }
 $PathsJson = & $Binary paths --config $Config
 if ($LASTEXITCODE -ne 0) { throw 'Could not resolve configured service directories.' }
-$State = [IO.Path]::GetFullPath(($PathsJson | ConvertFrom-Json).state_dir)
+$Paths = $PathsJson | ConvertFrom-Json
+$State = [IO.Path]::GetFullPath($Paths.state_dir)
 if ($State.StartsWith('\\?\')) { $State = $State.Substring(4) }
 if (!$State.StartsWith($DataDirectory.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
     throw 'For the installed service, state_dir must be a subfolder of the selected data folder.'
@@ -46,7 +47,30 @@ for ($Current = $State; $Current; $Current = [IO.Path]::GetDirectoryName($Curren
         throw "The service data path cannot contain a junction or symbolic link: $Current"
     }
 }
+# TLS keys may deliberately have inheritance disabled. Grant only this service
+# read access to the configured files, never to the local CA or its signing key.
+foreach ($TlsPath in $Paths.tls_files) {
+    $TlsPath = [IO.Path]::GetFullPath($TlsPath)
+    if ($TlsPath.StartsWith('\\?\')) { $TlsPath = $TlsPath.Substring(4) }
+    $TlsRoot = [IO.Path]::GetPathRoot($TlsPath)
+    if ($TlsRoot.StartsWith('\\') -or ([IO.DriveInfo]::new($TlsRoot)).DriveType -eq 'Network') {
+        throw 'The LocalService certificate and key must be on a local disk.'
+    }
+    for ($Current = $TlsPath; $Current; $Current = [IO.Path]::GetDirectoryName($Current)) {
+        if ((Get-Item -LiteralPath $Current -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            throw "The TLS path cannot contain a junction or symbolic link: $Current"
+        }
+    }
+    & icacls $TlsPath /grant '*S-1-5-19:R'
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot grant the service read access to its TLS certificate/key.' }
+    & icacls ([IO.Path]::GetDirectoryName($TlsPath)) /grant '*S-1-5-19:RX'
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot grant the service access to its TLS directory.' }
+}
 # The installer owns only this data directory; R needs read/execute access.
+& icacls $Binary /grant '*S-1-5-19:RX'
+if ($LASTEXITCODE -ne 0) { throw 'Cannot grant service access to the executable.' }
+& icacls ([IO.Path]::GetDirectoryName($Binary)) /grant '*S-1-5-19:RX'
+if ($LASTEXITCODE -ne 0) { throw 'Cannot grant service access to the program directory.' }
 & icacls $DataDirectory /grant '*S-1-5-19:(OI)(CI)RX'
 if ($LASTEXITCODE -ne 0) { throw 'Cannot grant service read access to application data.' }
 # Allow atomic configuration writes, without granting modification of app files.

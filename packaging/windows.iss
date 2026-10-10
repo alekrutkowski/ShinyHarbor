@@ -11,7 +11,7 @@ AppPublisherURL=https://github.com/alekrutkowski/ShinyHarbor
 DefaultDirName={autopf}\ShinyHarbor
 DefaultGroupName=ShinyHarbor
 DisableProgramGroupPage=yes
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed={#Architecture}
 ArchitecturesInstallIn64BitMode={#Architecture}
@@ -21,6 +21,7 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 LicenseFile={#Payload}\LICENSE
+SetupIconFile={#Payload}\brand\shinyharbor.ico
 UninstallDisplayIcon={app}\shinyharbor.exe
 CloseApplications=yes
 RestartApplications=no
@@ -28,6 +29,7 @@ AllowNetworkDrive=yes
 
 [Files]
 Source: "{#Payload}\shinyharbor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Payload}\brand\*"; DestDir: "{app}\brand"; Flags: ignoreversion
 Source: "{#Payload}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\VALIDATION.md"; DestDir: "{app}"; Flags: ignoreversion
@@ -45,11 +47,11 @@ Source: "{#Payload}\examples\*"; DestDir: "{app}\examples"; Flags: ignoreversion
 [Tasks]
 Name: desktopicon; Description: "Create a desktop shortcut"; Flags: unchecked
 Name: shiny; Description: "Install or update the Shiny R package (requires R and Internet access)"; Flags: unchecked
-Name: service; Description: "Run in the background as a Windows service"; Flags: unchecked; Check: IsAdminInstallMode
+Name: service; Description: "Start automatically after reboot as a Windows service (recommended)"; Check: IsAdminInstallMode
 
 [Icons]
-Name: "{group}\Start ShinyHarbor"; Filename: "{app}\shinyharbor.exe"; Parameters: "--config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
-Name: "{autodesktop}\ShinyHarbor"; Filename: "{app}\shinyharbor.exe"; Parameters: "--config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"; Tasks: desktopicon
+Name: "{group}\Start ShinyHarbor"; Filename: "{app}\shinyharbor.exe"; Parameters: "--config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"; Check: NotService
+Name: "{autodesktop}\ShinyHarbor"; Filename: "{app}\shinyharbor.exe"; Parameters: "open apps --config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"; Tasks: desktopicon
 Name: "{group}\Open applications"; Filename: "{app}\shinyharbor.exe"; Parameters: "open apps --config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
 Name: "{group}\Usage dashboard"; Filename: "{app}\shinyharbor.exe"; Parameters: "open dashboard --config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
 Name: "{group}\Server administration"; Filename: "{app}\shinyharbor.exe"; Parameters: "open admin --config ""{code:DataDirectory}\harbor.toml"""; WorkingDir: "{code:DataDirectory}"
@@ -68,6 +70,7 @@ Type: files; Name: "{app}\data-directory.txt"
 [InstallDelete]
 Type: files; Name: "{group}\Open applications.url"
 Type: files; Name: "{group}\Usage dashboard.url"
+Type: files; Name: "{group}\Start ShinyHarbor.lnk"; Check: IsAdminInstallMode
 
 [Code]
 var
@@ -117,6 +120,8 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var Code: Integer; Args: String; ShowMode: Integer;
 begin
   if CurStep = ssPostInstall then begin
+    if not Exec(ExpandConstant('{app}\shinyharbor.exe'), 'tui --help', '', SW_HIDE, ewWaitUntilTerminated, Code) or (Code <> 0) then
+      RaiseException('The installed executable does not support this installer''s commands. Close every running ShinyHarbor process and retry.');
     ForceDirectories(DataDirectory(''));
     Args := 'setup --directory "' + DataDirectory('') + '"';
     if WizardIsTaskSelected('shiny') or WizardIsTaskSelected('service') then Args := Args + ' --install-shiny';
@@ -131,6 +136,10 @@ begin
       if not Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), Args, '', SW_SHOW, ewWaitUntilTerminated, Code) or (Code <> 0) then
         RaiseException('Background service setup failed. See the PowerShell diagnostic and docs/INSTALLATION.md.');
     end;
+    Args := '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{app}\packaging\windows-shortcuts.ps1') + '" -Directory "' + ExpandConstant('{group}') + '"';
+    if WizardIsTaskSelected('service') then Args := Args + ' -Service';
+    if not Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), Args, '', SW_HIDE, ewWaitUntilTerminated, Code) or (Code <> 0) then
+      RaiseException('Could not finish the terminal shortcut. You can run tui from an administrator PowerShell.');
   end;
 end;
 

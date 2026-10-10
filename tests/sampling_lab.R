@@ -17,11 +17,13 @@ for (shape in c("normal", "skewed", "heavy")) {
   stopifnot(abs(area - 1) < .001)
 }
 shiny::testServer(example$server, {
-  session$setInputs(shape = "normal", n = 30, mu = 0, sigma = 1, level = ".95", repetitions = "500", seed = 2026, run = 0)
+  session$setInputs(shape = "normal", n = 30, mu = 0, sigma = 1, level = ".95", repetitions = "500", seed = 2026)
   first <- experiment()
   session$setInputs(n = 100)
-  stopifnot(identical(first, experiment()))
-  session$setInputs(run = 1)
+  stopifnot(!identical(first, experiment()))
   stopifnot(experiment()$n == 100, length(experiment()$sample) == 100)
+  session$setInputs(mu = 3, sigma = 2, level = '.99', shape = 'skewed', repetitions = '2000')
+  stopifnot(experiment()$mu == 3, experiment()$sigma == 2, experiment()$level == .99,
+            experiment()$shape == 'skewed', nrow(experiment()$intervals) == 2000)
 })
 cat("Sampling Lab: interval formula, densities, coverage, seed isolation, reproducibility and reactive controls passed.\n")

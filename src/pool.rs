@@ -337,15 +337,31 @@ impl Pool {
         };
         Ok((seconds > 0).then(|| Duration::from_secs(seconds)))
     }
-    pub fn access_policy(&self) -> Result<(Vec<String>, Vec<String>)> {
+    pub fn access_policy(&self) -> Result<(Vec<String>, Vec<String>, bool)> {
         match self {
             Self::Native { app, .. } => {
                 let effective = crate::legacy::app_settings(app)?;
-                Ok((effective.allowed_users, effective.allowed_groups))
+                Ok((
+                    effective.allowed_users,
+                    effective.allowed_groups,
+                    effective.auth_ignore_case,
+                ))
             }
-            Self::Upstream { config, .. } => {
-                Ok((config.allowed_users.clone(), config.allowed_groups.clone()))
+            Self::Upstream { config, .. } => Ok((
+                config.allowed_users.clone(),
+                config.allowed_groups.clone(),
+                false,
+            )),
+        }
+    }
+    pub fn whitelist_headers(&self) -> Result<Vec<String>> {
+        match self {
+            Self::Native { app, .. } => {
+                let headers = crate::legacy::app_settings(app)?.whitelist_headers;
+                crate::security::validate_forwarded_headers(&headers)?;
+                Ok(headers)
             }
+            Self::Upstream { .. } => Ok(vec![]),
         }
     }
     pub fn session_affinity(&self, path: &str) -> Option<String> {

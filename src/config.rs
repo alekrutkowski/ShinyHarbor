@@ -188,6 +188,8 @@ pub struct App {
     pub environment: BTreeMap<String, String>,
     pub allowed_users: Vec<String>,
     pub allowed_groups: Vec<String>,
+    pub auth_ignore_case: bool,
+    pub whitelist_headers: Vec<String>,
     pub bookmark_state_dir: Option<PathBuf>,
     pub log_dir: Option<PathBuf>,
     pub template_dir: Option<PathBuf>,
@@ -224,6 +226,8 @@ impl Default for App {
             environment: BTreeMap::new(),
             allowed_users: vec![],
             allowed_groups: vec![],
+            auth_ignore_case: false,
+            whitelist_headers: vec![],
             bookmark_state_dir: None,
             log_dir: None,
             template_dir: None,
@@ -803,6 +807,16 @@ impl Config {
             .iter()
             .chain(self.sites.iter().map(|s| &s.app_defaults))
         {
+            crate::security::validate_forwarded_headers(&app.whitelist_headers)?;
+            if app.auth_ignore_case {
+                let mut folded = HashSet::new();
+                ensure!(
+                    self.users
+                        .keys()
+                        .all(|name| folded.insert(name.to_lowercase())),
+                    "auth_ignore_case cannot be used with local usernames differing only by case"
+                );
+            }
             ensure!(
                 app.path.exists(),
                 "Application {} does not exist: {}",
@@ -950,19 +964,20 @@ impl Config {
                 "Authentication user and groups headers must differ"
             );
         }
-        for (allowed, groups) in self
+        for (allowed, groups, ignore_case) in self
             .apps
             .iter()
-            .map(|a| (&a.allowed_users, &a.allowed_groups))
+            .map(|a| (&a.allowed_users, &a.allowed_groups, a.auth_ignore_case))
             .chain(
                 self.upstreams
                     .iter()
-                    .map(|a| (&a.allowed_users, &a.allowed_groups)),
+                    .map(|a| (&a.allowed_users, &a.allowed_groups, false)),
             )
             .chain(self.sites.iter().map(|s| {
                 (
                     &s.app_defaults.allowed_users,
                     &s.app_defaults.allowed_groups,
+                    s.app_defaults.auth_ignore_case,
                 )
             }))
         {
@@ -971,7 +986,11 @@ impl Config {
                 ensure!(
                     self.auth_proxy.is_some()
                         || matches!(user.as_str(), "*" | "**")
-                        || self.users.contains_key(user),
+                        || self.users.keys().any(|name| crate::auth::identity_matches(
+                            name,
+                            user,
+                            ignore_case
+                        )),
                     "Unknown allowed user {user:?}"
                 );
             }

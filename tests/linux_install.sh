@@ -6,6 +6,7 @@ if dpkg-query -W shinyharbor >/dev/null 2>&1; then echo 'Existing installation; 
 package=$(realpath "$1")
 sudo apt-get install -y "$package"
 sudo systemctl is-active --quiet shinyharbor
+sudo systemctl is-enabled --quiet shinyharbor
 sudo -u shinyharbor /usr/bin/shinyharbor doctor --config /etc/shinyharbor/harbor.toml
 python3 -c 'import urllib.request; assert urllib.request.urlopen("http://127.0.0.1:3838/hello/", timeout=60).status == 200'
 printf '\n# retained installer test setting\n' | sudo tee -a /etc/shinyharbor/harbor.toml >/dev/null

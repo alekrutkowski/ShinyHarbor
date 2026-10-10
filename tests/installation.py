@@ -39,6 +39,11 @@ async def exercise(binary, check_r):
             return out.decode('utf-8'), err.decode('utf-8')
 
         await command('setup', '--directory', str(data))
+        help_text, _ = await command('--help')
+        assert all(name in help_text for name in ['tui', 'open', 'setup', 'example'])
+        tui_help, _ = await command('tui', '--config', str(data / 'harbor.toml'), '--help')
+        assert '--once' in tui_help and '--width' in tui_help
+        checks.append('installed-command-help-and-TUI-config-parser')
         config = data / 'harbor.toml'
         assert config.is_file() and (data / 'apps/hello/app.R').is_file()
         assert (data / 'R/library').is_dir()
@@ -52,11 +57,12 @@ async def exercise(binary, check_r):
         checks.append('repeat-setup-preserves-user-config-and-app-data')
         example = data / 'apps/hello/app.R'
         current_example = example.read_bytes()
-        old_example = (Path(__file__).parent / 'fixtures/hello-alpha1.R').read_bytes()
-        example.write_bytes(old_example)
-        await command('setup', '--directory', str(data))
-        assert example.read_bytes() == current_example
-        assert any(p.read_bytes() == old_example for p in example.parent.glob('.app.R-before-update-*.bak'))
+        for version in ['alpha1', 'alpha2']:
+            old_example = (Path(__file__).parent / f'fixtures/hello-{version}.R').read_bytes()
+            example.write_bytes(old_example)
+            await command('setup', '--directory', str(data))
+            assert example.read_bytes() == current_example
+            assert any(p.read_bytes() == old_example for p in example.parent.glob('.app.R-before-update-*.bak'))
         assert config.read_text(encoding='utf-8') == original
         checks.append('upgrade-refreshes-unmodified-old-example-with-backup')
         customized = current_example + b'\n# my own customized app\n'
@@ -105,7 +111,7 @@ async def exercise(binary, check_r):
         paths, _ = await command('paths')
         resolved = json.loads(paths)
         assert Path(resolved['config']).samefile(config)
-        assert set(resolved) == {'config', 'state_dir', 'rscript', 'r_library'}
+        assert set(resolved) == {'config', 'state_dir', 'rscript', 'r_library', 'tls_files'}
         checks.append('paths-command-resolves-installation-without-secrets')
         if check_r:
             no_path = dict(environment, PATH='')

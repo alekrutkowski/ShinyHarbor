@@ -242,6 +242,7 @@ async fn run_config(config: Config, path: Option<PathBuf>, stop: CancellationTok
         app
     };
     let admin = Router::new()
+        .route("/__shinyharbor__/icon.svg", get(icon))
         .route("/", get(dashboard))
         .route("/admin", get(administration))
         .route("/admin/", get(administration))
@@ -535,6 +536,12 @@ fn secure_asset(content: &'static str, mime: &'static str) -> Response {
     h.insert("referrer-policy", HeaderValue::from_static("no-referrer"));
     h.insert("content-security-policy", HeaderValue::from_static("default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"));
     response
+}
+pub(crate) async fn icon() -> Response {
+    secure_asset(
+        include_str!("../assets/brand/shinyharbor.svg"),
+        "image/svg+xml",
+    )
 }
 async fn dashboard() -> Response {
     secure_asset(

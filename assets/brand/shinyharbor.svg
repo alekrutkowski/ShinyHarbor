@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="ShinyHarbor">
+  <defs><linearGradient id="sea" x2=".8" y2="1"><stop stop-color="#087f8c"/><stop offset="1" stop-color="#123d62"/></linearGradient></defs>
+  <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#sea)"/>
+  <path d="M128 39 79 112h98Z" fill="#f7c873"/>
+  <path d="M114 88h28l12 103h-52Z" fill="#fff"/>
+  <path d="M100 114h56M109 147h38" fill="none" stroke="#bcefe6" stroke-width="10"/>
+  <path d="M43 180c22-17 38-17 60 0s38 17 60 0 34-17 50 0M43 207c22-17 38-17 60 0s38 17 60 0 34-17 50 0" fill="none" stroke="#77dac7" stroke-width="12" stroke-linecap="round"/>
+  <path d="m184 52 3 12 12 3-12 3-3 12-3-12-12-3 12-3Z" fill="#f7c873"/>
+</svg>

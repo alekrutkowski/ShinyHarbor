@@ -1,60 +1,54 @@
-# ShinyHarbor 0.1.0-alpha.2 — Sampling Lab and server administration
+# ShinyHarbor 0.1.0-alpha.3 — Reactive apps, new start page and Alpine
 
-The [step-by-step README](https://github.com/alekrutkowski/ShinyHarbor/blob/v0.1.0-alpha.2/README.md)
-explains installation, your first app, administration, the terminal monitor and HTTPS.
+Sampling Lab now responds immediately to every input. The former **Run experiment**
+button is gone; **Draw a new experiment** only changes the random seed. A fixed
+seed keeps comparisons reproducible. CSV/PDF downloads track the current results.
 
-## What changed
+This release adds a lighthouse icon, branded application catalog, Windows executable
+and installer icons, Linux desktop icon and a prepared macOS application launcher.
+The catalog keeps encoded app links, static-file access, private-file filtering and
+custom directory templates.
 
-- **Sampling Lab** replaces the old example. Explore normal, skewed and heavy-tailed populations, Student-t confidence intervals, repeated-sampling coverage and Monte Carlo uncertainty. Experiments are reproducible and isolated between browser sessions. Download the sample and intervals as CSV, or a three-page PDF. Statistics, graphics and exports use base R; Shiny is the only additional R package.
-- **Server administration** is available at `/admin` on the private dashboard port. Unlock it with the admin token. Common settings have labelled controls; the full configuration editor covers advanced settings and legacy `.conf` files. Inspect running values and the complete settings reference. Validate before saving, with private backups and detection of conflicting edits. Supported changes apply live; listener and other global changes require a restart, which the page explains.
-- **Terminal monitor:** run `shinyharbor tui` for live status, worker/session counts and keyboard navigation. `--once` prints a readable snapshot. `shinyharbor open apps`, `open dashboard` and `open admin` follow your configured ports and HTTPS settings. Windows and macOS installer shortcuts use these commands.
-- **HTTPS instructions** now distinguish trusted localhost certificates from automatically renewed public-domain ACME certificates. The README includes Windows, macOS, Debian/Ubuntu, Fedora, Arch and portable commands, service permissions, verification, renewal and restart steps.
-- Upgrades refresh only the known, unmodified old example, keeping a backup. Customized apps, configuration and data are preserved.
+Windows setup defaults to an automatic LocalService service, checks that the
+installed executable supports `tui`, and grants access to configured leaf TLS files.
+Per-user/portable foreground installations remain an explicit alternative. Linux
+DEB/RPM/Arch use systemd. The new Alpine APK uses OpenRC; macOS packaging now prepares
+a system LaunchDaemon running before login. Native macOS execution remains pending.
 
-## Downloads
+Compatibility additions: inherited `auth_ignore_case` user/group access matching
+and `whitelist_headers` for additional Shiny session headers, including reconnect
+channels. Credential usernames remain exact; reserved identity and transport headers
+cannot be overridden. The README now explains every CLI command/option and includes
+OS-specific service, HTTPS, upgrade and troubleshooting instructions.
 
-| Computer | File under Assets |
+## Installers in Assets and the local dist directory
+
+| Platform | Installer |
 | --- | --- |
-| Windows Intel/AMD 64-bit | `shinyharbor-0.1.0-alpha.2-x86_64-pc-windows-msvc-setup.exe` |
-| Debian/Ubuntu Intel/AMD 64-bit | `shinyharbor_0.1.0-alpha.2-1_amd64.deb` |
-| Fedora Intel/AMD 64-bit | `shinyharbor-0.1.0-alpha.2-1.x86_64.rpm` |
-| Arch Linux Intel/AMD 64-bit | `shinyharbor-0.1.0_alpha.2-1-x86_64.pkg.tar.zst` |
-| Portable Windows / Linux x64 | The `.zip` / `-linux-musl.tar.gz` archive |
+| Windows x64 | `shinyharbor-0.1.0-alpha.3-x86_64-pc-windows-msvc-setup.exe` |
+| Debian / Ubuntu x64 | `shinyharbor_0.1.0-alpha.3-1_amd64.deb` |
+| Fedora x64 | `shinyharbor-0.1.0-alpha.3-1.x86_64.rpm` |
+| Arch x64 | `shinyharbor-0.1.0_alpha.3-1-x86_64.pkg.tar.zst` |
+| Alpine 3.23+ x64 (apk-tools 3) | `shinyharbor-0.1.0_alpha3-r0-x86_64.apk` |
 
-R is installed separately. Windows setup can install Shiny into a private R
-library; Debian/Ubuntu and Fedora packages declare R/Shiny dependencies. Arch
-requires the documented additional Shiny installation step.
+Portable Windows ZIP and static Linux musl tar archives are also included. R and
+app packages are separate dependencies. Alpine/Arch need the documented CRAN Shiny
+installation step. Verify SHA-256 checksums; Windows and Alpine packages are unsigned.
+No public package repository or automatic update channel is installed.
 
-## Validation and limits
+## Validation and remaining work
 
-Optimized Windows x64 and Linux x64 executables passed administration API,
-configuration preservation, example upgrade, real-Shiny startup and verified
-HTTPS checks. Windows browser checks cover the new administration UI and Sampling
-Lab, including mobile layouts, session isolation and actual downloads. Base-R
-checks compare intervals with `t.test` and verify coverage, density normalization
-and random-state isolation. Linux PTY checks exercise terminal keys, restoration
-and server survival. See [VALIDATION.md](https://github.com/alekrutkowski/ShinyHarbor/blob/v0.1.0-alpha.2/VALIDATION.md)
-for version-specific evidence and remaining platform checks.
+See [VALIDATION.md](https://github.com/alekrutkowski/ShinyHarbor/blob/v0.1.0-alpha.3/VALIDATION.md)
+for runtime checks and the release's `RELEASE_MANIFEST.json` for installer evidence
+and exact hashes. Automatic startup configuration is checked without rebooting the
+user's computer. Repository workflows include all eight OS/architecture targets
+and Alpine service tests. The full current-source matrix has not passed; macOS and
+ARM installers are not included in this manually published evaluation prerelease.
 
-**This is a partial-platform alpha prerelease.** Hosted CI has been blocked by the
-repository account's billing error. The complete eight-platform matrix has not
-passed on this source. macOS and ARM installers are not included. Windows service
-acceptance and actual Debian/Fedora/Arch package-manager lifecycles remain
-unverified locally. Installers are unsigned. There is no hosted APT/DNF repository
-or AUR entry. macOS installer recipes and CI jobs are supplied, not certified.
-
-Local PEM certificates must be renewed externally; automatic renewal applies to
-public-domain ACME mode. Administration remains on its separate loopback HTTP
-listener; use an SSH tunnel for remote access. Saving settings does not install
-R packages, alter browser trust, open a firewall or restart the server.
-
-Full Shiny Server compatibility and Professional feature parity remain **unmet**;
-see the [compatibility guide](https://github.com/alekrutkowski/ShinyHarbor/blob/v0.1.0-alpha.2/docs/COMPATIBILITY.md).
-This release does not claim stable-release certification or a successful full CI run.
-
-Every payload has a `.sha256` sidecar. `SHA256SUMS` and `RELEASE_MANIFEST.json`
-record the published files, hashes, source provenance and validation scope.
-Dependency notices and the resolved dependency inventory are included. R,
-app-specific R packages and country databases are not bundled.
-
-Because the repository is private, downloads require a GitHub account with access.
+**Full Shiny Server and Professional drop-in compatibility is not achieved.**
+Native PAM/LDAP/AD/OIDC/password-file login providers, complete legacy configuration
+and live reload equivalence, and exhaustive protocol/platform conformance remain
+open. No licensed Professional reference was available. Read the
+[compatibility guide](https://github.com/alekrutkowski/ShinyHarbor/blob/v0.1.0-alpha.3/docs/COMPATIBILITY.md)
+before migration. HTTPS/ACME, statistics, administration and worker pools remain
+available without paid feature limits; that is not a claim of full Professional parity.

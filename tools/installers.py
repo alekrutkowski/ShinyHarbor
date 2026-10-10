@@ -98,7 +98,9 @@ def linux(source, target, version, output, temporary):
     write(root / 'etc/shinyharbor/harbor.toml', (ROOT / 'packaging/linux.toml').read_text())
     write(root / 'usr/lib/systemd/system/shinyharbor.service', (ROOT / 'packaging/shinyharbor.service').read_text())
     write(root / 'usr/share/shinyharbor/hello/app.R', (ROOT / 'examples/hello/app.R').read_text())
-    write(root / 'usr/share/applications/shinyharbor.desktop', '[Desktop Entry]\nType=Application\nName=ShinyHarbor Applications\nExec=xdg-open http://127.0.0.1:3838/\nTerminal=false\nCategories=Development;\n')
+    write(root / 'usr/share/icons/hicolor/scalable/apps/shinyharbor.svg', (ROOT / 'assets/brand/shinyharbor.svg').read_text())
+    write(root / 'usr/share/shinyharbor/open-applications', (ROOT / 'packaging/open-applications.sh').read_text(), 0o755)
+    write(root / 'usr/share/applications/shinyharbor.desktop', '[Desktop Entry]\nType=Application\nName=ShinyHarbor Applications\nExec=/usr/share/shinyharbor/open-applications\nIcon=shinyharbor\nTerminal=true\nCategories=Development;\n')
     # Configuration is a conffile. App data/state is never deleted by hooks.
     deb = temporary / 'deb'
     shutil.copytree(root, deb)
@@ -182,6 +184,7 @@ if [ -d /run/systemd/system ]; then systemctl daemon-reload; fi
 /usr/share/doc/shinyharbor
 /usr/share/applications/shinyharbor.desktop
 /usr/share/shinyharbor
+/usr/share/icons/hicolor/scalable/apps/shinyharbor.svg
 ''')
     run('rpmbuild', '--nodeps', '--dbpath', rpm_top / 'database', '--define', f'_dbpath {rpm_top / "database"}', '--define', f'_topdir {rpm_top}', '--define', '_rpmformat 4', '--target', machine, '-bb', spec)
     rpms = list((rpm_top / 'RPMS').rglob('*.rpm'))
@@ -236,35 +239,77 @@ def windows(source, target, version, output, compiler):
     checksum(output / f'shinyharbor-{version}-{target}-setup.exe')
 
 
+def alpine(source, target, version, output, temporary, *, revision=0):
+    """Use Alpine's native apk-tools 3 builder; run inside Alpine 3.23 or newer."""
+    if not target.endswith('linux-musl'):
+        raise ValueError('Alpine requires a static musl build')
+    machine = 'aarch64' if target.startswith('aarch64') else 'x86_64'
+    native_version = version.replace('-alpha.', '_alpha').replace('-beta.', '_beta').replace('-rc.', '_rc')
+    root = temporary / 'apk-root'
+    (root / 'usr/bin').mkdir(parents=True)
+    shutil.copy2(source / 'shinyharbor', root / 'usr/bin/shinyharbor')
+    (root / 'usr/bin/shinyharbor').chmod(0o755)
+    documentation(source, root / 'usr/share/doc/shinyharbor')
+    write(root / 'etc/shinyharbor/harbor.toml', (ROOT / 'packaging/linux.toml').read_text())
+    write(root / 'etc/init.d/shinyharbor', (ROOT / 'packaging/alpine/shinyharbor.initd').read_text(), 0o755)
+    write(root / 'etc/logrotate.d/shinyharbor', (ROOT / 'packaging/alpine/shinyharbor.logrotate').read_text())
+    write(root / 'usr/share/shinyharbor/hello/app.R', (ROOT / 'examples/hello/app.R').read_text())
+    write(root / 'usr/share/icons/hicolor/scalable/apps/shinyharbor.svg', (ROOT / 'assets/brand/shinyharbor.svg').read_text())
+    package_version = f'{native_version}-r{revision}'
+    package = output / f'shinyharbor-{package_version}-{machine}.apk'
+    command = ['apk', 'mkpkg', '--files', root, '--output', package,
+               '--info', 'name:shinyharbor', '--info', f'version:{package_version}',
+               '--info', f'arch:{machine}', '--info', 'license:MIT',
+               '--info', 'description:Portable R Shiny server with HTTPS and usage statistics',
+               '--info', 'url:https://github.com/alekrutkowski/ShinyHarbor',
+               '--info', 'depends:R openrc logrotate font-dejavu']
+    for name in ['pre-install', 'post-install', 'post-upgrade', 'pre-deinstall']:
+        script = temporary / name
+        write(script, (ROOT / 'packaging/alpine' / name).read_text(), 0o755)
+        command += ['--script', f'{name}:{script}']
+    run(*command)
+    checksum(package)
+
+
 def macos(source, target, version, output, temporary):
     root = temporary / 'mac-root'
     (root / 'usr/local/bin').mkdir(parents=True)
     shutil.copy2(source / 'shinyharbor', root / 'usr/local/bin/shinyharbor')
     (root / 'usr/local/bin/shinyharbor').chmod(0o755)
     documentation(source, root / 'usr/local/share/doc/shinyharbor')
-    for script in ['service.sh', 'uninstall.sh']:
+    for script in ['service.sh', 'daemon.sh', 'uninstall.sh']:
         write(root / 'usr/local/libexec/shinyharbor' / script, (ROOT / 'packaging/macos' / script).read_text(), 0o755)
+    for source_name, name in [('harbor.toml','macos.toml'),('org.shinyharbor.server.plist','org.shinyharbor.server.plist')]:
+        write(root / 'usr/local/share/shinyharbor' / name, (ROOT / 'packaging/macos' / source_name).read_text())
+    app = root / 'Applications/ShinyHarbor/ShinyHarbor.app/Contents'
+    write(app / 'MacOS/ShinyHarbor', '#!/bin/sh\nset -eu\nurl=$(osascript -e \'do shell script "/usr/local/bin/shinyharbor open apps --print --config /etc/shinyharbor/harbor.toml" with administrator privileges\')\nexec /usr/bin/open "$url"\n', 0o755)
+    (app / 'Resources').mkdir()
+    shutil.copy2(source / 'brand/shinyharbor.icns', app / 'Resources/shinyharbor.icns')
+    (app / 'Info.plist').write_bytes(plistlib.dumps({'CFBundleExecutable':'ShinyHarbor','CFBundleIdentifier':'org.shinyharbor.launcher','CFBundleName':'ShinyHarbor','CFBundleIconFile':'shinyharbor.icns','CFBundlePackageType':'APPL','CFBundleShortVersionString':version.split('-')[0]}))
     shortcuts = {
-        'Open applications.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor open apps\n',
-        'Usage dashboard.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor open dashboard\n',
-        'Server administration.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor open admin\n',
-        'Terminal monitor.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor tui\n',
-        'Start ShinyHarbor.command': '#!/bin/sh\nexec /usr/local/bin/shinyharbor\n',
-        'Run at login.command': '#!/bin/sh\n/usr/local/libexec/shinyharbor/service.sh start\n',
-        'Stop background server.command': '#!/bin/sh\n/usr/local/libexec/shinyharbor/service.sh stop\n',
-        'Install Shiny R package.command': '#!/bin/sh\n/usr/local/bin/shinyharbor setup --install-shiny\nprintf "Press Enter to close."\nread answer\n',
-        'Uninstall ShinyHarbor.command': '#!/bin/sh\n/usr/local/libexec/shinyharbor/service.sh stop\nsudo /usr/local/libexec/shinyharbor/uninstall.sh\n',
+        'Open applications.command': '#!/bin/sh\nset -eu\nurl=$(sudo /usr/local/bin/shinyharbor open apps --print --config /etc/shinyharbor/harbor.toml)\nexec /usr/bin/open "$url"\n',
+        'Usage dashboard.command': '#!/bin/sh\nset -eu\nurl=$(sudo /usr/local/bin/shinyharbor open dashboard --print --config /etc/shinyharbor/harbor.toml)\nexec /usr/bin/open "$url"\n',
+        'Server administration.command': '#!/bin/sh\nset -eu\nurl=$(sudo /usr/local/bin/shinyharbor open admin --print --config /etc/shinyharbor/harbor.toml)\nexec /usr/bin/open "$url"\n',
+        'Terminal monitor.command': '#!/bin/sh\nexec sudo /usr/local/bin/shinyharbor tui --config /etc/shinyharbor/harbor.toml\n',
+        'Start ShinyHarbor.command': '#!/bin/sh\nexec sudo /usr/local/libexec/shinyharbor/daemon.sh start\n',
+        'Restart server.command': '#!/bin/sh\nexec sudo /usr/local/libexec/shinyharbor/daemon.sh restart\n',
+        'Stop background server.command': '#!/bin/sh\nexec sudo /usr/local/libexec/shinyharbor/daemon.sh stop\n',
+        'Install Shiny R package.command': '#!/bin/sh\nsudo -u _shinyharbor /usr/local/bin/shinyharbor setup --directory /etc/shinyharbor --install-shiny\nprintf "Press Enter to close."\nread answer\n',
+        'Uninstall ShinyHarbor.command': '#!/bin/sh\nexec sudo /usr/local/libexec/shinyharbor/uninstall.sh\n',
     }
     for name, content in shortcuts.items():
         write(root / 'Applications/ShinyHarbor' / name, content, 0o755)
     resources = temporary / 'mac-resources'
-    write(resources / 'welcome.html', '<html><body><h1>Welcome to ShinyHarbor</h1><p>Installs the server and shortcuts in Applications/ShinyHarbor. Your apps and settings stay in your home folder and are preserved during upgrades and removal.</p><p>Install R from cran.r-project.org, then use Install Shiny R package and Start ShinyHarbor. Use Run at login for a background service.</p></body></html>')
+    write(resources / 'welcome.html', '<html><body><h1>Welcome to ShinyHarbor</h1><p>Installs a system service that starts after reboot, without a user login. The server uses a dedicated unprivileged account. Apps and settings are preserved during upgrades and removal.</p><p>Configuration: /etc/shinyharbor/harbor.toml. Apps: /Library/Application Support/ShinyHarbor/apps.</p><p>Install R from cran.r-project.org, then use Install Shiny R package in Applications/ShinyHarbor. Open ShinyHarbor.app to browse your applications.</p></body></html>')
     shutil.copy2(source / 'LICENSE', resources / 'license.txt')
     component = temporary / 'component.pkg'
     # Apple package versions are numeric; the public filename retains prerelease identity.
     numeric_version = version.split('-')[0]
+    scripts = temporary / 'mac-scripts'
+    write(scripts / 'preinstall', '#!/bin/sh\nset -eu\nlaunchctl bootout system/org.shinyharbor.server 2>/dev/null || true\n', 0o755)
+    write(scripts / 'postinstall', '#!/bin/sh\nset -eu\n/usr/local/libexec/shinyharbor/daemon.sh install\n', 0o755)
     run('pkgbuild', '--root', root, '--identifier', 'org.shinyharbor.server', '--version', numeric_version,
-        '--install-location', '/', '--ownership', 'recommended', component)
+        '--install-location', '/', '--ownership', 'recommended', '--scripts', scripts, component)
     architecture = 'arm64' if target.startswith('aarch64') else 'x86_64'
     distribution = temporary / 'Distribution.xml'
     write(distribution, f'''<?xml version="1.0" encoding="utf-8"?>
@@ -288,6 +333,8 @@ def main():
     parser.add_argument('--archive', type=Path)
     parser.add_argument('--output', type=Path, default=ROOT / 'dist')
     parser.add_argument('--iscc', default=str(ROOT / '.build/inno/ISCC.exe'))
+    parser.add_argument('--format', choices=['native', 'alpine'], default='native',
+                        help='alpine builds an APK using apk-tools 3 on Alpine; native chooses by target')
     args = parser.parse_args()
     targets = json.loads((ROOT / 'tools/targets.json').read_text())['include']
     if args.target not in {item['target'] for item in targets}:
@@ -299,7 +346,9 @@ def main():
     with tempfile.TemporaryDirectory(prefix='harbor-installer-') as directory:
         temporary = Path(directory)
         source = payload(archive.resolve(), temporary / 'payload')
-        if 'windows' in args.target:
+        if args.format == 'alpine':
+            alpine(source, args.target, version, args.output.resolve(), temporary)
+        elif 'windows' in args.target:
             windows(source, args.target, version, args.output.resolve(), args.iscc)
         elif 'apple' in args.target:
             macos(source, args.target, version, args.output.resolve(), temporary)

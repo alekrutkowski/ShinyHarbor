@@ -24,6 +24,8 @@ def expected_files(version: str, targets: list[dict]) -> list[str]:
             files += [f'shinyharbor_{version}-1_{deb_arch}.deb',
                       f'shinyharbor-{version}-1.{architecture}.rpm',
                       f'shinyharbor-{version.replace("-", "_")}-1-{architecture}.pkg.tar.zst']
+            alpine_version = version.replace('-alpha.', '_alpha').replace('-beta.', '_beta').replace('-rc.', '_rc')
+            files.append(f'shinyharbor-{alpine_version}-r0-{architecture}.apk')
     return files
 
 def verify(directory: Path) -> list[str]:

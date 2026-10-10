@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+/usr/bin/shinyharbor example --directory /srv/shinyharbor/apps/hello
+if [ -f /run/openrc/softlevel ]; then rc-service --ifstarted shinyharbor restart; fi

@@ -12,7 +12,12 @@ pub fn example(directory: &Path) -> anyhow::Result<()> {
         let old = std::fs::read_to_string(&path)?;
         let normalized = old.replace("\r\n", "\n");
         let hash = hex::encode(Sha256::digest(normalized.trim().as_bytes()));
-        if hash != "c7cb63762ebfe32c4a783257481aff2e4cb5f179b8c198385f5419214d43f8f0" {
+        if ![
+            "c7cb63762ebfe32c4a783257481aff2e4cb5f179b8c198385f5419214d43f8f0",
+            "4e2772cae4e7e5db71fee110f2e6a52510ea6716b0d64902daefcc59919b3804",
+        ]
+        .contains(&hash.as_str())
+        {
             println!("Keeping existing example/app: {}", path.display());
             return Ok(());
         }

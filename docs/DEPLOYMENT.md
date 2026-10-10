@@ -29,7 +29,8 @@ avoid a glibc dependency but do not eliminate R's own dynamic library requiremen
 
 ## Linux service
 
-Native Linux packages perform service setup automatically. For manual installation,
+Native Linux packages perform service setup automatically (systemd for DEB/RPM/Arch;
+OpenRC for Alpine). The commands in this section are for systemd. For manual installation,
 create a dedicated `shinyharbor` system user/group. Put read-only apps under
 `/srv/shinyharbor/apps`, config at `/etc/shinyharbor/harbor.toml`, the executable at
 `/usr/bin/shinyharbor`, and set `state_dir = "/var/lib/shinyharbor"` in config.
@@ -106,8 +107,8 @@ binding permission required for 443 and preserve the ACME cache volume.
 
 ## macOS and other platforms
 
-The matrix provides Intel and ARM64 macOS binary and PKG jobs, with per-user
-LaunchAgent shortcuts. macOS installer execution remains pending hosted CI;
+The matrix provides Intel and ARM64 macOS binary and PKG jobs, with a system
+LaunchDaemon and graphical/terminal shortcuts. macOS installer execution remains pending hosted CI;
 notarization is not configured. Interactive deployment uses the same CLI. Other architectures
 and operating systems are outside the initial matrix and must not be advertised as
 supported until their own build/runtime acceptance work exists.

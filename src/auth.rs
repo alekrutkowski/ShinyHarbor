@@ -1,7 +1,7 @@
 use crate::security::{Secret, epoch_seconds};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use base64::{Engine, engine::general_purpose::STANDARD};
-use http::{HeaderMap, StatusCode, header};
+use http::{HeaderMap, StatusCode};
 use std::{
     collections::{BTreeMap, HashMap},
     net::IpAddr,
@@ -47,6 +47,7 @@ impl Auth {
         peer: IpAddr,
         users: &[String],
         groups: &[String],
+        ignore_case: bool,
     ) -> Result<Option<Identity>, StatusCode> {
         let identity = if let Some(proxy) = &self.proxy {
             if proxy.trusted_peers.iter().any(|net| net.contains(&peer)) {
@@ -81,20 +82,31 @@ impl Auth {
                 None
             }
         } else {
-            self.authorize(headers, users).await?.map(|user| Identity {
-                user,
-                groups: vec![],
-            })
+            let required = if users.is_empty() || users.iter().any(|u| u == "**") {
+                vec![]
+            } else {
+                vec!["*".to_owned()]
+            };
+            self.authorize(headers, &required)
+                .await?
+                .map(|user| Identity {
+                    user,
+                    groups: vec![],
+                })
         };
         let public = users.is_empty() || users.iter().any(|u| u == "**");
         let user_allowed = public
-            || identity
-                .as_ref()
-                .is_some_and(|i| users.iter().any(|u| u == "*" || u == &i.user));
+            || identity.as_ref().is_some_and(|i| {
+                users
+                    .iter()
+                    .any(|u| u == "*" || identity_matches(u, &i.user, ignore_case))
+            });
         let group_allowed = groups.is_empty()
-            || identity
-                .as_ref()
-                .is_some_and(|i| groups.iter().any(|g| i.groups.contains(g)));
+            || identity.as_ref().is_some_and(|i| {
+                groups
+                    .iter()
+                    .any(|g| i.groups.iter().any(|v| identity_matches(g, v, ignore_case)))
+            });
         if user_allowed && group_allowed {
             Ok(identity)
         } else {
@@ -113,10 +125,7 @@ impl Auth {
         if allowed.is_empty() || allowed.iter().any(|u| u == "**") {
             return Ok(None);
         }
-        let raw = headers
-            .get(header::AUTHORIZATION)
-            .and_then(|v| v.to_str().ok())
-            .ok_or(StatusCode::UNAUTHORIZED)?;
+        let raw = single_header(headers, "authorization")?.ok_or(StatusCode::UNAUTHORIZED)?;
         if raw.len() > 4096 {
             return Err(StatusCode::UNAUTHORIZED);
         }
@@ -195,6 +204,9 @@ pub fn valid_identity(value: &str) -> bool {
         && value.trim() == value
         && !value.chars().any(char::is_control)
 }
+pub fn identity_matches(left: &str, right: &str, ignore_case: bool) -> bool {
+    left == right || (ignore_case && left.to_lowercase() == right.to_lowercase())
+}
 fn single_header<'a>(headers: &'a HeaderMap, name: &str) -> Result<Option<&'a str>, StatusCode> {
     let mut values = headers.get_all(name).iter();
     let value = values
@@ -211,6 +223,7 @@ fn single_header<'a>(headers: &'a HeaderMap, name: &str) -> Result<Option<&'a st
 mod tests {
     use super::*;
     use argon2::{PasswordHasher, password_hash::SaltString};
+    use http::header;
     #[tokio::test]
     async fn proxy_identity_trust_groups_and_ambiguous_headers() {
         let auth = Auth::new(BTreeMap::new(), Secret::generate().unwrap()).with_proxy(Some(
@@ -228,21 +241,22 @@ mod tests {
             groups: vec!["admins".into(), "users".into()],
         });
         assert_eq!(
-            auth.authorize_request(&headers, peer, &["*".into()], &["admins".into()])
+            auth.authorize_request(&headers, peer, &["*".into()], &["admins".into()], false)
                 .await,
             Ok(expected.clone())
         );
         assert_eq!(
-            auth.authorize_request(&headers, peer, &[], &[]).await,
+            auth.authorize_request(&headers, peer, &[], &[], false)
+                .await,
             Ok(expected)
         );
         assert_eq!(
-            auth.authorize_request(&headers, peer, &["bob".into()], &["admins".into()])
+            auth.authorize_request(&headers, peer, &["bob".into()], &["admins".into()], false)
                 .await,
             Err(StatusCode::FORBIDDEN)
         );
         assert_eq!(
-            auth.authorize_request(&headers, peer, &["alice".into()], &["other".into()])
+            auth.authorize_request(&headers, peer, &["alice".into()], &["other".into()], false)
                 .await,
             Err(StatusCode::FORBIDDEN)
         );
@@ -252,21 +266,22 @@ mod tests {
                 &headers,
                 "192.0.2.4".parse().unwrap(),
                 &["alice".into()],
-                &[]
+                &[],
+                false
             )
             .await,
             Err(StatusCode::UNAUTHORIZED)
         );
         headers.append("x-auth-username", "bob".parse().unwrap());
         assert_eq!(
-            auth.authorize_request(&headers, peer, &["*".into()], &[])
+            auth.authorize_request(&headers, peer, &["*".into()], &[], false)
                 .await,
             Err(StatusCode::UNAUTHORIZED)
         );
         auth.strip_identity_headers(&mut headers);
         assert!(!headers.contains_key("x-auth-username") && !headers.contains_key("x-groups"));
         assert_eq!(
-            auth.authorize_request(&headers, peer, &["**".into()], &[])
+            auth.authorize_request(&headers, peer, &["**".into()], &[], false)
                 .await,
             Ok(None)
         );
@@ -317,5 +332,41 @@ mod tests {
             Err(StatusCode::UNAUTHORIZED)
         );
         assert_eq!(auth.authorize(&headers, &[]).await, Ok(None));
+        headers.insert(
+            header::AUTHORIZATION,
+            format!("Basic {}", STANDARD.encode("alice:test-password"))
+                .parse()
+                .unwrap(),
+        );
+        let peer = "127.0.0.1".parse().unwrap();
+        assert_eq!(
+            auth.authorize_request(&headers, peer, &["ALICE".into()], &[], true)
+                .await
+                .unwrap()
+                .unwrap()
+                .user,
+            "alice"
+        );
+        assert_eq!(
+            auth.authorize_request(&headers, peer, &["ALICE".into()], &[], false)
+                .await,
+            Err(StatusCode::FORBIDDEN)
+        );
+        headers.insert(
+            header::AUTHORIZATION,
+            format!("Basic {}", STANDARD.encode("ALICE:test-password"))
+                .parse()
+                .unwrap(),
+        );
+        assert_eq!(
+            auth.authorize_request(&headers, peer, &["alice".into()], &[], true)
+                .await,
+            Err(StatusCode::UNAUTHORIZED)
+        );
+        headers.append(header::AUTHORIZATION, "Basic junk".parse().unwrap());
+        assert_eq!(
+            auth.authorize(&headers, &["*".into()]).await,
+            Err(StatusCode::UNAUTHORIZED)
+        );
     }
 }

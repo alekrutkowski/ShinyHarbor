@@ -256,6 +256,12 @@ fn settings(nodes: &[Directive], parent: &Settings, scope: &str) -> Result<Setti
             "http_keepalive_timeout" if scope == "root" => { d.arity(1, 1)?; }
             "required_user" => { d.arity(0, 256)?; result.app.allowed_users = d.args.clone(); }
             "required_group" => { d.arity(0, 256)?; result.app.allowed_groups = d.args.clone(); }
+            "auth_ignore_case" => result.app.auth_ignore_case = d.boolean(Some(true))?,
+            "whitelist_headers" => {
+                d.arity(0, 64)?;
+                crate::security::validate_forwarded_headers(&d.args)?;
+                result.app.whitelist_headers = d.args.iter().map(|s| s.to_ascii_lowercase()).collect();
+            }
             "members_of" if scope != "application" => { d.arity(0, 256)?; result.app.members_of = d.args.clone(); }
             "r_path" => result.app.rscript = Some(d.one()?.into()),
             "exec_supervisor" => {
@@ -392,6 +398,7 @@ pub fn app_settings(app: &App) -> Result<App> {
                     | "reconnect"
                     | "required_user"
                     | "required_group"
+                    | "whitelist_headers"
                     | "log_file_mode"
                     | "preserve_logs"
             ),
@@ -692,6 +699,23 @@ mod tests {
         let c = parse("# comment\nserver { listen 3838; location / { app_dir 'C:\\apps\\my app'; log_dir \"logs #1\"; } }").unwrap();
         assert_eq!(c.apps[0].path, PathBuf::from("C:\\apps\\my app"));
         assert_eq!(c.apps[0].log_dir, Some("logs #1".into()));
+    }
+    #[test]
+    fn inherited_auth_case_and_session_headers() {
+        let c = parse("auth_ignore_case; whitelist_headers X-Role; server { listen 3838; location /one { app_dir one; } location /two { app_dir two; auth_ignore_case off; whitelist_headers X-Department; } }").unwrap();
+        assert!(c.apps[0].auth_ignore_case);
+        assert_eq!(c.apps[0].whitelist_headers, ["x-role"]);
+        assert!(!c.apps[1].auth_ignore_case);
+        assert_eq!(c.apps[1].whitelist_headers, ["x-department"]);
+        for header in [
+            "shiny-server-credentials",
+            "Authorization",
+            "X-Forwarded-For",
+            "Sec-WebSocket-Key",
+            "bad:header",
+        ] {
+            assert!(parse(&format!("whitelist_headers {header}; server {{ listen 3838; location / {{ app_dir one; }} }}")).is_err());
+        }
     }
     #[test]
     fn invalid_and_unsupported_are_not_silently_ignored() {

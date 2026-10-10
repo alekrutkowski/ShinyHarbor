@@ -58,10 +58,11 @@ async def run(binary, library):
                         await expect(second.locator('#scenario')).to_contain_text('Bell-shaped',timeout=60000)
                         # Native select has a selectize presentation; update through Shiny's input binding.
                         await page.evaluate("$('#shape')[0].selectize.setValue('skewed')")
-                        await expect(page.locator('#pending')).to_contain_text('Settings changed')
-                        await expect(page.locator('#scenario')).to_contain_text('Bell-shaped')
-                        await page.locator('#run').click()
                         await expect(page.locator('#scenario')).to_contain_text('Right-skewed')
+                        await page.evaluate("Shiny.setInputValue('n', 80)")
+                        await expect(page.locator('#scenario')).to_contain_text('n = 80')
+                        await page.locator('#new_seed').click()
+                        await expect(page.locator('#scenario')).to_contain_text('seed 2027')
                         await expect(second.locator('#scenario')).to_contain_text('Bell-shaped')
                         await page.get_by_role('tab',name='Interval coverage',exact=True).click()
                         await expect(page.locator('#intervals_plot img')).to_be_visible()
@@ -77,7 +78,7 @@ async def run(binary, library):
                             raise
                         await page.screenshot(path=str(results/'sampling-lab-mobile.png'),full_page=True)
                         assert not errors,errors
-                        checks += ['explicit-run-keeps-experiments-consistent','independent-browser-session-results','all-three-statistical-plots','responsive-mobile-layout','no-browser-script-errors']
+                        checks += ['inputs-react-immediately-and-redraw-changes-seed','independent-browser-session-results','all-three-statistical-plots','responsive-mobile-layout','no-browser-script-errors']
                     finally: await browser.close()
             finally:
                 if proc.returncode is None: proc.terminate()

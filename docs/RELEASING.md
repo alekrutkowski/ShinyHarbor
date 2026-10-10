@@ -48,7 +48,7 @@ git push origin v0.1.0-alpha.1
 ```
 
 The release workflow performs policy checks, invokes the full reusable CI, requires
-all eight portable archives and ten native installers, checks each sidecar digest, creates `SHA256SUMS`, and then
+all eight portable archives and twelve native installers, checks each sidecar digest, creates `SHA256SUMS`, and then
 publishes a GitHub prerelease. A failed platform, browser job or packaging step
 prevents publication. Only the publish job receives `contents: write`; build jobs
 have read-only repository permissions. No `pull_request_target` workflow is used.
@@ -63,7 +63,8 @@ binary distributions and may not contain the resolved lockfile if it was not com
 After `tools/package.py`, run `python tools/installers.py --target TARGET`.
 Windows uses the checksum-pinned compiler installed by `tools/fetch_inno.ps1`.
 Linux musl targets require `dpkg-deb`, `rpmbuild`, `tar` and `zstd`; they produce
-DEB, RPM and Arch packages. macOS uses Apple's `pkgbuild` and `productbuild`.
+DEB, RPM and Arch packages. Alpine APKs use `apk mkpkg` inside Alpine 3.24
+for both musl architectures, with an OpenRC installation test. macOS uses Apple's `pkgbuild` and `productbuild`.
 Installer payloads include dependency notices and preserve user data on removal.
 
 The CI matrix exercises Windows install/upgrade/uninstall, inspects all Linux
@@ -75,7 +76,7 @@ entries, and code-signing identities are not provisioned.
 
 ## Manually published evaluation prerelease
 
-At the repository owner's explicit request, the `v0.1.0-alpha.1` and `v0.1.0-alpha.2` evaluation releases are published
+At the repository owner's explicit request, the `v0.1.0-alpha.1`, `v0.1.0-alpha.2` and `v0.1.0-alpha.3` evaluation releases are published
 with the locally validated Windows x64 and Linux x64 artifacts while hosted CI
 is blocked by account billing. This is a partial-platform **prerelease**, not a
 successful execution of the full release workflow described above.

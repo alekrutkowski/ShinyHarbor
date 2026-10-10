@@ -130,6 +130,7 @@ def main() -> None:
         shutil.copy2(binary, folder / binary_name)
         shutil.copy2(ROOT / 'examples/init.toml', folder / 'harbor.toml')
         shutil.copytree(ROOT / 'examples/hello', folder / 'apps/hello')
+        shutil.copytree(ROOT / 'assets/brand', folder / 'brand')
         for file in ["LICENSE", "README.md", "Cargo.lock", "ATTRIBUTIONS.md", "SECURITY.md", "VALIDATION.md"]:
             shutil.copy2(ROOT / file, folder / file)
         for directory in ["docs", "examples", "packaging", "conformance", "validation"]:
