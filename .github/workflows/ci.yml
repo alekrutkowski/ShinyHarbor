@@ -18,7 +18,7 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.value }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         shell: bash
         run: rustup update stable --no-self-update
@@ -29,7 +29,7 @@ jobs:
           cargo metadata --locked --format-version 1 > /dev/null
       - id: matrix
         run: echo "value=$(python3 -c 'import json; print(json.dumps(json.load(open("tools/targets.json"))))')" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: resolved-lockfile
           path: Cargo.lock
@@ -44,8 +44,8 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: resolved-lockfile
       - name: Configure native toolchain
@@ -62,10 +62,10 @@ jobs:
           # Rust supplies the static musl CRT. musl-gcc's linker specs break
           # static PIE startup on x86_64 (rust-lang/rust#95926).
           echo "CARGO_TARGET_$(echo '${{ matrix.target }}' | tr '[:lower:]-' '[:upper:]_')_LINKER=cc" >> "$GITHUB_ENV"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Install gateway test dependencies
@@ -143,13 +143,13 @@ jobs:
           sudo /usr/local/bin/shinyharbor tui --once --config /etc/shinyharbor/harbor.toml
           sudo /usr/local/libexec/shinyharbor/uninstall.sh
           test ! -e /usr/local/bin/shinyharbor
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: native-test-evidence-${{ matrix.target }}
           path: test-results/
           if-no-files-found: warn
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.target }}
           path: dist/*
@@ -165,8 +165,8 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: resolved-lockfile
       - run: rustup update stable --no-self-update
@@ -188,7 +188,7 @@ jobs:
           install.packages(c('shiny', 'rmarkdown', 'testthat'), repos = 'https://cloud.r-project.org', Ncpus = 2)
           stopifnot(all(vapply(c('shiny', 'rmarkdown', 'testthat'), requireNamespace, logical(1), quietly = TRUE)))
           cat('Reference package:', as.character(packageVersion('shiny')), '\n')
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: |
@@ -234,7 +234,7 @@ jobs:
         run: |
           python tools/fetch_pebble.py
           python tests/tls.py --binary target/debug/shinyharbor${{ runner.os == 'Windows' && '.exe' || '' }} --pebble .build/pebble-ci/pebble${{ runner.os == 'Windows' && '.exe' || '' }} --certificates .build/pebble-ci/certs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: browser-test-evidence-${{ matrix.runner }}
